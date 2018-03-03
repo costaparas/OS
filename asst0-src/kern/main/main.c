@@ -213,7 +213,7 @@ void
 kmain(char *arguments)
 {
 	boot();
-
+	complex_hello();
 	menu(arguments);
 
 	/* Should not get here */

@@ -386,6 +386,7 @@ file      syscall/time_syscalls.c
 
 file      main/main.c
 file      main/menu.c
+file      main/hello.c
 
 ########################################
 #                                      #
