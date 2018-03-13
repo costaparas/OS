@@ -54,7 +54,6 @@ dkms.conf
 # project-related files
 build/
 root/kernel-ASST?
-root/kernel
 asst?-src/kern/compile
 asst?-src/defs.mk
 
