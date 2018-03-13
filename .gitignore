@@ -50,3 +50,10 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# custom files
+.ctags
+build/
+asst?-src/kern/compile
+defs.mk
+root/kernel-ASST?
