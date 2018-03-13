@@ -57,3 +57,8 @@ build/
 asst?-src/kern/compile
 asst?-src/defs.mk
 root/kernel-ASST?
+
+# JetBraisn
+.idea/
+CMakeLists.txt
+cmake-build-debug
