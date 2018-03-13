@@ -51,14 +51,17 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# custom files
-.ctags
+# project-related files
 build/
+root/kernel-ASST?
+root/kernel
 asst?-src/kern/compile
 asst?-src/defs.mk
-root/kernel-ASST?
 
-# JetBraisn
+# ctags data
+.ctags
+
+# JetBrains
 .idea/
 CMakeLists.txt
 cmake-build-debug
