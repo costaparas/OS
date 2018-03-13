@@ -55,5 +55,5 @@ dkms.conf
 .ctags
 build/
 asst?-src/kern/compile
-defs.mk
+asst?-src/defs.mk
 root/kernel-ASST?
