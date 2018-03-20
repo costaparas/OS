@@ -75,7 +75,6 @@ static void adder(void * unusedpointer, unsigned long addernumber)
 		if (a < NADDS) {
 			counter = counter + 1;
 			b = counter;
-//kprintf("hello");
 
 			/* count the number of increments we perform  for statistics */
 			adder_counters[addernumber]++;
