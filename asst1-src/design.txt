@@ -1,1 +1,34 @@
-Place your design document here.
+1.
+The counter variable is a shared resource between the threads of
+execution. The critical section in adder() therefore begins from the
+assignment to the variable a and ends at the end of the if statement.
+
+To achieve mutual exlcusion, we employed the use of a lock, acquired
+before the critical section and released after the critical section.
+
+Using the locking primitives provided in OS/161, we created a lock
+in maths() and passed it into the adder() function, destroying the lock
+after all the adder() threads terminate.
+
+2.
+In the original code, bill() and ben() are called in seperate threads
+and acquire the same two locks in the reverse order. This causes a deadlock
+for example, when the following interleaving occurs:
+
+bill's thread          | ben's thread
+1: lock_acquire(locka) |
+2:                     | lock_acquire(lockb)
+3: lock_acquire(lockb) |
+4:                     | lock_acquire(locka)
+
+A deadlock occurs since bill's thread waits for a lock on b
+which ben currently has and ben's thread waits for a lock on a, which
+bill currently has.
+
+To prevent the deadlock, we ensured that the threads acquire the locks
+in the same order. This solution works since neither thread can acquire a
+lock that the other thread will need if the second thread has already
+acquired one of its locks.
+
+3.
+
