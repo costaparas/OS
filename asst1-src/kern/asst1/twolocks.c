@@ -53,8 +53,8 @@ static void ben(void * unusedpointer, unsigned long unusedint)
         kprintf("Hi, I'm Ben\n");
 
         for (i = 0; i < NUM_LOOPS; i++) {
-                lock_acquire(lockb);
                 lock_acquire(locka);
+                lock_acquire(lockb);
 
                 /* Ben now holds both locks and can do what ever bill
                    needs to do while holding the locks (nothing in
