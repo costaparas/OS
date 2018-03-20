@@ -123,7 +123,7 @@ int maths (int data1, char **data2)
 	finished = sem_create("finished", 0);
 
 	if (finished == NULL) {
-		panic("maths: sem create failed");
+		panic("%s: sem create failed", __FILE__);
 	}
 
 	/*
@@ -133,7 +133,7 @@ int maths (int data1, char **data2)
 	 */
 	struct lock *counter_lock = lock_create("counter lock");
 	if (counter_lock == NULL) {
-		panic("maths: counter_lock create failed");
+		panic("%s: counter_lock create failed", __FILE__);
  	}
 
 	/*
