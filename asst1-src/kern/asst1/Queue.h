@@ -1,3 +1,5 @@
+#include <types.h>
+
 #include "item.h"
 
 #ifndef QUEUE_H
@@ -6,16 +8,16 @@
 typedef struct queue *Queue;
 
 //queue initialisation
-Queue createQueue(void);
-void  disposeQueue(Queue q);
+Queue create_queue(void);
+void dispose_queue(Queue q);
 
 //queue progression
 void enqueue(Queue q, item data);
 item dequeue(Queue q);
 
 //queue query
-item getHead(Queue q);
-unsigned long getQueueLength(Queue q);
-bool isQueueEmpty(Queue q);
+item get_head(Queue q);
+unsigned long get_queue_length(Queue q);
+bool is_queue_empty(Queue q);
 
 #endif
