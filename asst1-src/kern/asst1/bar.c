@@ -6,6 +6,7 @@
 
 #include "bar.h"
 #include "bar_driver.h"
+#include "Queue.h"
 
 
 
@@ -16,7 +17,10 @@
  */
 
 /* Declare any globals you need here (e.g. locks, etc...) */
+Queue pending_orders;
+struct lock *que_lock;
 
+struct cv *order_made;
 
 /*
  * **********************************************************************
@@ -34,8 +38,12 @@
 
 void order_drink(struct barorder *order)
 {
-        (void) order; /* Avoid compiler warning, remove when used */
-        panic("You need to write some code!!!!\n");
+	order->order_ready = cv_create("order ready");
+	lock_acquire(que_lock);
+	enqueue(pending_orders, order);
+	lock_release(que_lock);
+	cv_signal(order_made, que_lock);
+	cv_destroy(order->order_ready);
 }
 
 
@@ -56,9 +64,14 @@ void order_drink(struct barorder *order)
 
 struct barorder *take_order(void)
 {
-        struct barorder *ret = NULL;
-
-        return ret;
+	struct barorder *ret = NULL;
+	//loop - while true
+	//wait on order_ready
+	lock_acquire(que_lock);
+	cv_wait(order_made, que_lock);
+//	dequeue();
+	lock_release(que_lock);
+	return ret;
 }
 
 
@@ -76,11 +89,11 @@ struct barorder *take_order(void)
 void fill_order(struct barorder *order)
 {
 
-        /* add any sync primitives you need to ensure mutual exclusion
-           holds as described */
+	/* add any sync primitives you need to ensure mutual exclusion
+	   holds as described */
 
-        /* the call to mix must remain */
-        mix(order);
+	/* the call to mix must remain */
+	mix(order);
 
 }
 
@@ -94,8 +107,8 @@ void fill_order(struct barorder *order)
 
 void serve_order(struct barorder *order)
 {
-        (void) order; /* avoid a compiler warning, remove when you
-                         start */
+	(void) order; /* avoid a compiler warning, remove when you
+			 start */
 }
 
 
@@ -117,7 +130,9 @@ void serve_order(struct barorder *order)
 
 void bar_open(void)
 {
-
+	pending_orders = createQueue();
+	que_lock = lock_create("queue lock");
+	order_made = cv_create("order made");
 }
 
 /*
@@ -129,6 +144,8 @@ void bar_open(void)
 
 void bar_close(void)
 {
-
+	disposeQueue(pending_orders);
+	lock_destroy(que_lock);
+	cv_destroy(order_made);
 }
 
