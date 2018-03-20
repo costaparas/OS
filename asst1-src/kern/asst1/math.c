@@ -85,11 +85,10 @@ static void adder(void * unusedpointer, unsigned long addernumber)
 				kprintf("In thread %ld, %ld + 1 == %ld?\n",
 					addernumber, a, b) ;
 			}
-			lock_release(counter_lock);
 		} else {
 			flag = 0;
-			lock_release(counter_lock);
 		}
+		lock_release(counter_lock);
 	}
 
 	/* signal the main thread we have finished and then exit */
