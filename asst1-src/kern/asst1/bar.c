@@ -85,7 +85,6 @@ void fill_order(struct barorder *order) {
  * Takes a filled order and makes it available to (unblocks) the
  * waiting customer.
  */
-
 void serve_order(struct barorder *order) {
 	(void) order; /* avoid a compiler warning, remove when you start */
 }
