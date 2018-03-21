@@ -5,23 +5,17 @@
 #include <thread.h>
 #include <synch.h>
 
-
-
 /* declare (local to this file) pointers to the synch variables that
    we will allocate later */
-
 static struct lock *locka, *lockb;
 static struct semaphore *finished;
 
 /* a constant indicating how many times the locking loops go round */
 #define NUM_LOOPS 1000
 
-
 /* Bill and Ben are two threads that simply spin for a while,
    acquiring and releasing locks */
-
-static void bill(void * unusedpointer, unsigned long unusedint)
-{
+static void bill(void *unusedpointer, unsigned long unusedint) {
         int i;
         kprintf("Hi, I'm Bill\n");
 
@@ -44,11 +38,7 @@ static void bill(void * unusedpointer, unsigned long unusedint)
                         finished */
 }
 
-
-
-static void ben(void * unusedpointer, unsigned long unusedint)
-{
-
+static void ben(void *unusedpointer, unsigned long unusedint) {
         int i;
         kprintf("Hi, I'm Ben\n");
 
@@ -69,11 +59,9 @@ static void ben(void * unusedpointer, unsigned long unusedint)
         kprintf("Ben says 'bye'\n");
         V(finished); /* indicate to the parent thread Bill has
                         finished */
-
 }
 
-int twolocks (int data1, char ** data2)
-{
+int twolocks(int data1, char **data2) {
         int error;
         /*
          * Avoid unused variable warnings.
@@ -82,7 +70,6 @@ int twolocks (int data1, char ** data2)
         (void) data2;
 
         kprintf("Locking frenzy starting up\n");
-
 
         finished = sem_create("finished", 0);
         KASSERT(finished != 0); /* KASSERT panics if the condition is
@@ -96,29 +83,22 @@ int twolocks (int data1, char ** data2)
         lockb = lock_create("lock_b");
         KASSERT(lockb != 0);
 
-
-
         error = thread_fork("bill thread", NULL, &bill, NULL, 0); /* start
                                                                      Bill */
-
         /*
          * panic() on error. One should not panic for normal system
          * calls, but it is okay for this assignment if the error is
          * unrecoverable.
          */
-
         if (error) {
                 panic("bill: thread_fork failed: %s\n", strerror(error));
         }
 
-
         error = thread_fork("ben thread", NULL, &ben, NULL, 0); /* start
                                                                    Ben */
-
         /*
          * panic() on error.
          */
-
         if (error) {
                 panic("ben: thread_fork failed: %s\n", strerror(error));
         }

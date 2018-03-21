@@ -6,11 +6,9 @@
 #include <synch.h>
 
 enum {
-	NADDERS = 10,        /* the number of adder threads */
+	NADDERS = 10,    /* the number of adder threads */
 	NADDS   = 10000, /* the number of overall increments to perform */
 };
-
-
 
 /*
  * Declare the counter variable that all the adder() threads increment
@@ -21,23 +19,14 @@ enum {
  */
 volatile unsigned long int counter;
 
-
 /*
  * Declare an array of adder counters to count per-thread
  * increments. These are used for printing statistics.
  */
 unsigned long int adder_counters[NADDERS];
 
-
 /* We use a semaphore to wait for adder() threads to finish */
 struct semaphore *finished;
-
-
-/*
- * **********************************************************************
- * ADD YOUR OWN VARIABLES HERE AS NEEDED
- * **********************************************************************
- */
 
 /*
  * adder()
@@ -59,9 +48,7 @@ struct semaphore *finished;
  * + only synchronise the critical section, no more.
  *
  */
-
-static void adder(void * unusedpointer, unsigned long addernumber)
-{
+static void adder(void *unusedpointer, unsigned long addernumber) {
 	unsigned long int a, b;
 	int flag = 1;
 
@@ -69,6 +56,7 @@ static void adder(void * unusedpointer, unsigned long addernumber)
 		/* loop doing increments until we achieve the overall number
 		   of increments */
 
+		//start of critical section
 		struct lock *counter_lock = (struct lock*) unusedpointer;
 		lock_acquire(counter_lock);
 		a = counter;
@@ -76,7 +64,7 @@ static void adder(void * unusedpointer, unsigned long addernumber)
 			counter = counter + 1;
 			b = counter;
 
-			/* count the number of increments we perform  for statistics */
+			/* count the number of increments we perform for statistics */
 			adder_counters[addernumber]++;
 
 			/* check we are getting sane results */
@@ -88,6 +76,7 @@ static void adder(void * unusedpointer, unsigned long addernumber)
 			flag = 0;
 		}
 		lock_release(counter_lock);
+		//end of critical section
 	}
 
 	/* signal the main thread we have finished and then exit */
@@ -106,9 +95,7 @@ static void adder(void * unusedpointer, unsigned long addernumber)
  * + Starts the define number of adder threads
  * + waits, prints statistics, cleans up, and exits
  */
-
-int maths (int data1, char **data2)
-{
+int maths (int data1, char **data2) {
 	int index, error;
 	unsigned long int sum;
 
@@ -119,7 +106,6 @@ int maths (int data1, char **data2)
 	(void) data2;
 
 	/* create a semaphore to allow main thread to wait on workers */
-
 	finished = sem_create("finished", 0);
 
 	if (finished == NULL) {
@@ -139,30 +125,22 @@ int maths (int data1, char **data2)
 	/*
 	 * Start NADDERS adder() threads.
 	 */
-
 	kprintf("Starting %d adder threads\n", NADDERS);
-
 	for (index = 0; index < NADDERS; index++) {
-
 		error = thread_fork("adder thread", NULL, &adder, counter_lock, index);
 
 		/*
 		 * panic() on error.
 		 */
-
 		if (error) {
-			panic("adder: thread_fork failed: %s\n",
-			      strerror(error));
+			panic("adder: thread_fork failed: %s\n", strerror(error));
 		}
 	}
 
-
 	/* Wait until the adder threads complete */
-
 	for (index = 0; index < NADDERS; index++) {
 		P(finished);
 	}
-
 	kprintf("Adder threads performed %ld adds\n", counter);
 
 	/* Print out some statistics */
@@ -185,4 +163,3 @@ int maths (int data1, char **data2)
 	sem_destroy(finished);
 	return 0;
 }
-
