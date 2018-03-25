@@ -16,7 +16,7 @@ needed to be used in every adder() thread, our lock was created in the maths()
 function and destroyed after all the adder() threads terminated.
 
 2.
-In the original code, bill() and ben() are called in seperate threads
+In the original code, bill() and ben() are called in separate threads
 and acquire the same two locks in the reverse order. This causes a deadlock
 for example, when the following interleaving occurs:
 
@@ -26,14 +26,16 @@ bill's thread          | ben's thread
 3: lock_acquire(lockb) |
 4:                     | lock_acquire(locka)
 
-A deadlock occurs since bill's thread waits for a lock on b
-which ben currently has and ben's thread waits for a lock on a, which
-bill currently has.
+This occurs since bill's thread is waiting for lockb to be released (which ben
+currently has), and ben's thread is waiting for locka to be released (which bill
+currently has). As each thread is waiting for the other to release a requested
+resource, a deadlock occurs.
 
 To prevent the deadlock, we ensured that the threads acquire the locks
-in the same order. This solution works since neither thread can acquire a
-lock that the other thread will need if the second thread has already
-acquired one of its locks.
+in the same order. This solution ensures that the first lock is required to be
+held by a thread before the second lock can be acquired. As such, neither thread
+thread can acquire a lock that the other thread will need if the other thread
+has already acquired one of its locks.
 
 3.
 
