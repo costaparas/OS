@@ -38,4 +38,15 @@ thread can acquire a lock that the other thread will need if the other thread
 has already acquired one of its locks.
 
 3.
-
+BRIEF OUTLINE TO FLESH OUT
+- We used a lock (buffer_lock) to restrict access to the buffer (a shared resource
+  between producer/consumer threads). Any time that the buffer is modified (producer
+  produces an item or consumer consumes an item), the lock is used to ensure
+  mutual exclusion.
+- We used two condition variables (has_capacity and has_data) to track whether
+  the buffer had free slots available and has items available to consume
+- Consumer waits on has_data, sleeping if there are no items available to consume.
+  Signals has_capacity once it finishes consuming an item.
+- Producer waits on has_capacity, sleeping if there is no space in the buffer to
+  produce items. Signals has_data once it finishes producing an item.
+- Something about how we could have alternatively used a semaphore
