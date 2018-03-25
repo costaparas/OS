@@ -1,14 +1,19 @@
 1.
-The counter variable is a shared resource between the threads of
-execution. The critical section in adder() therefore begins from the
-assignment to the variable a and ends at the end of the if statement.
+The counter variable is a shared resource between the threads of execution.
+As each of these threads require updating the counter, without the use
+of synchronisation the operating system could for example interleave the
+instructions such that `counter = counter + 1` is executed in multiple
+threads before the instruction `b = counter` is executed, leaving an unexpected
+value in b.
 
-To achieve mutual exlcusion, we employed the use of a lock, acquired
-before the critical section and released after the critical section.
-
-Using the locking primitives provided in OS/161, we created a lock
-in maths() and passed it into the adder() function, destroying the lock
-after all the adder() threads terminate.
+To prevent concurrent (unsafe) modification of the counter variable, we employed
+the use of a lock to achieve mutual exclusion (made available through the OS/161
+locking primitives).  We identified the critical section in adder() beginning
+from the assignment `a = counter` and ending at the end of the if/else block.
+Accordingly, we acquire the lock prior to entry of the critical region and release
+the lock after execution of the critical region has finished. Since our lock
+needed to be used in every adder() thread, our lock was created in the maths()
+function and destroyed after all the adder() threads terminated.
 
 2.
 In the original code, bill() and ben() are called in seperate threads
