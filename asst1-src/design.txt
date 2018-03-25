@@ -31,11 +31,36 @@ currently has), and ben's thread is waiting for locka to be released (which bill
 currently has). As each thread is waiting for the other to release a requested
 resource, a deadlock occurs.
 
-To prevent the deadlock, we ensured that the threads acquire the locks
-in the same order. This solution ensures that the first lock is required to be
-held by a thread before the second lock can be acquired. As such, neither thread
-thread can acquire a lock that the other thread will need if the other thread
-has already acquired one of its locks.
+We used the prevention strategy to deal with the deadlock, removing the circular wait
+condition by ordering the resource requests such that the threads acquire the locks in
+the same order. This solution ensures that the first lock is required to be held by a
+thread before the second lock can be acquired. As such, neither thread can acquire a
+lock that the other thread will need if the other thread has already acquired one of
+its locks.
+
+With this request ordering, there are four possible interleavings of requests:
+
+Case 1: One of the threads requests (and acquires) both locks before the other thread. When
+the other thread requests locka, it blocks until the first thread releases locka. Since the
+first thread has access to all the resources it requires, it will eventually complete and
+release its resources for the other thread to use.
+
+bill's thread          | ben's thread          || bill's thread          | ben's thread
+1: lock_acquire(locka) |                       || 1:                     | lock_acquire(locka)
+2: lock_acquire(lockb) |                       || 2:                     | lock_acquire(lockb)
+3:                     | lock_acquire(lock_a)  || 3: lock_acquire(locka) |
+4:                     | lock_acquire(lock_b)  || 4: lock_acquire(lockb) |
+
+Case 2: One of the locks requests (and acquires) locka, then the other thread requests locka
+and blocks (as the first thread is holding it). The first thread proceeds to acquire lockb.
+Again, the first thread has access to all the resources it requires, so it will eventually
+complete and release its resources for the other thread to use.
+
+bill's thread          | ben's thread          || bill's thread          | ben's thread
+1: lock_acquire(locka) |                       || 1:                     | lock_acquire(locka)
+2:                     | lock_acquire(lock_a)  || 2: lock_acquire(locka) |
+3: lock_acquire(lockb) |                       || 3:                     | lock_acquire(lockb)
+4:                     | lock_acquire(lock_b)  || 4: lock_acquire(lockb) |
 
 3.
 BRIEF OUTLINE TO FLESH OUT
