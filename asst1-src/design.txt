@@ -8,7 +8,7 @@ value in b.
 
 To prevent concurrent (unsafe) modification of the counter variable, we employed
 the use of a lock to achieve mutual exclusion (made available through the OS/161
-locking primitives).  We identified the critical section in adder() beginning
+locking primitives). We identified the critical section in adder() beginning
 from the assignment `a = counter` and ending at the end of the if/else block.
 Accordingly, we acquire the lock prior to entry of the critical region and release
 the lock after execution of the critical region has finished. Since our lock
@@ -51,7 +51,7 @@ bill's thread          | ben's thread          || bill's thread          | ben's
 3:                     | lock_acquire(lock_a)  || 3: lock_acquire(locka) |
 4:                     | lock_acquire(lock_b)  || 4: lock_acquire(lockb) |
 
-Case 2: One of the locks requests (and acquires) locka, then the other thread requests locka
+Case 2: One of the threads requests (and acquires) locka, then the other thread requests locka
 and blocks (as the first thread is holding it). The first thread proceeds to acquire lockb.
 Again, the first thread has access to all the resources it requires, so it will eventually
 complete and release its resources for the other thread to use.
@@ -63,15 +63,20 @@ bill's thread          | ben's thread          || bill's thread          | ben's
 4:                     | lock_acquire(lock_b)  || 4: lock_acquire(lockb) |
 
 3.
-BRIEF OUTLINE TO FLESH OUT
+- The buffer used by the producer and consumer consists of a fixed-size array and two
+  indexes, `head` (referring to the first item for consumption) and `tail` (referring
+  to the next available slot for production).
 - We used a lock (buffer_lock) to restrict access to the buffer (a shared resource
   between producer/consumer threads). Any time that the buffer is modified (producer
   produces an item or consumer consumes an item), the lock is used to ensure
   mutual exclusion.
-- We used two condition variables (has_capacity and has_data) to track whether
-  the buffer had free slots available and has items available to consume
+- We used two condition variables:
+  - has_capacity; to track whether the buffer has at least one free slot
+  - has_data: to track whether the buffer has at least one item available to consume
 - Consumer waits on has_data, sleeping if there are no items available to consume.
-  Signals has_capacity once it finishes consuming an item.
+  Signals has_capacity once it finishes consuming an item by adjusting the head pointer.
 - Producer waits on has_capacity, sleeping if there is no space in the buffer to
-  produce items. Signals has_data once it finishes producing an item.
-- Something about how we could have alternatively used a semaphore
+  produce items. Signals has_data once it finishes producing an item by adding it to the
+  end of the queue and adjusting the tail pointer.
+- An alternative solution is to use semaphores in place of condition variables.
+  However, for the sake of code clarity, it was decided to use condition variables.
