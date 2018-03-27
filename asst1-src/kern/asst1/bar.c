@@ -57,7 +57,7 @@ struct barorder *take_order(void) {
 	while (is_queue_empty(pending_orders)) cv_wait(order_made, que_lock);
 	struct barorder *ret = dequeue(pending_orders);
 	lock_release(que_lock);
-	if (ret->go_home_flag != 0) fill_order(ret);
+	if (ret->go_home_flag == 0) fill_order(ret);
 	return ret;
 }
 
