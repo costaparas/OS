@@ -4,18 +4,19 @@
 
 #include "producerconsumer_driver.h"
 
-//bounded buffer for the producer/consumer
+/* bounded buffer for the producer/consumer */
 static struct _buffer {
 	struct pc_data data[BUFFER_SIZE];
-	uint32_t head, tail; // tail is next available slot
+	uint32_t head, tail; /* tail is next available slot */
 } buffer;
 
-//synchronization primitives for the producer/consumer
+/* synchronization primitives for the producer/consumer */
 static struct cv *has_capacity;
 static struct cv *has_data;
 static struct lock *buffer_lock;
 
-/* consumer_receive() is called by a consumer to request more data. It
+/*
+ * consumer_receive() is called by a consumer to request more data. It
  * should block on a sync primitive if no data is available in your
  * buffer.
  */
@@ -33,7 +34,8 @@ struct pc_data consumer_receive(void) {
 	return thedata;
 }
 
-/* procucer_send() is called by a producer to store data in your
+/*
+ * procucer_send() is called by a producer to store data in your
  * bounded buffer.
  */
 void producer_send(struct pc_data item) {
@@ -48,7 +50,8 @@ void producer_send(struct pc_data item) {
 	lock_release(buffer_lock);
 }
 
-/* Perform any initialisation (e.g. of global data) you need
+/*
+ * Perform any initialisation (e.g. of global data) you need
  * here. Note: You can panic if any allocation fails during setup
  */
 void producerconsumer_startup(void) {
@@ -63,7 +66,7 @@ void producerconsumer_startup(void) {
 	if (buffer_lock == NULL)
 		panic("%s: buffer_lock create failed", __FILE__);
 
-	// Initialise buffer props
+	/* initialise buffer props */
 	buffer.head = 0;
 	buffer.tail = 0;
 }

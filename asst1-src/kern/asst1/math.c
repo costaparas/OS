@@ -53,10 +53,9 @@ static void adder(void *unusedpointer, unsigned long addernumber) {
 	int flag = 1;
 
 	while (flag) {
-		/* loop doing increments until we achieve the overall number
-		   of increments */
+		/* loop doing increments until we achieve the overall number of increments */
 
-		//start of critical section
+		/* start of critical section */
 		struct lock *counter_lock = (struct lock*) unusedpointer;
 		lock_acquire(counter_lock);
 		a = counter;
@@ -69,14 +68,13 @@ static void adder(void *unusedpointer, unsigned long addernumber) {
 
 			/* check we are getting sane results */
 			if (a + 1 != b) {
-				kprintf("In thread %ld, %ld + 1 == %ld?\n",
-					addernumber, a, b) ;
+				kprintf("In thread %ld, %ld + 1 == %ld?\n", addernumber, a, b);
 			}
 		} else {
 			flag = 0;
 		}
 		lock_release(counter_lock);
-		//end of critical section
+		/* end of critical section */
 	}
 
 	/* signal the main thread we have finished and then exit */
@@ -147,8 +145,7 @@ int maths (int data1, char **data2) {
 	sum = 0;
 	for (index = 0; index < NADDERS; index++) {
 		sum += adder_counters[index];
-		kprintf("Adder %d performed %ld increments.\n", index,
-			adder_counters[index]);
+		kprintf("Adder %d performed %ld increments.\n", index, adder_counters[index]);
 	}
 	kprintf("The adders performed %ld increments overall\n", sum);
 

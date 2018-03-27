@@ -77,8 +77,10 @@ void fill_order(struct barorder *order) {
 
 	/* lock all bottles needed for the order */
 	for (int i = 0; i < DRINK_COMPLEXITY; ++i) {
-		if (order->requested_bottles[i] <= 0) continue;
-		struct lock *l = bottle_locks[order->requested_bottles[i] - 1];
+		int bottle = order->requested_bottles[i];
+		if (bottle > NBOTTLES) panic("Unknown bottle");
+		if (bottle <= 0) continue;
+		struct lock *l = bottle_locks[bottle - 1];
 		if (!lock_do_i_hold(l)) lock_acquire(l);
 	}
 
@@ -87,8 +89,10 @@ void fill_order(struct barorder *order) {
 
 	/* release all bottle locks */
 	for (int i = 0; i < DRINK_COMPLEXITY; ++i) {
-		if (order->requested_bottles[i] <= 0) continue;
-		struct lock *l = bottle_locks[order->requested_bottles[i] - 1];
+		int bottle = order->requested_bottles[i];
+		if (bottle > NBOTTLES) panic("Unknown bottle");
+		if (bottle <= 0) continue;
+		struct lock *l = bottle_locks[bottle - 1];
 		if (lock_do_i_hold(l)) lock_release(l);
 	}
 

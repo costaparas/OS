@@ -5,7 +5,8 @@
 #ifndef BAR_H
 #define BAR_H
 
-/* struct barorder is the main type referred to in the code. It must
+/*
+ * struct barorder is the main type referred to in the code. It must
  * be preserved as noted for our later testing to work
  */
 struct barorder {
