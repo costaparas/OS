@@ -13,7 +13,7 @@ struct barorder {
 	struct glass glass;                               /* Do not change */
 
 	/* This struct can be extended with your own entries below here */ 
-	struct cv *order_ready; /* used to block until order ready */
+	struct semaphore *order_ready; /* used to block until order ready */
 };
 
 #endif

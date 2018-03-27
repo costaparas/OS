@@ -29,12 +29,14 @@ struct lock *bottle_locks[NBOTTLES];
  * until a bartender has filled the glass with the appropriate drinks.
  */
 void order_drink(struct barorder *order) {
-	order->order_ready = cv_create("order ready");
+	order->order_ready = sem_create("order ready", 0);
+	if (order->order_ready == NULL) panic("%s: order_ready lock create failed", __FILE__);
 	lock_acquire(que_lock);
 	enqueue(pending_orders, order);
-	lock_release(que_lock);
 	cv_signal(order_made, que_lock);
-	cv_destroy(order->order_ready);
+	lock_release(que_lock);
+	P(order->order_ready);
+	sem_destroy(order->order_ready);
 }
 
 /*
@@ -52,10 +54,10 @@ void order_drink(struct barorder *order) {
  */
 struct barorder *take_order(void) {
 	lock_acquire(que_lock);
-	cv_wait(order_made, que_lock);
+	while (is_queue_empty(pending_orders)) cv_wait(order_made, que_lock);
 	struct barorder *ret = dequeue(pending_orders);
-	fill_order(ret);
 	lock_release(que_lock);
+	fill_order(ret);
 	return ret;
 }
 
@@ -75,14 +77,21 @@ void fill_order(struct barorder *order) {
 	holds as described */
 	quicksort(order->requested_bottles, 0, DRINK_COMPLEXITY - 1);
 	for (int i = 0; i < DRINK_COMPLEXITY; ++i) {
-		lock_acquire(bottle_locks[order->requested_bottles[i]]);
+		kprintf("%d\n", order->requested_bottles[i]);
+	}
+	for (int i = 0; i < DRINK_COMPLEXITY; ++i) {
+		if (order->requested_bottles[i] <= 0) continue;
+		struct lock *l = bottle_locks[order->requested_bottles[i] - 1];
+		if (!lock_do_i_hold(l)) lock_acquire(l);
 	}
 
 	/* the call to mix must remain */
 	mix(order);
 
 	for (int i = 0; i < DRINK_COMPLEXITY; ++i) {
-		lock_release(bottle_locks[order->requested_bottles[i]]);
+		if (order->requested_bottles[i] <= 0) continue;
+		struct lock *l = bottle_locks[order->requested_bottles[i] - 1];
+		if (lock_do_i_hold(l)) lock_release(l);
 	}
 
 }
@@ -94,7 +103,7 @@ void fill_order(struct barorder *order) {
  * waiting customer.
  */
 void serve_order(struct barorder *order) {
-	(void) order; /* avoid a compiler warning, remove when you start */
+	V(order->order_ready);
 }
 
 /*
