@@ -15,7 +15,7 @@
  *
  */
 
-/* #define PRINT_ON */
+#define PRINT_ON
 
 /* this semaphore is for cleaning up at the end. */
 static struct semaphore *alldone;

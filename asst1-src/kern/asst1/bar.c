@@ -57,7 +57,7 @@ struct barorder *take_order(void) {
 	while (is_queue_empty(pending_orders)) cv_wait(order_made, que_lock);
 	struct barorder *ret = dequeue(pending_orders);
 	lock_release(que_lock);
-	fill_order(ret);
+	if (ret->go_home_flag != 0) fill_order(ret);
 	return ret;
 }
 
@@ -76,9 +76,9 @@ void fill_order(struct barorder *order) {
 	/* add any sync primitives you need to ensure mutual exclusion
 	holds as described */
 	quicksort(order->requested_bottles, 0, DRINK_COMPLEXITY - 1);
-	for (int i = 0; i < DRINK_COMPLEXITY; ++i) {
-		kprintf("%d\n", order->requested_bottles[i]);
-	}
+//	for (int i = 0; i < DRINK_COMPLEXITY; ++i) {
+//		kprintf("%d\n", order->requested_bottles[i]);
+//	}
 	for (int i = 0; i < DRINK_COMPLEXITY; ++i) {
 		if (order->requested_bottles[i] <= 0) continue;
 		struct lock *l = bottle_locks[order->requested_bottles[i] - 1];
