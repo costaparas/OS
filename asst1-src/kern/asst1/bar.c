@@ -7,6 +7,7 @@
 #include "bar.h"
 #include "bar_driver.h"
 #include "Queue.h"
+#include "quicksort.h"
 
 /* Declare any globals you need here (e.g. locks, etc...) */
 Queue pending_orders;
