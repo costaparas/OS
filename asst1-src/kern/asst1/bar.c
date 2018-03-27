@@ -12,6 +12,7 @@
 Queue pending_orders;
 struct lock *que_lock;
 struct cv *order_made;
+struct lock *bottle_locks[NBOTTLES];
 
 /*
  * **********************************************************************
@@ -49,12 +50,10 @@ void order_drink(struct barorder *order) {
  *
  */
 struct barorder *take_order(void) {
-	struct barorder *ret = NULL;
-	//loop - while true
-	//wait on order_ready
 	lock_acquire(que_lock);
 	cv_wait(order_made, que_lock);
-	//dequeue();
+	struct barorder *ret = dequeue(pending_orders);
+	fill_order(ret);
 	lock_release(que_lock);
 	return ret;
 }
@@ -73,9 +72,17 @@ void fill_order(struct barorder *order) {
 
 	/* add any sync primitives you need to ensure mutual exclusion
 	holds as described */
+	quicksort(order->requested_bottles, 0, DRINK_COMPLEXITY - 1, DRINK_COMPLEXITY);
+	for (int i = 0; i < DRINK_COMPLEXITY; ++i) {
+		lock_acquire(order->requested_bottles[i]);
+	}
 
 	/* the call to mix must remain */
 	mix(order);
+
+	for (int i = 0; i < DRINK_COMPLEXITY; ++i) {
+		lock_release(order->requested_bottles[i]);
+	}
 
 }
 
@@ -105,7 +112,13 @@ void serve_order(struct barorder *order) {
 void bar_open(void) {
 	pending_orders = create_queue();
 	que_lock = lock_create("queue lock");
+	if (que_lock == NULL) panic("%s: que_lock create failed", __FILE__);
 	order_made = cv_create("order made");
+	if (order_made == NULL) panic("%s: order_made create failed", __FILE__);
+	for (int i = 0; i < NBOTTLES; ++i) {
+		bottle_locks[i] = lock_create("bottle lock");
+		if (bottle_locks[i] == NULL) panic("%s: bottle_lock %d create failed", __FILE__, i);
+	}
 }
 
 /*
@@ -118,4 +131,7 @@ void bar_close(void) {
 	dispose_queue(pending_orders);
 	lock_destroy(que_lock);
 	cv_destroy(order_made);
+	for (int i = 0; i < NBOTTLES; ++i) {
+		lock_destroy(bottle_locks[i]);
+	}
 }
