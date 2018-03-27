@@ -73,16 +73,16 @@ void fill_order(struct barorder *order) {
 
 	/* add any sync primitives you need to ensure mutual exclusion
 	holds as described */
-	quicksort(order->requested_bottles, 0, DRINK_COMPLEXITY - 1, DRINK_COMPLEXITY);
+	quicksort(order->requested_bottles, 0, DRINK_COMPLEXITY - 1);
 	for (int i = 0; i < DRINK_COMPLEXITY; ++i) {
-		lock_acquire(order->requested_bottles[i]);
+		lock_acquire(bottle_locks[order->requested_bottles[i]]);
 	}
 
 	/* the call to mix must remain */
 	mix(order);
 
 	for (int i = 0; i < DRINK_COMPLEXITY; ++i) {
-		lock_release(order->requested_bottles[i]);
+		lock_release(bottle_locks[order->requested_bottles[i]]);
 	}
 
 }

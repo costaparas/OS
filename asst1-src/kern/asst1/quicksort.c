@@ -7,23 +7,23 @@
 
 #include "quicksort.h"
 
-static void partition(int a[], int l, int r, int N, int *p);
-static void swap(int a[], int i, int j, int N);
+static void partition(unsigned int a[], int l, int r, int *p);
+static void swap(unsigned int a[], int i, int j);
 
 //sorts an array between the indexes l and r
-void quicksort(int a[], int l, int r, int N) {
+void quicksort(unsigned int a[], int l, int r) {
 	if (l < r) {
 		int p;
-		partition(a, l, r, N, &p);
-		quicksort(a, l, p - 1, N);
-		quicksort(a, p + 1, r, N);
+		partition(a, l, r, &p);
+		quicksort(a, l, p - 1);
+		quicksort(a, p + 1, r);
 	}
 }
 
 //partitions an array around a pivot value
 //returns the index of the pivot value
-static void partition(int a[], int l, int r, int N, int *p) {
-	int pivot = a[r]; //rightmost is pivot
+static void partition(unsigned int a[], int l, int r, int *p) {
+	unsigned int pivot = a[r]; //rightmost is pivot
 	int i = l - 1;
 
 	//arrange a to [(<=pivot)(pivot)(=>pivot)]
@@ -31,18 +31,18 @@ static void partition(int a[], int l, int r, int N, int *p) {
 	while (j != r) {
 		if (a[j] <= pivot) {
 			i = i + 1;
-			swap(a, i, j, N);
+			swap(a, i, j);
 		}
 		j = j + 1;
 	}
-	swap(a, i + 1, r, N); //move pivot to the "middle"
+	swap(a, i + 1, r); //move pivot to the "middle"
 
 	*p = i + 1;
 }
 
 //swaps two elements of an array at the given indexes
-static void swap(int a[], int i, int j, int N) {
-	int temp = a[i];
+static void swap(unsigned int a[], int i, int j) {
+	unsigned int temp = a[i];
 	a[i] = a[j];
 	a[j] = temp;
 }
