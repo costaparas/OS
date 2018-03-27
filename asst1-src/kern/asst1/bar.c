@@ -30,7 +30,7 @@ struct lock *bottle_locks[NBOTTLES];
  */
 void order_drink(struct barorder *order) {
 	order->order_ready = sem_create("order ready", 0);
-	if (order->order_ready == NULL) panic("%s: order_ready lock create failed", __FILE__);
+	if (order->order_ready == NULL) panic("%s: order_ready create failed", __FILE__);
 	lock_acquire(que_lock);
 	enqueue(pending_orders, order);
 	cv_signal(order_made, que_lock);
@@ -72,12 +72,10 @@ struct barorder *take_order(void) {
  */
 void fill_order(struct barorder *order) {
 
-	/* add any sync primitives you need to ensure mutual exclusion
-	holds as described */
+	/* enforce resource ordering to prevent deadlock */
 	quicksort(order->requested_bottles, 0, DRINK_COMPLEXITY - 1);
-//	for (int i = 0; i < DRINK_COMPLEXITY; ++i) {
-//		kprintf("%d\n", order->requested_bottles[i]);
-//	}
+
+	/* lock all bottles needed for the order */
 	for (int i = 0; i < DRINK_COMPLEXITY; ++i) {
 		if (order->requested_bottles[i] <= 0) continue;
 		struct lock *l = bottle_locks[order->requested_bottles[i] - 1];
@@ -87,6 +85,7 @@ void fill_order(struct barorder *order) {
 	/* the call to mix must remain */
 	mix(order);
 
+	/* release all bottle locks */
 	for (int i = 0; i < DRINK_COMPLEXITY; ++i) {
 		if (order->requested_bottles[i] <= 0) continue;
 		struct lock *l = bottle_locks[order->requested_bottles[i] - 1];
