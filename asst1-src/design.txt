@@ -138,14 +138,15 @@ order is ready, serve_order() is called, which invokes V() on the semaphore,
 allowing the producer thread to wakeup.
 
 The fill_order() function can be thought of as a wrapper to the mix() function
-in that it simply achieved deadlock-free mutual exclusion with respect to the
+in that it simply achieves deadlock-free mutual exclusion with respect to the
 bottles used to mix the drink. Since the mix() function increments the number
 of doses for up to DRINK_COMPLEXITY bottles used in the drink, fill_order()
 only needs to acquire and release locks on those specific bottles before and
-after calling mix() to achive mutual exclusion. To achieve this requirement,
-we created a global bottle_locks array to store locks for up to NBOTTLES and
-in fill_order(), we examined the requested_bottles in the order, acquiring
-locks on only those bottles.
+after calling mix() to achive mutual exclusion. This way, multiple consumer
+threads can call mix() concurrently if they mix a disjoint subset of drinks.
+To achieve mutual exclusion, we created a global bottle_locks array to store
+locks for up to NBOTTLES and in fill_order(), we examined the requested_bottles
+in the order, acquiring locks on only those bottles.
 
 Since a particular order may require multiple locks to be obtained for
 bottles in fill_order(), we had to employ a deadlock prevention scheme
