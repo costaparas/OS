@@ -1,0 +1,79 @@
+Index: kern/main/hello.c
+===================================================================
+--- kern/main/hello.c	(.../initial)	(revision 0)
++++ kern/main/hello.c	(.../trunk)	(revision 3)
+@@ -0,0 +1,49 @@
++#include <types.h>
++#include <kern/errno.h>
++#include <kern/unistd.h>
++#include <lib.h>
++#include <test.h>
++
++extern void complex_hello(void);
++
++static char *my_kstrdup(const char *buf)
++{
++	char *ptr, *ret;
++
++	ret = ptr = kmalloc(strlen(buf) + 1);
++	if (ptr == NULL)
++		panic("kmalloc returned NULL");
++
++	for (; *buf != '\0'; ++ptr, ++buf)
++		*ptr = *buf;
++
++	*ptr = '\0';
++
++	return ret;
++}
++
++static int my_toupper(int c) 
++{
++	if (c >= 'a' && c <= 'z') 
++		return c - 'a' + 'A';
++
++	return c;
++}
++
++void complex_hello(void)
++{
++	const char *msg = "hello World!!!";
++	char *copy;
++
++	/* my_kstrdup never returns a NULL pointer, no need to check */
++	copy = my_kstrdup(msg);
++
++	/* We want 'Hello World!!!', need to capitalise the first letter */
++	copy[0] = my_toupper(copy[0]);
++
++	kprintf("%s\n", copy);
++
++	/* Free the allocated memory */
++	kfree(copy);
++}
++
+Index: kern/main/main.c
+===================================================================
+--- kern/main/main.c	(.../initial)	(revision 3)
++++ kern/main/main.c	(.../trunk)	(revision 3)
+@@ -213,7 +213,7 @@
+ kmain(char *arguments)
+ {
+ 	boot();
+-
++	complex_hello();
+ 	menu(arguments);
+ 
+ 	/* Should not get here */
+Index: kern/conf/conf.kern
+===================================================================
+--- kern/conf/conf.kern	(.../initial)	(revision 3)
++++ kern/conf/conf.kern	(.../trunk)	(revision 3)
+@@ -386,6 +386,7 @@
+ 
+ file      main/main.c
+ file      main/menu.c
++file      main/hello.c
+ 
+ ########################################
+ #                                      #
