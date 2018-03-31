@@ -30,8 +30,8 @@ elif test "$1" = bar-prob
 then
 	#run tests for bar sync problem
 	mv bar_driver.c $original_c
-	mv bar_driver.h $original_h
-	mv barglass.h $original_h2
+	cp bar_driver.h $original_h
+	cp barglass.h $original_h2
 	cp bar-tests/bar_driver.c .
 	for cust in 1 3 10 32
 	do
