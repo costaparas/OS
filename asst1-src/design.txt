@@ -43,7 +43,8 @@ required to be held by a thread before the second lock can be acquired. As such,
 neither thread can acquire a lock that the other thread will need if the other
 thread has already acquired one of its locks.
 
-With this request ordering, there are four possible interleavings of requests:
+With this request ordering, there are four possible interleavings of requests
+(none of which result in deadlock):
 
 Case 1: One of the threads acquires both locks before the other thread. When
 the other thread requests locka, it blocks until the first thread releases it.
@@ -87,13 +88,13 @@ bill's thread          | ben's thread
 Part 3: Bounded Buffer Producer/Consumer Problem
 ################################################
 
-- The buffer used by the producer and consumer consists of a fixed-size array
-  and two indexes, `head` (referring to the first item for consumption) and
-  `tail` (referring to the next available slot for production).
-- We used a lock `buffer_lock` to restrict access to the buffer (a shared
-  resource between producer/consumer threads). Any time the buffer is modified
-  (producer produces an item or consumer consumes an item), the lock is used
-  to ensure mutual exclusion.
+- The circular buffer used by the producer and consumer consists of a fixed-size
+  array and two indexes, `head` (referring to the first item for consumption)
+  and `tail` (referring to the next available slot for production).
+- We used a lock (buffer_lock) to restrict access to the buffer (a shared
+  resource between producer/consumer threads). Any time that the buffer is
+  modified (producer produces an item or consumer consumes an item), the lock is
+  used to ensure mutual exclusion.
 - We used two condition variables:
   - `has_capacity`: to track whether the buffer has at least one free slot
   - `has_data`: to track whether the buffer has at least one item available for
@@ -107,8 +108,7 @@ Part 3: Bounded Buffer Producer/Consumer Problem
   - signals `has_data` once it finishes producing an item by adding it to the
     end of the queue and adjusting `tail`
 - An alternative solution is to use semaphores in place of condition variables.
-  However, for the sake of code clarity, it was decided to use condition
-  variables.
+  However, for the sake of code clarity, we decided to use condition variables.
 
 ###########################
 Part 4: Bar Synchronisation
@@ -118,23 +118,23 @@ At a high-level, this problem is essentially a more involved producer-consumer
 scenario in which the producers are customers who order drinks ("producing"
 orders) and the consumers are bartenders, who serve the customers ("consuming"
 the orders). Concurrency issues arise from the use of shared resources (bottles)
-and managing the queue of orders to ensure all customers are served.
+and managing the queue of orders to ensure all customers are served the correct
+drinks.
 
 Once a drink is ordered by a customer, a condition variable (`order_made`) is
 signalled in order_drink() to wake up a bartender, who waits for the signal in
-take_order(). The newly created order is added to a gloabl queue of orders
+take_order(). The newly created order is added to a global queue of orders
 named `pending_orders`. Since multiple threads require access to the queue,
 we require mutual exclusion to prevent race conditions (e.g. an order being
 served by multiple bartenders). This is achieved through the use of a lock
-named `que_lock`, acquired and released before and after enqueuing and
-dequeuing.
+`que_lock`, acquired and released before and after enqueuing and dequeuing.
 
 To prevent bartender and customer threads from busy waiting, we added a
 semaphore to the `barorder` struct so that P() and V() could be executed
 from any function with access to the order. In order_drink(), we create the
-semaphore and decrement it using P(), which blocks the customer until the
-order is ready. Once the order is ready, serve_order() is called, which invokes
-V() on the semaphore, signalling that the customer thread can wake up and
+semaphore and decrement it using P(), which blocks the customer until the order
+is ready. Once the order is ready, serve_order() is called, which invokes
+V() on the semaphore, signaling that the customer thread can wake up and
 either produce more orders or go home.
 
 The fill_order() function can be thought of as a wrapper to the mix() function
@@ -142,25 +142,27 @@ in that it simply manages access to the bottles used to mix the drinks in such
 a way that deadlocks do not occur and bottle access is mutually exclusive.
 Since the mix() function simply increments the number of doses for up to
 DRINK_COMPLEXITY bottles used in the drink, fill_order() only needs to acquire
-and release locks on those specific bottles before and after calling
-mix() to achieve mutual exclusion. This way, multiple bartender threads can
-mix() concurrently if the orders consist of a disjoint subset of drinks. We
+and release locks on those specific bottles before and after calling mix()
+to achieve mutual exclusion. This way, multiple bartender threads can mix()
+concurrently if the orders consist of a disjoint subset of drinks. We
 implemented this by creating a global `bottle_locks` array to store individual
-locks for each of the `NBOTTLES`, acquiring them in fill_order() as needed.
+locks for each bottle, acquiring them in fill_order() as needed.
 
-Since there is no guarantee on the order of bottles requested by customers,
-there is a possibility of multiple customers ordering drinks from the same
+Since there is guarantee on the order of bottles requested by customers,
+there is the possibility of multiple customers ordering drinks from the same
 bottles but in different orders, with the OS interleaving the orders in such a
-way that a deadlock occurrs. As such, we had to employ a deadlock prevention
-scheme to avoid cyclic wait conditions, implemented by sorting (using
-`quicksort`) the order->requested_bottles array before acquiring locks for the
-requested bottles. This ensured a consistent resource ordering convention,
-requiring that all threads acquire locks in the same order.
+way that a deadlock occurs. As such, we had to employ a deadlock prevention
+scheme to avoid cyclic wait conditions, implemented sorting (using quicksort())
+the `order->requested_bottles` array before acquiring locks for each requested
+bottle. This ensured a consistent resource ordering convention, requiring that
+all threads acquire locks in the same order.
 
-Since customers may also request multiple doses from the same bottle in a
-single order, we needed to ensure that a given lock was not acquired more than
-once. This was done by calling lock_do_i_hold(), and only acquiring it if not
-currently held.
+As locks in OS/161 are not re-entrant, customers may request multiple doses
+from the same bottle in a single order, causing a bartender to block against
+itself if it tried to acquire the same lock more than once (essentially
+causing a single-process deadlock). To prevent this, bartenders call
+lock_do_i_hold() to check if they already hold the lock before
+re-requesting it.
 
 Finally, our solution ensures that all locks, semaphores and condition
 variables used are appropriately freed. Our bar_open() function initially
