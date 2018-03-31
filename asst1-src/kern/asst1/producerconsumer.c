@@ -8,6 +8,7 @@
 static struct _buffer {
 	struct pc_data data[BUFFER_SIZE];
 	uint32_t head, tail; /* tail is next available slot */
+	uint32_t num_items;
 } buffer;
 
 /* synchronization primitives for the producer/consumer */
@@ -22,11 +23,12 @@ static struct lock *buffer_lock;
  */
 struct pc_data consumer_receive(void) {
 	lock_acquire(buffer_lock);
-	while ((buffer.tail - buffer.head) % BUFFER_SIZE == 0)
+	while (buffer.num_items == 0)
 		cv_wait(has_data, buffer_lock);
 
 	struct pc_data thedata = buffer.data[buffer.head++];
 	buffer.head %= BUFFER_SIZE;
+	buffer.num_items--;
 
 	cv_signal(has_capacity, buffer_lock);
 	lock_release(buffer_lock);
@@ -40,11 +42,12 @@ struct pc_data consumer_receive(void) {
  */
 void producer_send(struct pc_data item) {
 	lock_acquire(buffer_lock);
-	while ((buffer.tail - buffer.head) % BUFFER_SIZE == BUFFER_SIZE)
+	while (buffer.num_items == BUFFER_SIZE)
 		cv_wait(has_capacity, buffer_lock);
 
 	buffer.data[buffer.tail++] = item;
 	buffer.tail %= BUFFER_SIZE;
+	buffer.num_items++;
 
 	cv_signal(has_data, buffer_lock);
 	lock_release(buffer_lock);
@@ -69,6 +72,7 @@ void producerconsumer_startup(void) {
 	/* initialise buffer props */
 	buffer.head = 0;
 	buffer.tail = 0;
+	buffer.num_items = 0;
 }
 
 /* Perform any clean-up you need here */

@@ -107,6 +107,12 @@ Part 3: Bounded Buffer Producer/Consumer Problem
     produce items
   - signals `has_data` once it finishes producing an item by adding it to the
     end of the queue and adjusting `tail`
+- Before either thread blocks while waiting for data or space, we check the
+  number of items in the queue. This is done in a loop so that when the thread
+  unblocks, the condition is checked again to ensure there is still data or
+  space. The member `buffer.num_items` is used instead of relying on the `head`
+  and `tail` values in order to correctly distinguish between the empty and
+  full cases.
 - An alternative solution is to use semaphores in place of condition variables.
   However, for the sake of code clarity, we decided to use condition variables.
 
