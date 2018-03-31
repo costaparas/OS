@@ -77,7 +77,7 @@ static void customer(void *unusedpointer, unsigned long customernum)
                         order.requested_bottles[j] = 0;
                 }
 
-                /* randomise the specific drinks number of overall drinks*/
+                /* randomise the specific drinks and number of overall drinks*/
                 int num_drinks = (random() % DRINK_COMPLEXITY) + 1;
                 for (int k = 0; k < num_drinks; ++k) {
                         order.requested_bottles[k] = (random() % NBOTTLES) + 1;

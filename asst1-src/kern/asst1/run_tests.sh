@@ -6,11 +6,13 @@ then
 	exit 1
 fi
 
+original_c=`mktemp -p /tmp`
+original_h=`mktemp -p /tmp`
+original_h2=`mktemp -p /tmp`
+
 if test "$1" = pc-prob
 then
 	#run tests for producer-consumer problem
-	original_c=`mktemp -p /tmp`
-	original_h=`mktemp -p /tmp`
 	mv producerconsumer_driver.c $original_c
 	mv producerconsumer_driver.h $original_h
 	for h in producer-consumer-tests/*.h
@@ -28,6 +30,8 @@ elif test "$1" = bar-prob
 then
 	#run tests for bar sync problem
 	mv bar_driver.c $original_c
+	mv bar_driver.h $original_h
+	mv barglass.h $original_h2
 	cp bar-tests/bar_driver.c .
 	for cust in 1 3 10 32
 	do
@@ -47,6 +51,8 @@ then
 		done
 	done
 	mv $original_c bar_driver.c
+	mv $original_h bar_driver.h
+	mv $original_h2 barglass.c
 else
 	echo "$0: unknown test '$1'" >&2
 	exit 1
