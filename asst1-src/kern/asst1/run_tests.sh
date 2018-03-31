@@ -52,7 +52,7 @@ then
 	done
 	mv $original_c bar_driver.c
 	mv $original_h bar_driver.h
-	mv $original_h2 barglass.c
+	mv $original_h2 barglass.h
 else
 	echo "$0: unknown test '$1'" >&2
 	exit 1
