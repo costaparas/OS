@@ -56,6 +56,8 @@ build/
 root/kernel-ASST?
 asst?-src/kern/compile
 asst?-src/defs.mk
+root/*/
+root/*.img
 
 # ctags data
 .ctags
