@@ -1,6 +1,6 @@
 set can-use-hw-watchpoints 0
-define asst1
-dir ~/cs3231/asst1-src/kern/compile/ASST1
+define asst2
+dir ~/cs3231/asst2-src/kern/compile/ASST2
 target remote unix:.sockets/gdb
 b panic
 end
