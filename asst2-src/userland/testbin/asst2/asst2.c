@@ -14,10 +14,12 @@ char buf[MAX_BUF];
 int
 main(int argc, char * argv[])
 {
-        int fd, r, i, j , k;
+        int fd, r, i, j, k;
         (void) argc;
         (void) argv;
-
+fd = open("file.h", O_WRONLY | O_CREAT);
+close(fd);
+return 0;
         printf("\n**********\n* File Tester\n");
 
         snprintf(buf, MAX_BUF, "**********\n* write() works for stdout\n");
