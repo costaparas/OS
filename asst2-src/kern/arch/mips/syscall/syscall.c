@@ -114,6 +114,10 @@ syscall(struct trapframe *tf)
 	    case SYS_close:
 	    	err = sys_close((uint32_t) tf->tf_a0);
 	    	break;
+	    case SYS_read:
+	    	err = sys_read((uint32_t) tf->tf_a0, (void *) tf->tf_a1, (uint32_t) tf->tf_a2);
+	    	break;
+
 
 	    /* Add stuff here */
 

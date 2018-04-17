@@ -17,7 +17,9 @@ main(int argc, char * argv[])
         int fd, r, i, j, k;
         (void) argc;
         (void) argv;
-fd = open("file.h", O_WRONLY | O_CREAT);
+//fd = open("file.h", O_WRONLY | O_CREAT);
+        fd = open("file.h", O_RDONLY);
+	read(fd, NULL, 0);
 close(fd);
 return 0;
         printf("\n**********\n* File Tester\n");
