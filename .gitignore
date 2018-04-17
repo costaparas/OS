@@ -66,3 +66,8 @@ root/*.img
 .idea/
 CMakeLists.txt
 cmake-build-debug
+
+# other files
+*.tmp
+*.swp
+*~

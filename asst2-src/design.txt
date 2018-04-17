@@ -1,1 +1,33 @@
-Place your design document here.
+state specific to a process (e.g. cwd)?
+state specific to a process + particular fd (e.g. offset)?
+
+###############
+RELEVANT FILES:
+###############
+
+modify this so that fd 1 & 2 are attached to the console device ("con:"):
+kern/syscall/runprogram.c
+
+function prototypes for the syscalls:
+kern/include/syscall.h:
+
+primitive vfs operations:
+kern/include/vfs.h
+kern/include/vnode.h
+
+kern/syscall/file.c: implement syscalls in this file
+kern/include/file.h: put declarations and data types in this file
+
+system call dispatcher:
+kern/arc/mips/syscall/syscall.c
+
+examples of syscalls:
+kern/main/main.c: sys_reboot()
+kern/syscall/time_syscalls.c: sys___time()
+
+sample user-level program making syscalls (add more for testing):
+userland/testbin/asst2/asst2.c
+
+list of error numbers to set errno to on error:
+kern/include/kern/errno.h:
+(can add more & add err msg string to userland/lib/libc/string/strerror.c)
