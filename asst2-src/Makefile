@@ -84,3 +84,9 @@ conf: # Full reconfigure
 	bmake && bmake install && \
 	cd kern/conf && ./config ASST2 && \
 	cd ../compile/ASST2 && bmake depend && bmake && bmake install
+
+domconf: # CONF WITH DOM'S SILLY DIRECTORY SYSTEM
+	./configure --ostree='~/Documents/comp3231/assignments/root' && \
+	bmake && bmake install && \
+	cd kern/conf && ./config ASST2 && \
+	cd ../compile/ASST2 && bmake depend && bmake && bmake install
