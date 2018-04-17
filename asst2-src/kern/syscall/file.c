@@ -77,12 +77,16 @@ int sys_read(uint32_t fd, void *buf, size_t buflen) {
 
 	VOP_READ(v, &u);
 
+	// Advance the file offset
+	// TODO THIS ASSUMES THAT BUFLEN BYTES ARE READ - NOT ALWAYS THE CASE
+	fds[fd].offset += buflen;
+
 	// TODO ERROR CHECK
 
 	// TODO REMOVE THIS JUST SHOWS READ SUCCEEDED
 	kprintf("BUF CONTENTS: \n");
 	kprintf("###################\n");
-	kprintf("%s\n", (char *) buf);
+	kprintf("%s", (char *) buf);
 	kprintf("###################\n");
 	return 0;
 }

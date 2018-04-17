@@ -22,7 +22,11 @@ main(int argc, char * argv[])
         char buf[101];
 	read(fd, buf, 99);
 	buf[100] = '\0';
-//	printf("BUF: %s\n", buf);
+
+	// TEST TO CHECK THAT FILE OFFSET INCREASED - SHOULD PRINT NOTHING
+	char buf2[101];
+	read(fd, buf2, 99);
+	buf2[100] = '\0';
 
 close(fd);
 return 0;
