@@ -22,6 +22,7 @@ struct file {
 };
 
 struct file fds[NUM_FILES];
-int open_files = 0;
+
+void fs_init(void);
 
 #endif /* _FILE_H_ */

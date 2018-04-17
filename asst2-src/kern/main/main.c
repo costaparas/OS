@@ -64,6 +64,8 @@
 extern const int buildversion;
 extern const char buildconfig[];
 
+extern void fs_init();
+
 /*
  * Copyright message for the OS/161 base code.
  */
@@ -210,6 +212,7 @@ void
 kmain(char *arguments)
 {
 	boot();
+	fs_init();
 
 	menu(arguments);
 
