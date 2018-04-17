@@ -14,6 +14,7 @@
 #include <file.h>
 #include <syscall.h>
 #include <copyinout.h>
+#include <proc.h>
 
 /*
  * Add your file-related functions here ...
@@ -22,6 +23,7 @@
 void fs_init() {
 	for (int i = 0; i < NUM_FILES; i++) {
 		fds[i].free = true;
+		fds[i].offset = 0;
 	}
 }
 
@@ -64,12 +66,27 @@ int sys_close(uint32_t fd) {
 }
 
 int sys_read(uint32_t fd, void *buf, size_t buflen) {
-	(void) buf;
-	(void) buflen;
+	kprintf("read\n");
+
+	struct iovec iov;
+	iov.iov_kbase = buf;
+	iov.iov_len = buflen;
 
 	struct vnode *v = fds[fd].v;
 	struct uio u;
+	u.uio_iov = &iov;
+	u.uio_iovcnt = 1;
+	u.uio_resid = buflen;          // amount to read from the file
+	u.uio_offset = fds[fd].offset;
+	u.uio_segflg = UIO_USERSPACE;
+	u.uio_rw = UIO_READ;
+	u.uio_space = proc_getas();
+
 	VOP_READ(v, &u);
 	// TODO ERROR CHECK
+
+	// TODO REMOVE THIS JUST SHOWS READ SUCCEEDED
+	kprintf("BUF CONTENTS: \n");
+	kprintf("%s\n", (char *) buf);
 	return 0;
 }

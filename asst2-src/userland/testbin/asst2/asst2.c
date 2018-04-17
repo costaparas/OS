@@ -19,7 +19,11 @@ main(int argc, char * argv[])
         (void) argv;
 //fd = open("file.h", O_WRONLY | O_CREAT);
         fd = open("file.h", O_RDONLY);
-	read(fd, NULL, 0);
+        char buf[101];
+	read(fd, buf, 99);
+	buf[100] = '\0';
+//	printf("BUF: %s\n", buf);
+
 close(fd);
 return 0;
         printf("\n**********\n* File Tester\n");

@@ -19,6 +19,7 @@
 struct file {
 	bool free;
 	struct vnode *v;
+	off_t offset;
 };
 
 struct file fds[NUM_FILES];
