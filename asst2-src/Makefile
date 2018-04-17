@@ -70,3 +70,17 @@ install: $(OSTREE)
 # old BSD name, same as distclean
 cleandir: distclean
 .PHONY: cleandir
+
+k: # Build kernel
+	cd kern/compile/ASST2 && bmake && bmake install
+u: # Build userland
+	bmake && bmake install
+
+run: # Run kernel
+	cd ../root && sys161 kernel "$(args)"
+
+conf: # Full reconfigure
+	./configure && \
+	bmake && bmake install && \
+	cd kern/conf && ./config ASST2 && \
+	cd ../compile/ASST2 && bmake depend && bmake && bmake install
