@@ -19,3 +19,9 @@
  * Add your file-related functions here ...
  */
 
+int sys_open (uint32_t path, uint32_t flags) {
+	kprintf("HELLLLLLLLLLLOOOOOOOOOOOOOOOOOOOOOOO\n");
+	(void) path;
+	(void) flags;
+	return 0;
+}
