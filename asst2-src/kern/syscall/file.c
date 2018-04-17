@@ -19,8 +19,6 @@
  * Add your file-related functions here ...
  */
 
-extern const struct vnode_ops sfs_fileops;
-
 void fs_init() {
 	for (int i = 0; i < NUM_FILES; i++) {
 		fds[i].free = true;
@@ -71,7 +69,7 @@ int sys_read(uint32_t fd, void *buf, size_t buflen) {
 
 	struct vnode *v = fds[fd].v;
 	struct uio u;
-	sfs_fileops.vop_read(v, &u);
+	VOP_READ(v, &u);
 	// TODO ERROR CHECK
 	return 0;
 }
