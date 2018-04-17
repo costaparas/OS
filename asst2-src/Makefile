@@ -76,6 +76,9 @@ k: # Build kernel
 u: # Build userland
 	bmake && bmake install
 
+a:
+	bmake k && bmake u
+
 run: # Run kernel
 	cd ../root && sys161 kernel "$(args)"
 
