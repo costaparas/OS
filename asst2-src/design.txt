@@ -1,6 +1,17 @@
 state specific to a process (e.g. cwd)?
 state specific to a process + particular fd (e.g. offset)?
 
+struct file {
+	int offset;
+	char *name;
+	int flags;
+	int fd;
+	struct vnode;
+};
+
+#define NUM_FILES 32
+struct file fds[NUM_FILES];
+
 ###############
 RELEVANT FILES:
 ###############
