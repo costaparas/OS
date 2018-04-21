@@ -80,7 +80,8 @@ a:
 	bmake k && bmake u
 
 run: # Run kernel
-	cd ../root && sys161 kernel "$(args)"
+	cd ../root && sys161 kernel "p /testbin/asst2"
+	# cd ../root && sys161 kernel "$(args)"
 
 conf: # Full reconfigure
 	./configure && \
