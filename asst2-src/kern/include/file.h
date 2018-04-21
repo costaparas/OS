@@ -24,6 +24,6 @@ struct file {
 
 struct file fds[NUM_FILES];
 
-void fs_init(void);
+void fs_bootstrap(void);
 
 #endif /* _FILE_H_ */

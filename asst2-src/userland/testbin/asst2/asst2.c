@@ -11,12 +11,12 @@
 char teststr[] = "The quick brown fox jumped over the lazy dog.";
 char buf[MAX_BUF];
 
-int
-main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
 	int fd, r, i, j, k;
 	(void) argc;
 	(void) argv;
-//fd = open("file.h", O_WRONLY | O_CREAT);
+	/* begin custom test */
+	//fd = open("file.h", O_WRONLY | O_CREAT);
 	fd = open("file.h", O_RDONLY);
 	char buf[101];
 	read(fd, buf, 99);
@@ -29,6 +29,8 @@ main(int argc, char *argv[]) {
 
 	close(fd);
 	return 0;
+	/* end custom test */
+
 	printf("\n**********\n* File Tester\n");
 
 	snprintf(buf, MAX_BUF, "**********\n* write() works for stdout\n");
@@ -135,5 +137,3 @@ main(int argc, char *argv[]) {
 
 	return 0;
 }
-
-

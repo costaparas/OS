@@ -36,7 +36,6 @@
 #include <current.h>
 #include <syscall.h>
 
-
 /*
  * System call dispatcher.
  *
@@ -100,33 +99,28 @@ syscall(struct trapframe *tf)
 	retval = 0;
 
 	switch (callno) {
-	    case SYS_reboot:
+	case SYS_reboot:
 		err = sys_reboot(tf->tf_a0);
 		break;
-
-	    case SYS___time:
+	case SYS___time:
 		err = sys___time((userptr_t)tf->tf_a0,
-				 (userptr_t)tf->tf_a1);
+		(userptr_t)tf->tf_a1);
 		break;
-	    case SYS_open:
-	    	err = sys_open((void*) tf->tf_a0, (uint32_t) tf->tf_a1);
-	    	break;
-	    case SYS_close:
-	    	err = sys_close((uint32_t) tf->tf_a0);
-	    	break;
-	    case SYS_read:
-	    	err = sys_read((uint32_t) tf->tf_a0, (void *) tf->tf_a1, (uint32_t) tf->tf_a2);
-	    	break;
-
-
-	    /* Add stuff here */
-
-	    default:
+	case SYS_open:
+		err = sys_open((void*) tf->tf_a0, (uint32_t) tf->tf_a1);
+		break;
+	case SYS_close:
+		err = sys_close((uint32_t) tf->tf_a0);
+		break;
+	case SYS_read:
+		err = sys_read((uint32_t) tf->tf_a0, (void *) tf->tf_a1,
+		(uint32_t) tf->tf_a2);
+		break;
+	default:
 		kprintf("Unknown syscall %d\n", callno);
 		err = ENOSYS;
 		break;
 	}
-
 
 	if (err) {
 		/*
@@ -135,12 +129,12 @@ syscall(struct trapframe *tf)
 		 * code in errno.
 		 */
 		tf->tf_v0 = err;
-		tf->tf_a3 = 1;      /* signal an error */
+		tf->tf_a3 = 1; /* signal an error */
 	}
 	else {
 		/* Success. */
 		tf->tf_v0 = retval;
-		tf->tf_a3 = 0;      /* signal no error */
+		tf->tf_a3 = 0; /* signal no error */
 	}
 
 	/*

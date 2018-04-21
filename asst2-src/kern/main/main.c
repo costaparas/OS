@@ -64,7 +64,7 @@
 extern const int buildversion;
 extern const char buildconfig[];
 
-extern void fs_init();
+extern void fs_bootstrap();
 
 /*
  * Copyright message for the OS/161 base code.
@@ -114,6 +114,7 @@ boot(void)
 	thread_bootstrap();
 	hardclock_bootstrap();
 	vfs_bootstrap();
+	fs_bootstrap();
 	kheap_nextgeneration();
 
 	/* Probe and initialize devices. Interrupts should come on. */
@@ -212,7 +213,6 @@ void
 kmain(char *arguments)
 {
 	boot();
-	fs_init();
 
 	menu(arguments);
 

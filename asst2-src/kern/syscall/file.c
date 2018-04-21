@@ -15,17 +15,12 @@
 #include <syscall.h>
 #include <copyinout.h>
 
-/*
- * Add your file-related functions here ...
- */
-
-void fs_init() {
+void fs_bootstrap() {
 	for (int i = 0; i < NUM_FILES; i++) {
 		fds[i].free = true;
 		fds[i].offset = 0;
 	}
 }
-
 
 int sys_open(void *path, uint32_t flags) {
 	kprintf("open\n");
