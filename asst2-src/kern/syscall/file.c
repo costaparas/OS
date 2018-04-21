@@ -15,53 +15,134 @@
 #include <syscall.h>
 #include <copyinout.h>
 
+int errno = 0;
+
+/*
+ * Initialize state required for the open file and file descriptor tables.
+ */
 void fs_bootstrap() {
-	for (int i = 0; i < NUM_FILES; i++) {
-		fds[i].free = true;
-		fds[i].offset = 0;
-	}
+	kprintf("\nINIT FS...\n");
+	num_files = 0;
+	num_proc = 0;
 }
 
-int sys_open(void *path, uint32_t flags) {
-	kprintf("open\n");
+/*
+ * Free memory used by the open file and file descriptor tables.
+ */
+void fs_clear_tables() {
+	kprintf("\nFREEING FS...\n");
+	kfree(fd_tables);
+	kfree(open_files);
+}
 
-	int fd_found = -1;
-	for (int curr = 0; curr < NUM_FILES; curr++) {
-		if (fds[curr].free) {
-			fd_found = curr; break;
+/*
+ * Return the fd table for the current process; NULL if non-existent.
+ */
+struct FD *get_fd_table(void) {
+	for (uint32_t i = 0; i < num_proc; ++i) {
+		if (fd_tables[i].proc == curproc) {
+			return fd_tables[i].fds;
 		}
 	}
+	return NULL;
+}
 
+/*
+ * Open a file in the specified mode. Return a process-unique file
+ * descriptor on success; otherwise, return -1 and set errno appropriately.
+ */
+int sys_open(void *path, uint32_t flags) {
+	kprintf("\nOPENING FILE...%s %d\n", (char *) path, flags);
+	struct FD *fds = get_fd_table();
+
+	/* if this is the first file opened by the process, create an fd table */
+	if (fds == NULL) {
+		struct fd_proc *tmp = kmalloc(sizeof(fd_proc) * (num_proc + 1));
+		KASSERT(tmp != NULL);
+		memcpy(tmp, fd_tables, sizeof(fd_proc) * num_proc);
+		kfree(fd_tables);
+		fd_tables = tmp;
+		fds = fd_tables[num_proc].fds;
+		fd_tables[num_proc++].proc = curproc;
+	}
+
+	/* look for an available fd */
+	int fd_found = -1;
+	for (int i = 0; i < __OPEN_MAX; i++) {
+		if (fds[i].free) {
+			fd_found = i;
+			break;
+		}
+	}
 	if (fd_found == -1) {
-		// TODO ERROR HANDLING
+		errno = ENFILE; /* reached max open files for this process */
 		return -1;
 	}
 
+	/* TODO: implement more error handling before calling vfs_open */
 
+	/* open the file - will increase the ref count in vnode */
 	struct vnode *v;
-//	int result;
+	int result = vfs_open(path, flags, 0, &v);
+	if (result != 0) {
+		errno = result;
+		return -1;
+	}
 
-	/* Open the file. */
-	//result =
-	vfs_open(path, flags, 0, &v);
+	/* look for vnode in open file table */
+	fds[fd_found].file = NULL;
+	for (uint32_t i = 0; i < num_files; ++i) {
+		if (open_files[i].v == v) {
+			fds[fd_found].file = &open_files[i];
+			break;
+		}
+	}
 
-	fds[fd_found].v = v;
+	/* otherwise, create a new entry in open file table for the vnode */
+	if (fds[fd_found].file == NULL) {
+		struct OF *tmp = kmalloc(sizeof(OF) * (num_files + 1));
+		KASSERT(tmp != NULL);
+		memcpy(tmp, open_files, sizeof(OF) * num_files);
+		kfree(open_files);
+		open_files = tmp;
+		open_files[num_files].offset = 0;
+		open_files[num_files].v = v;
+		fds[fd_found].file = &open_files[num_files++];
+	}
 
+	fds[fd_found].free = false; /* mark this fd as used */
 	return fd_found;
 }
 
+/*
+ * Close an open file. Return -1 on error and set errno appropriately.
+ */
 int sys_close(uint32_t fd) {
-	kprintf("close\n");
-//	int result; // TODO CHECK VFS CLOSE
-	struct vnode *v = fds[fd].v;
-	//result =
-	vfs_close(v);
-	return 0;
+	kprintf("\nCLOSING FILE...%d\n", fd);
+	if (fd >= __OPEN_MAX) {
+		errno = EBADF; /* invalid file descriptor */
+		return -1;
+	}
+	struct FD *fds = get_fd_table();
+	if (fds == NULL) {
+		errno = EBADF; /* this process has no open files */
+		return -1;
+	}
+
+	if (fds[fd].free == false) {
+		vfs_close((fds[fd].file)->v); /* hard i/o error is unlikely and
+		rarely checked - see kern/vfs/vfspath.c */
+		fds[fd].free = true; /* fd can be re-used for this process */
+		return 0;
+	}
+
+	errno = EBADF; /* fd must not be open */
+	return -1;
 }
 
 int sys_read(uint32_t fd, void *buf, size_t buflen) {
-	kprintf("read\n");
-
+	kprintf("\nREADING FILE...%d %s %d\n", fd, (char *) buf, buflen);
+/*
 	struct iovec iov;
 	iov.iov_kbase = buf;
 	iov.iov_len = buflen;
@@ -83,5 +164,6 @@ int sys_read(uint32_t fd, void *buf, size_t buflen) {
 	kprintf("###################\n");
 	kprintf("%s", (char *) buf);
 	kprintf("###################\n");
+*/
 	return 0;
 }

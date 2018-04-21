@@ -65,6 +65,7 @@ extern const int buildversion;
 extern const char buildconfig[];
 
 extern void fs_bootstrap();
+extern void fs_clear_tables();
 
 /*
  * Copyright message for the OS/161 base code.
@@ -154,6 +155,7 @@ shutdown(void)
 
 	kprintf("Shutting down.\n");
 
+	fs_clear_tables();
 	vfs_clearbootfs();
 	vfs_clearcurdir();
 	vfs_unmountall();
