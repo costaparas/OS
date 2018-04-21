@@ -48,6 +48,19 @@ struct FD *get_fd_table(void) {
 }
 
 /*
+ * Check if the fd is valid for the current process.
+ */
+bool valid_fd(uint32_t fd, struct FD *fds) {
+	if (fd >= __OPEN_MAX) {
+		return false; /* invalid file descriptor */
+	}
+	if (fds == NULL) {
+		return false; /* this process has no open files */
+	}
+	return true;
+}
+
+/*
  * Open a file in the specified mode. Return a process-unique file
  * descriptor on success; otherwise, return -1 and set errno appropriately.
  */
@@ -119,43 +132,46 @@ int sys_open(void *path, uint32_t flags) {
  */
 int sys_close(uint32_t fd) {
 	kprintf("\nCLOSING FILE...%d\n", fd);
-	if (fd >= __OPEN_MAX) {
-		errno = EBADF; /* invalid file descriptor */
-		return -1;
-	}
 	struct FD *fds = get_fd_table();
-	if (fds == NULL) {
-		errno = EBADF; /* this process has no open files */
+	if (!valid_fd(fd, fds)) {
+		errno = EBADF;
 		return -1;
 	}
-
 	if (fds[fd].free == false) {
 		vfs_close((fds[fd].file)->v); /* hard i/o error is unlikely and
 		rarely checked - see kern/vfs/vfspath.c */
 		fds[fd].free = true; /* fd can be re-used for this process */
 		return 0;
 	}
-
 	errno = EBADF; /* fd must not be open */
 	return -1;
 }
 
 int sys_read(uint32_t fd, void *buf, size_t buflen) {
 	kprintf("\nREADING FILE...%d %s %d\n", fd, (char *) buf, buflen);
-/*
+	struct FD *fds = get_fd_table();
+	if (!valid_fd(fd, fds)) {
+		errno = EBADF;
+		return -1;
+	}
+	if (fds[fd].free == true) {
+		errno = EBADF; /* file must not be not open */
+		return -1;
+	}
+
 	struct iovec iov;
 	iov.iov_kbase = buf;
 	iov.iov_len = buflen;
 
-	struct vnode *v = fds[fd].v;
+	struct vnode *v = fds[fd].file->v;
 	struct uio u;
-	uio_kinit(&iov, &u, buf, buflen, fds[fd].offset, UIO_READ);
+	uio_kinit(&iov, &u, buf, buflen, fds[fd].file->offset, UIO_READ);
 
 	VOP_READ(v, &u);
 
 	// Advance the file offset
 	// TODO THIS ASSUMES THAT BUFLEN BYTES ARE READ - NOT ALWAYS THE CASE
-	fds[fd].offset += buflen;
+	fds[fd].file->offset += buflen;
 
 	// TODO ERROR CHECK
 
@@ -164,6 +180,6 @@ int sys_read(uint32_t fd, void *buf, size_t buflen) {
 	kprintf("###################\n");
 	kprintf("%s", (char *) buf);
 	kprintf("###################\n");
-*/
+
 	return 0;
 }

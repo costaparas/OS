@@ -38,6 +38,7 @@ uint32_t num_files; /* number of open files on the system */
 uint32_t num_proc; /* number of processes with at least one open fd, i.e. the
 number of fd tables */
 
+bool valid_fd(uint32_t, struct FD *fds);
 struct FD *get_fd_table(void);
 void fs_bootstrap(void);
 void fs_clear_tables(void);
