@@ -16,8 +16,8 @@ int main(int argc, char *argv[]) {
 	(void) argc;
 	(void) argv;
 	/* begin custom test */
-	//fd = open("file.h", O_WRONLY | O_CREAT);
-	fd = open("file.h", O_RDONLY);
+	//fd = open("file.txt", O_WRONLY | O_CREAT);
+	fd = open("file.txt", O_RDONLY);
 	char buf[101];
 	read(fd, buf, 99);
 	buf[100] = '\0';
