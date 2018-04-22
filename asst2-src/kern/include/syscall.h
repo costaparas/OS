@@ -61,5 +61,6 @@ int sys___time(userptr_t user_seconds, userptr_t user_nanoseconds);
 int sys_open(void *path, uint32_t flags);
 int sys_close(uint32_t fd);
 int sys_read(uint32_t fd, void *buf, size_t buflen);
+int sys_write(uint32_t fd, void *buf, size_t nbytes);
 
 #endif /* _SYSCALL_H_ */

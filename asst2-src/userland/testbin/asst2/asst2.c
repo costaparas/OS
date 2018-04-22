@@ -28,6 +28,7 @@ int main(int argc, char *argv[]) {
 	buf2[100] = '\0';
 
 	close(fd);
+	printf("HELLO FROM ASST2!!!!!!!!!!!!!!! CHECKING WRITE WORKS\n");
 	return 0;
 	/* end custom test */
 

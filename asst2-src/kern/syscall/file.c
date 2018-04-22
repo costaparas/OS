@@ -191,3 +191,31 @@ int sys_read(uint32_t fd, void *buf, size_t buflen) {
 
 	return strlen(buf); //TODO: check this
 }
+
+int sys_write(uint32_t fd, void *buf, size_t nbytes) {
+	kprintf("\nWRITING FILE...%d %s %d\n", fd, (char *) buf, nbytes);
+	struct FD *fds = get_fd_table();
+	if (!valid_fd(fd, fds)) {
+		return EBADF;
+	} else if (fds[fd].free == true) {
+		return EBADF; /* file must not be not open */
+	}
+
+	struct iovec iov;
+	iov.iov_kbase = buf;
+	iov.iov_len = nbytes;
+
+	struct vnode *v = fds[fd].file->v;
+	struct uio u;
+	uio_kinit(&iov, &u, buf, nbytes, fds[fd].file->offset, UIO_WRITE);
+
+	VOP_WRITE(v, &u);
+
+	// Advance the file offset
+	// TODO THIS ASSUMES THAT BUFLEN BYTES ARE READ - NOT ALWAYS THE CASE
+	fds[fd].file->offset += strlen(buf); //TODO: check this
+
+	// TODO ERROR CHECK
+
+	return strlen(buf); // TODO: check this
+}
