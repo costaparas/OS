@@ -150,7 +150,7 @@ int sys_close(uint32_t fd) {
 }
 
 /*
- * Read up to buflen bytes into the buffer buf.
+ * Read up to buflen bytes into the buffer buf and return number of bytes read.
  */
 int sys_read(uint32_t fd, void *buf, size_t buflen) {
 	kprintf("\nREADING FILE...%d %s %d\n", fd, (char *) buf, buflen);
@@ -173,7 +173,7 @@ int sys_read(uint32_t fd, void *buf, size_t buflen) {
 
 	// Advance the file offset
 	// TODO THIS ASSUMES THAT BUFLEN BYTES ARE READ - NOT ALWAYS THE CASE
-	fds[fd].file->offset += buflen;
+	fds[fd].file->offset += strlen(buf); //TODO: check this
 
 	// TODO ERROR CHECK
 
@@ -183,5 +183,7 @@ int sys_read(uint32_t fd, void *buf, size_t buflen) {
 	kprintf("%s", (char *) buf);
 	kprintf("###################\n");
 
-	return 0;
+	//TODO: connect stdout/err to console to support printing in user prog
+
+	return strlen(buf); //TODO: check this
 }
