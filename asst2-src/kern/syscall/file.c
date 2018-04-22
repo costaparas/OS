@@ -199,6 +199,8 @@ int sys_write(uint32_t fd, void *buf, size_t nbytes) {
 		return EBADF;
 	} else if (fds[fd].free == true) {
 		return EBADF; /* file must not be not open */
+	} else if (!fds[fd].can_write) {
+		return EBADF; /* file was not opened for writing */
 	}
 
 	struct iovec iov;
