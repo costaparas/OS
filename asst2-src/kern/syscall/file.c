@@ -15,8 +15,6 @@
 #include <syscall.h>
 #include <copyinout.h>
 
-int errno = 0;
-
 /*
  * Initialize state required for the open file and file descriptor tables.
  */
@@ -62,7 +60,7 @@ bool valid_fd(uint32_t fd, struct FD *fds) {
 
 /*
  * Open a file in the specified mode. Return a process-unique file
- * descriptor on success; otherwise, return -1 and set errno appropriately.
+ * descriptor on success; otherwise, return an appropriate errno.
  */
 int sys_open(void *path, uint32_t flags) {
 	kprintf("\nOPENING FILE...%s %d\n", (char *) path, flags);
@@ -88,8 +86,7 @@ int sys_open(void *path, uint32_t flags) {
 		}
 	}
 	if (fd_found == -1) {
-		errno = ENFILE; /* reached max open files for this process */
-		return -1;
+		return ENFILE; /* reached max open files for this process */
 	}
 
 	/* TODO: implement more error handling before calling vfs_open */
@@ -97,10 +94,7 @@ int sys_open(void *path, uint32_t flags) {
 	/* open the file - will increase the ref count in vnode */
 	struct vnode *v;
 	int result = vfs_open(path, flags, 0, &v);
-	if (result != 0) {
-		errno = result;
-		return -1;
-	}
+	if (result != 0) return result;
 
 	/* look for vnode in open file table */
 	fds[fd_found].file = NULL;
@@ -128,14 +122,13 @@ int sys_open(void *path, uint32_t flags) {
 }
 
 /*
- * Close an open file. Return -1 on error and set errno appropriately.
+ * Close an open file. Return EBADF for an invalid fd.
  */
 int sys_close(uint32_t fd) {
 	kprintf("\nCLOSING FILE...%d\n", fd);
 	struct FD *fds = get_fd_table();
 	if (!valid_fd(fd, fds)) {
-		errno = EBADF;
-		return -1;
+		return EBADF;
 	}
 	if (fds[fd].free == false) {
 		vfs_close((fds[fd].file)->v); /* hard i/o error is unlikely and
@@ -143,20 +136,19 @@ int sys_close(uint32_t fd) {
 		fds[fd].free = true; /* fd can be re-used for this process */
 		return 0;
 	}
-	errno = EBADF; /* fd must not be open */
-	return -1;
+	return EBADF; /* fd must not be open */
 }
 
+/*
+ * Read up to buflen bytes into the buffer buf.
+ */
 int sys_read(uint32_t fd, void *buf, size_t buflen) {
 	kprintf("\nREADING FILE...%d %s %d\n", fd, (char *) buf, buflen);
 	struct FD *fds = get_fd_table();
 	if (!valid_fd(fd, fds)) {
-		errno = EBADF;
-		return -1;
-	}
-	if (fds[fd].free == true) {
-		errno = EBADF; /* file must not be not open */
-		return -1;
+		return EBADF;
+	} else if (fds[fd].free == true) {
+		return EBADF; /* file must not be not open */
 	}
 
 	struct iovec iov;

@@ -10,8 +10,6 @@
  */
 #include <limits.h>
 
-extern int errno;
-
 /* state relating to an open file on the system */
 typedef struct OF {
 	struct vnode *v; /* ptr to the underlying vnode */
