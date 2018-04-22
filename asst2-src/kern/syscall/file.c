@@ -97,7 +97,7 @@ int sys_open(void *path, uint32_t flags) {
 		}
 	}
 	if (fd_found == -1) {
-		return ENFILE; /* reached max open files for this process */
+		return EMFILE; /* reached max open files for this process */
 	}
 
 	// Check whether O_WRONLY or O_RDWR in flags; update can_write flag if true
