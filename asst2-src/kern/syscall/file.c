@@ -77,8 +77,6 @@ int sys_open(void *path, uint32_t flags) {
 	kprintf("\nOPENING FILE...%s %d\n", (char *) path, flags);
 	struct FD *fds = get_fd_table();
 
-	/* TODO: account for the flags and set can_write flag */
-
 	/* if this is the first file opened by the process, create an fd table */
 	if (fds == NULL) {
 		fd_tables = (struct fd_proc *) expand_buffer(fd_tables,
@@ -100,6 +98,12 @@ int sys_open(void *path, uint32_t flags) {
 	}
 	if (fd_found == -1) {
 		return ENFILE; /* reached max open files for this process */
+	}
+
+	// Check whether O_WRONLY or O_RDWR in flags; update can_write flag if true
+	if ((flags & O_WRONLY) != 0 || (flags & O_RDWR) != 0) {
+		kprintf("CAN_WRITE FLAG ENABLED!\n");
+		fds[fd_found].can_write = true;
 	}
 
 	/* TODO: implement more error handling before calling vfs_open */
