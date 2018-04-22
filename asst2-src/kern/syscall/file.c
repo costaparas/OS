@@ -59,6 +59,17 @@ bool valid_fd(uint32_t fd, struct FD *fds) {
 }
 
 /*
+ * Increase size of a buffer (crude version of krealloc).
+ */
+void *expand_buffer(void *src, uint32_t size, uint32_t new_size) {
+	void *tmp = kmalloc(new_size);
+	KASSERT(tmp != NULL);
+	memcpy(tmp, src, size);
+	kfree(src);
+	return tmp;
+}
+
+/*
  * Open a file in the specified mode. Return a process-unique file
  * descriptor on success; otherwise, return an appropriate errno.
  */
@@ -66,14 +77,16 @@ int sys_open(void *path, uint32_t flags) {
 	kprintf("\nOPENING FILE...%s %d\n", (char *) path, flags);
 	struct FD *fds = get_fd_table();
 
+	/* TODO: account for the flags and set can_write flag */
+
 	/* if this is the first file opened by the process, create an fd table */
 	if (fds == NULL) {
-		struct fd_proc *tmp = kmalloc(sizeof(fd_proc) * (num_proc + 1));
-		KASSERT(tmp != NULL);
-		memcpy(tmp, fd_tables, sizeof(fd_proc) * num_proc);
-		kfree(fd_tables);
-		fd_tables = tmp;
+		fd_tables = (struct fd_proc *) expand_buffer(fd_tables,
+			sizeof(fd_proc) * num_proc, sizeof(fd_proc) * (num_proc + 1));
 		fds = fd_tables[num_proc].fds;
+		for (int i = 0; i < __OPEN_MAX; ++i) {
+			fds[i].free = true;
+		}
 		fd_tables[num_proc++].proc = curproc;
 	}
 
@@ -107,11 +120,8 @@ int sys_open(void *path, uint32_t flags) {
 
 	/* otherwise, create a new entry in open file table for the vnode */
 	if (fds[fd_found].file == NULL) {
-		struct OF *tmp = kmalloc(sizeof(OF) * (num_files + 1));
-		KASSERT(tmp != NULL);
-		memcpy(tmp, open_files, sizeof(OF) * num_files);
-		kfree(open_files);
-		open_files = tmp;
+		open_files = (struct OF *) expand_buffer(open_files,
+			sizeof(OF) * num_files, sizeof(OF) * (num_files + 1));
 		open_files[num_files].offset = 0;
 		open_files[num_files].v = v;
 		fds[fd_found].file = &open_files[num_files++];

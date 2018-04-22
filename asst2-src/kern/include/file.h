@@ -23,7 +23,7 @@ typedef struct FD {
 	bool can_write; /* used to handle O_RDONLY open mode */
 } FD;
 
-OF *open_files = NULL; /* dynamically allocated open file table */
+struct OF *open_files = NULL; /* dynamically allocated open file table */
 
 typedef struct fd_proc {
 	struct FD fds[__OPEN_MAX]; /* per-process file descriptor table */
@@ -33,9 +33,11 @@ typedef struct fd_proc {
 fd_proc *fd_tables = NULL; /* dynamically allocated array of fd tables */
 
 uint32_t num_files; /* number of open files on the system */
-uint32_t num_proc; /* number of processes with at least one open fd, i.e. the
-number of fd tables */
+uint32_t num_proc; /* number of processes with at least one open fd, i.e.
+the number of fd tables */
 
+/* function prototypes for helpers */
+void *expand_buffer(void *src, uint32_t size, uint32_t new_size);
 bool valid_fd(uint32_t, struct FD *fds);
 struct FD *get_fd_table(void);
 void fs_bootstrap(void);
