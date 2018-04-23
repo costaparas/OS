@@ -73,7 +73,7 @@ void *expand_buffer(void *src, uint32_t size, uint32_t new_size) {
  * Open a file in the specified mode. Return a process-unique file
  * descriptor on success; otherwise, return an appropriate errno.
  */
-int sys_open(void *path, uint32_t flags) {
+int sys_open(void *path, uint32_t flags, mode_t mode) {
 	kprintf("\nOPENING FILE...%s %d\n", (char *) path, flags);
 	struct FD *fds = get_fd_table();
 
@@ -110,7 +110,7 @@ int sys_open(void *path, uint32_t flags) {
 
 	/* open the file - will increase the ref count in vnode */
 	struct vnode *v;
-	int result = vfs_open(path, flags, 0, &v);
+	int result = vfs_open(path, flags, mode, &v);
 	if (result != 0) return result;
 
 	/* look for vnode in open file table */
