@@ -79,6 +79,10 @@ u: # Build userland
 a:
 	bmake k && bmake u
 
+q:
+	`bmake k && bmake u` > /dev/null
+
+
 run: # Run kernel
 	cd ../root && sys161 kernel "p /testbin/asst2"
 	# cd ../root && sys161 kernel "$(args)"
