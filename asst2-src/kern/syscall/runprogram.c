@@ -45,6 +45,8 @@
 #include <syscall.h>
 #include <test.h>
 
+extern void init_fd_table(void);
+
 /*
  * Load program "progname" and start running it in usermode.
  * Does not return except on error.
@@ -98,10 +100,11 @@ runprogram(char *progname)
 	}
 
 	/* open stdout/err and connect to console device */
-	char c1[] = "con:";
-	char c2[] = "con:";
-	r1 = vfs_open(c1, f1, m1, &v1);
-	r2 = vfs_open(c2, f2, m2, &v2);
+	// char c1[] = "con:";
+	// char c2[] = "con:";
+	// r1 = vfs_open(c1, f1, m1, &v1);
+	// r2 = vfs_open(c2, f2, m2, &v2);
+	init_fd_table(); /* initialise state for the proc's fd table */
 
 	/* Warp to user mode. */
 	enter_new_process(0 /*argc*/, NULL /*userspace addr of argv*/,
