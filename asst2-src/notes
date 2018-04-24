@@ -1,0 +1,28 @@
+syscall
+-lseek - offset is 64 bits - can't store in a0-a3, flags goes onto stack as well, sp + 16
+-might need to modify return code to populate v0 and v1 if returning 64 bit value
+-handle returning byte sizes etc. from write/read - add extra int/whatev variable in syscall() to track and pass pointer to implementation
+
+CHECK OUT join32to64, split64to32
+
+userptr_t - differentiate (originating from user-level) pointers from kernel-level - can't dereference without casting
+Use copyin/copyout if dealing with user pointers
+
+USE UIO_USERSPACE INSTEAD OF SYS - CHECK SAMPLE HELPER FUNCTION IN ASST2.PDF INSTEAD OF UIO_KINIT()
+
+CAN'T JUST USE PATH DIRECTLY - COPY INTO KERNEL BUFFER
+
+Don't need vfs_lookup - normally used if checking a file already exists or not
+
+Need to maintain reference count - other FDs might point to open file table
+
+vnode.h - will need to check vop_isseekable in lseek() - STDIN/STDOUT/STDERR (stream files) and dirs (ESPIPE) - "cache" isseekable in our tables
+
+struct proc: - ADD PER-PROCESS MATERIAL IN PROC.H
+Make new uio for each read
+
+Move krealloc to malloc.h/c
+
+Use spinlock in proc struct
+
+Change KASSERT to return ERRNOMEM
