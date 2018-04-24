@@ -1,6 +1,4 @@
 syscall
--lseek - offset is 64 bits - can't store in a0-a3, flags goes onto stack as well, sp + 16
--might need to modify return code to populate v0 and v1 if returning 64 bit value
 -handle returning byte sizes etc. from write/read - add extra int/whatev variable in syscall() to track and pass pointer to implementation
 
 CHECK OUT join32to64, split64to32
@@ -26,3 +24,7 @@ Move krealloc to malloc.h/c
 Use spinlock in proc struct
 
 Change KASSERT to return ERRNOMEM
+
+LATER CONSIDERATIONS
+-lseek - offset is 64 bits - can't store in a0-a3, flags goes onto stack as well, sp + 16
+-write/lseek: might need to modify return code to populate v0 and v1 if returning 64 bit value

@@ -107,17 +107,17 @@ syscall(struct trapframe *tf)
 		(userptr_t)tf->tf_a1);
 		break;
 	case SYS_open:
-		err = sys_open((void*) tf->tf_a0, (uint32_t) tf->tf_a1, (mode_t) tf->tf_a2);
+		err = sys_open((const_userptr_t) tf->tf_a0, (uint32_t) tf->tf_a1, (mode_t) tf->tf_a2);
 		break;
 	case SYS_close:
 		err = sys_close((uint32_t) tf->tf_a0);
 		break;
 	case SYS_read:
-		err = sys_read((uint32_t) tf->tf_a0, (void *) tf->tf_a1,
+		err = sys_read((uint32_t) tf->tf_a0, (const_userptr_t) tf->tf_a1,
 			       (uint32_t) tf->tf_a2);
 		break;
 	case SYS_write:
-		err = sys_write((uint32_t) tf->tf_a0, (void *) tf->tf_a1,
+		err = sys_write((uint32_t) tf->tf_a0, (const_userptr_t) tf->tf_a1,
 				(uint32_t) tf->tf_a2);
 		break;
 	default:

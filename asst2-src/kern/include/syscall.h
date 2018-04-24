@@ -58,9 +58,9 @@ __DEAD void enter_new_process(int argc, userptr_t argv, userptr_t env,
 
 int sys_reboot(int code);
 int sys___time(userptr_t user_seconds, userptr_t user_nanoseconds);
-int sys_open(void *path, uint32_t flags, mode_t mode);
+int sys_open(const_userptr_t path, uint32_t flags, mode_t mode);
 int sys_close(uint32_t fd);
-int sys_read(uint32_t fd, void *buf, size_t buflen);
-int sys_write(uint32_t fd, void *buf, size_t nbytes);
+int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen);
+int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes);
 
 #endif /* _SYSCALL_H_ */

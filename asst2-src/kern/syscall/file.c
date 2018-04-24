@@ -73,8 +73,13 @@ void *expand_buffer(void *src, uint32_t size, uint32_t new_size) {
  * Open a file in the specified mode. Return a process-unique file
  * descriptor on success; otherwise, return an appropriate errno.
  */
-int sys_open(void *path, uint32_t flags, mode_t mode) {
-	kprintf("\nOPENING FILE...%s %d\n", (char *) path, flags);
+int sys_open(const_userptr_t path, uint32_t flags, mode_t mode) {
+	// Copy user space pointer to kernel space buffer
+	char path_kern[PATH_MAX];
+	size_t path_kern_size = 0;
+	copyinstr(path, path_kern, (size_t) PATH_MAX, &path_kern_size);
+
+	kprintf("\nNOOOOOOOOOOOoOPENING FILE...%s %d\n", path_kern, flags);
 	struct FD *fds = get_fd_table();
 
 	/* if this is the first file opened by the process, create an fd table */
@@ -110,7 +115,7 @@ int sys_open(void *path, uint32_t flags, mode_t mode) {
 
 	/* open the file - will increase the ref count in vnode */
 	struct vnode *v;
-	int result = vfs_open(path, flags, mode, &v);
+	int result = vfs_open(path_kern, flags, mode, &v);
 	if (result != 0) return result;
 
 	/* look for vnode in open file table */
@@ -156,8 +161,14 @@ int sys_close(uint32_t fd) {
 /*
  * Read up to buflen bytes into the buffer buf and return number of bytes read.
  */
-int sys_read(uint32_t fd, void *buf, size_t buflen) {
-	kprintf("\nREADING FILE...%d %s %d\n", fd, (char *) buf, buflen);
+int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen) {
+	// Copy user space pointer to kernel space buffer
+	char buf_kern[NAME_MAX];
+	size_t buf_kern_size = 0;
+	copyinstr(buf, buf_kern, buflen, &buf_kern_size);
+
+	kprintf("\nREADING FILE...%d %s %d\n", fd, buf_kern, buflen);
+
 	struct FD *fds = get_fd_table();
 	if (!valid_fd(fd, fds)) {
 		return EBADF;
@@ -166,34 +177,39 @@ int sys_read(uint32_t fd, void *buf, size_t buflen) {
 	}
 
 	struct iovec iov;
-	iov.iov_kbase = buf;
+	iov.iov_kbase = buf_kern;
 	iov.iov_len = buflen;
 
 	struct vnode *v = fds[fd].file->v;
 	struct uio u;
-	uio_kinit(&iov, &u, buf, buflen, fds[fd].file->offset, UIO_READ);
+	uio_kinit(&iov, &u, buf_kern, buflen, fds[fd].file->offset, UIO_READ);
 
 	VOP_READ(v, &u);
 
 	// Advance the file offset
 	// TODO THIS ASSUMES THAT BUFLEN BYTES ARE READ - NOT ALWAYS THE CASE
-	fds[fd].file->offset += strlen(buf); //TODO: check this
+	fds[fd].file->offset += strlen(buf_kern); //TODO: check this
 
 	// TODO ERROR CHECK
 
 	// TODO REMOVE THIS JUST SHOWS READ SUCCEEDED
 	kprintf("BUF CONTENTS: \n");
 	kprintf("###################\n");
-	kprintf("%s", (char *) buf);
+	kprintf("%s", buf_kern);
 	kprintf("###################\n");
 
 	//TODO: connect stdout/err to console to support printing in user prog
 
-	return strlen(buf); //TODO: check this
+	return strlen(buf_kern); //TODO: check this
 }
 
-int sys_write(uint32_t fd, void *buf, size_t nbytes) {
-	kprintf("\nWRITING FILE...%d %s %d\n", fd, (char *) buf, nbytes);
+int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes) {
+	// Copy user space pointer to kernel space buffer
+	char buf_kern[NAME_MAX];
+	size_t buf_kern_size = 0;
+	copyinstr(buf, buf_kern, nbytes, &buf_kern_size);
+
+	kprintf("\nWRITING FILE...%d %s %d\n", fd, buf_kern, nbytes);
 	struct FD *fds = get_fd_table();
 	if (!valid_fd(fd, fds)) {
 		return EBADF;
@@ -204,20 +220,20 @@ int sys_write(uint32_t fd, void *buf, size_t nbytes) {
 	}
 
 	struct iovec iov;
-	iov.iov_kbase = buf;
+	iov.iov_kbase = buf_kern;
 	iov.iov_len = nbytes;
 
 	struct vnode *v = fds[fd].file->v;
 	struct uio u;
-	uio_kinit(&iov, &u, buf, nbytes, fds[fd].file->offset, UIO_WRITE);
+	uio_kinit(&iov, &u, buf_kern, nbytes, fds[fd].file->offset, UIO_WRITE);
 
 	VOP_WRITE(v, &u);
 
 	// Advance the file offset
 	// TODO THIS ASSUMES THAT BUFLEN BYTES ARE READ - NOT ALWAYS THE CASE
-	fds[fd].file->offset += strlen(buf); //TODO: check this
+	fds[fd].file->offset += strlen(buf_kern); //TODO: check this
 
 	// TODO ERROR CHECK
 
-	return strlen(buf); // TODO: check this
+	return strlen(buf_kern); // TODO: check this
 }
