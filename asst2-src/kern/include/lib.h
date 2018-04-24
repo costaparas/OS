@@ -128,6 +128,7 @@ uint32_t random(void);
  */
 void *kmalloc(size_t size);
 void kfree(void *ptr);
+void *krealloc(void *src, uint32_t size, uint32_t new_size);
 void kheap_printstats(void);
 void kheap_nextgeneration(void);
 void kheap_dump(void);

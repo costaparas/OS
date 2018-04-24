@@ -37,7 +37,6 @@ uint32_t num_proc; /* number of processes with at least one open fd, i.e.
 the number of fd tables */
 
 /* function prototypes for helpers */
-void *expand_buffer(void *src, uint32_t size, uint32_t new_size);
 bool valid_fd(uint32_t, struct FD *fds);
 struct FD *get_fd_table(void);
 void fs_bootstrap(void);

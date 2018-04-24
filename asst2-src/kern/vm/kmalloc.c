@@ -1222,3 +1222,13 @@ kfree(void *ptr)
 	}
 }
 
+/*
+ * Increase size of a buffer (crude version of krealloc).
+ */
+void *krealloc(void *src, uint32_t size, uint32_t new_size) {
+	void *tmp = kmalloc(new_size);
+	KASSERT(tmp != NULL);
+	memcpy(tmp, src, size);
+	kfree(src);
+	return tmp;
+}
