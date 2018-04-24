@@ -45,6 +45,8 @@
 #include <syscall.h>
 #include <test.h>
 
+extern void init_fd_table(void);
+
 /*
  * Load program "progname" and start running it in usermode.
  * Does not return except on error.
@@ -96,6 +98,8 @@ runprogram(char *progname)
 		/* p_addrspace will go away when curproc is destroyed */
 		return result;
 	}
+
+	init_fd_table(); /* initialise state for the proc's fd table */
 
 	/* Warp to user mode. */
 	enter_new_process(0 /*argc*/, NULL /*userspace addr of argv*/,
