@@ -97,6 +97,12 @@ runprogram(char *progname)
 		return result;
 	}
 
+	/* open stdout/err and connect to console device */
+	char c1[] = "con:";
+	char c2[] = "con:";
+	r1 = vfs_open(c1, f1, m1, &v1);
+	r2 = vfs_open(c2, f2, m2, &v2);
+
 	/* Warp to user mode. */
 	enter_new_process(0 /*argc*/, NULL /*userspace addr of argv*/,
 			  NULL /*userspace addr of environment*/,
