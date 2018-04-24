@@ -59,11 +59,12 @@ void *expand_buffer(void *src, uint32_t size, uint32_t new_size) {
 //TODO: in proc_end, kfree the fd table
 
 void init_fd_table() {
-	struct FD *fds = kmalloc(sizeof(FD) * __OPEN_MAX);
+	struct FD **fds = kmalloc(sizeof(struct FD *) * __OPEN_MAX);
 	KASSERT(fds != NULL);
-	curproc->fds = &fds;
+	curproc->fds = fds;
 	KASSERT(curproc->fds != NULL);
 	for (int i = 0 ; i < __OPEN_MAX; ++i) {
+		curproc->fds[i] = kmalloc(sizeof(FD));
 		curproc->fds[i]->free = true;
 	}
 }
