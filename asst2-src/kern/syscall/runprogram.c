@@ -122,19 +122,21 @@ runprogram(char *progname)
 	file2.v = v2;
 	file1.offset = 0;
 	file2.offset = 0;
-	open_files = kmalloc(sizeof(struct OF) * 2);
+	open_files = (struct OF *) krealloc(open_files,
+		sizeof(OF) * num_files, sizeof(OF) * (num_files + 2));
 	if (open_files == NULL) return ENOMEM;
-	open_files[0] = file1; /* stdin not open, so start from entry 0 */
-	open_files[1] = file2;
-	num_files = 2; /* ignore stdin */
-	curproc->fds[1]->free = false;
+	open_files[num_files++] = file1;
+	struct OF *f1 = &open_files[num_files - 1];
+	open_files[num_files++] = file2;
+	struct OF *f2 = &open_files[num_files - 1];
+	curproc->fds[1]->free = false; /* skip stdin on fd 0 */
 	curproc->fds[2]->free = false;
 	curproc->fds[1]->can_write = true;
 	curproc->fds[2]->can_read = false;
 	curproc->fds[1]->can_write = true;
 	curproc->fds[2]->can_read = false;
-	curproc->fds[1]->file = &open_files[0];
-	curproc->fds[2]->file = &open_files[1];
+	curproc->fds[1]->file = f1;
+	curproc->fds[2]->file = f2;
 
 	/* Warp to user mode. */
 	enter_new_process(0 /*argc*/, NULL /*userspace addr of argv*/,

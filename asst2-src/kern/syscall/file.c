@@ -92,6 +92,8 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 		return EMFILE; /* reached max open files for this process */
 	}
 
+	/* TODO: handle O_APPEND and O_TRUNC flag by setting offset */
+
 	/* set can_read/can_write flags according to flags argument */
 	if ((flags & O_RDWR) != 0) {
 		kprintf("CAN READ AND WRITE\n"); /* TODO: debug-only */

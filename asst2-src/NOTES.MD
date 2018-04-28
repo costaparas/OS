@@ -23,6 +23,11 @@ Combinations
 * All syscalls: error handling - write up a flowchart with each of the different cases to handle
 * VERY DETAILED TESTING
 
+NOTE:
+need to handle concurrency issues using locks - open_file table & num_files
+since processes can be assumed to be single-threaded so ignore fd table
+synchronization (may need to use spinlock in struct proc anyway though?)
+
 FD/OF design
 ------------
 * Need to maintain reference count - other FDs might point to open file table
