@@ -42,7 +42,7 @@ void fs_clear_tables() {
  * Check if the fd is valid for the current process.
  */
 bool valid_fd(uint32_t fd) {
-	if (fd <= 0 || fd >= __OPEN_MAX) {
+	if (fd <= 0 || fd >= OPEN_MAX) {
 		return false; /* invalid file descriptor */
 	}
 	return true;
@@ -56,10 +56,10 @@ bool valid_fd(uint32_t fd) {
  * Initialise the fd table for the process.
  */
 int init_fd_table() {
-	struct FD **fds = kmalloc(sizeof(struct FD *) * __OPEN_MAX);
+	struct FD **fds = kmalloc(sizeof(struct FD *) * OPEN_MAX);
 	if (fds == NULL) return ENOMEM;
 	curproc->fds = fds;
-	for (int i = 0 ; i < __OPEN_MAX; ++i) {
+	for (int i = 0 ; i < OPEN_MAX; ++i) {
 		curproc->fds[i] = kmalloc(sizeof(FD));
 		if (curproc->fds[i] == NULL) return ENOMEM;
 		curproc->fds[i]->free = true;
@@ -84,7 +84,7 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 
 	/* look for an available fd */
 	int fd_found = -1;
-	for (int i = 0; i < __OPEN_MAX; i++) {
+	for (int i = 0; i < OPEN_MAX; i++) {
 		if (fds[i]->free) {
 			fd_found = i;
 			break;
