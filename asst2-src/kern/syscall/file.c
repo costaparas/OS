@@ -22,7 +22,7 @@ struct OF *open_files = NULL;
  * Initialize state required for the open file and file descriptor tables.
  */
 void fs_bootstrap() {
-	kprintf("\nINIT FS...\n");
+	kprintf("\nINIT FS...\n"); /* TODO: debug-only */
 	num_files = 0;
 	open_files = NULL;
 }
@@ -31,7 +31,7 @@ void fs_bootstrap() {
  * Free memory used by the open file and file descriptor tables.
  */
 void fs_clear_tables() {
-	kprintf("\nFREEING FS...\n");
+	kprintf("\nFREEING FS...\n"); /* TODO: debug-only */
 	kfree(open_files);
 }
 
@@ -45,9 +45,9 @@ bool valid_fd(uint32_t fd) {
 	return true;
 }
 
-///////////////////////////////////////
-//TODO: in proc_end, kfree the fd table
-///////////////////////////////////////
+///////////////////////////////////////////
+/* TODO: in proc_end, kfree the fd table */
+///////////////////////////////////////////
 
 /*
  * Initialise the fd table for the process.
@@ -76,7 +76,7 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 	size_t path_kern_size = 0;
 	copyinstr(path, path_kern, (size_t) PATH_MAX, &path_kern_size);
 
-	kprintf("\nOPENING FILE...%s %d\n", path_kern, flags);
+	kprintf("\nOPENING FILE...%s %d\n", path_kern, flags); /* TODO: debug-only */
 	struct FD **fds = curproc->fds;
 
 	/* look for an available fd */
@@ -88,36 +88,34 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 		}
 	}
 	if (fd_found == -1) {
-		kprintf("Ran out of file descriptors\n");
+		kprintf("Ran out of file descriptors\n"); /* TODO: debug-only */
 		return EMFILE; /* reached max open files for this process */
 	}
 
 	/* set can_read/can_write flags according to flags argument */
 	if ((flags & O_RDWR) != 0) {
-		kprintf("CAN READ AND WRITE\n");
+		kprintf("CAN READ AND WRITE\n"); /* TODO: debug-only */
 		fds[fd_found]->can_read = true;
 		fds[fd_found]->can_write = true;
 	} else if ((flags & O_WRONLY) != 0) {
-		kprintf("CAN WRITE ONLY\n");
+		kprintf("CAN WRITE ONLY\n"); /* TODO: debug-only */
 		fds[fd_found]->can_read = false;
 		fds[fd_found]->can_write = true;
 	} else if (flags == O_RDONLY) {
-		kprintf("CAN READ ONLY\n");
+		kprintf("CAN READ ONLY\n"); /* TODO: debug-only */
 		fds[fd_found]->can_read = true;
 		fds[fd_found]->can_write = false;
 	} else {
-		kprintf("Invalid flags to open %d\n", flags);
+		kprintf("Invalid flags to open %d\n", flags); /* TODO: debug-only */
 		return EINVAL; /* unknown flags */
 	}
-
-	/* TODO: implement more error handling before calling vfs_open */
 
 	/* open the file - will increase the ref count in vnode */
 	struct vnode *v;
 	int result = vfs_open(path_kern, flags, mode, &v);
 	if (result != 0) {
-		kprintf("Error being returned from vfs_open %d\n", result);
-		return result;
+		kprintf("Error being returned from vfs_open %d\n", result); /* TODO: debug-only */
+		return result; /* rest of error-checking handled here */
 	}
 
 	/* look for vnode in open file table */
@@ -147,7 +145,7 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
  * Close an open file. Return EBADF for an invalid fd.
  */
 int sys_close(uint32_t fd) {
-	kprintf("\nCLOSING FILE...%d\n", fd);
+	kprintf("\nCLOSING FILE...%d\n", fd); /* TODO: debug-only */
 	struct FD **fds = curproc->fds;
 	if (!valid_fd(fd)) {
 		return EBADF;
@@ -170,7 +168,7 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	size_t buf_kern_size = 0;
 	copyinstr(buf, buf_kern, buflen, &buf_kern_size);
 
-	kprintf("\nREADING FILE...%d %d\n", fd, buflen);
+	kprintf("\nREADING FILE...%d %d\n", fd, buflen); /* TODO: debug-only */
 
 	struct FD **fds = curproc->fds;
 	if (!valid_fd(fd)) {
@@ -190,24 +188,21 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	uio_kinit(&iov, &u, buf_kern, buflen, fds[fd]->file->offset, UIO_READ);
 
 	size_t resid = u.uio_resid;
-	VOP_READ(v, &u);
+	int ret = VOP_READ(v, &u);
+	if (ret) return ret; /* rest of error-checking handled here */
 
 	/* copy data from kernel buffer into user buffer */
-	//copyoutstr(buf_kern, buf, buflen, &buf_kern_size); //TODO
+	/* copyoutstr(buf_kern, buf, buflen, &buf_kern_size); TODO: fix this */
 
 	/* advance the file offset */
 	fds[fd]->file->offset += resid - u.uio_resid;
 
-	// TODO ERROR CHECK
-
-	// TODO REMOVE THIS JUST SHOWS READ SUCCEEDED
+	/* TODO: debug-only */
 	kprintf("(kernel) BUF CONTENTS: \n");
 	kprintf("###################\n");
 	buf_kern[resid - u.uio_resid] = '\0';
 	kprintf("%s", buf_kern);
 	kprintf("###################\n");
-
-	//TODO: connect stdout/err to console to support printing in user prog
 
 	*read = resid - u.uio_resid;
 	return 0;
@@ -237,12 +232,11 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
 	struct uio u;
 	uio_kinit(&iov, &u, buf_kern, nbytes, fds[fd]->file->offset, UIO_WRITE);
 	size_t resid = u.uio_resid;
-	VOP_WRITE(v, &u);
+	int ret = VOP_WRITE(v, &u);
+	if (ret) return ret; /* rest of error-checking handled here */
 
 	/* advance the file offset */
 	fds[fd]->file->offset += resid - u.uio_resid;
-
-	// TODO ERROR CHECK
 
 	*written = resid - u.uio_resid;
 	return 0;
