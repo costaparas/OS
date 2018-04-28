@@ -44,7 +44,7 @@
 #include <vfs.h>
 #include <syscall.h>
 #include <test.h>
-
+//#include <file.h>
 extern void init_fd_table(void);
 
 /*
@@ -99,13 +99,29 @@ runprogram(char *progname)
 		return result;
 	}
 
-	/* open stdout/err and connect to console device */
-	// char c1[] = "con:";
-	// char c2[] = "con:";
-	// r1 = vfs_open(c1, f1, m1, &v1);
-	// r2 = vfs_open(c2, f2, m2, &v2);
 	init_fd_table(); /* initialise state for the proc's fd table */
 
+	/* open stdout/err and connect to console device */
+/*
+	struct vnode v1;
+	struct vnode v2;
+	mode_t m;
+	char c1[] = "con:";
+	char c2[] = "con:";
+	int r1 = vfs_open(c1, O_WRONLY, m, &v1);
+	int r2 = vfs_open(c2, O_WRONLY, m, &v2);
+	struct OF file1;
+	struct OF file2;
+	curproc->fds[1].free = false;
+	curproc->fds[2].free = false;
+	curproc->fds[1].free = true;
+	curproc->fds[2].free = true;
+	file1.v = v1;
+	file2.v = v2;
+	file1.offset = 0;
+	file2.offset = 0;
+	num_files = 2;
+*/
 	/* Warp to user mode. */
 	enter_new_process(0 /*argc*/, NULL /*userspace addr of argv*/,
 			  NULL /*userspace addr of environment*/,

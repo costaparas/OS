@@ -46,13 +46,17 @@ bool valid_fd(uint32_t fd, struct FD *fds) {
 }
 
 //TODO: in proc_end, kfree the fd table
+
+/*
+ * Initialise the fd table for the process.
+ */
 void init_fd_table() {
 	struct FD **fds = kmalloc(sizeof(struct FD *) * __OPEN_MAX);
 	KASSERT(fds != NULL);
 	curproc->fds = fds;
-	KASSERT(curproc->fds != NULL);
 	for (int i = 0 ; i < __OPEN_MAX; ++i) {
 		curproc->fds[i] = kmalloc(sizeof(FD));
+		KASSERT(curproc->fds[i] != NULL);
 		curproc->fds[i]->free = true;
 	}
 }
@@ -140,7 +144,7 @@ int sys_close(uint32_t fd) {
 /*
  * Read up to buflen bytes into the buffer buf and return number of bytes read.
  */
-int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen) {
+int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	// Copy user space pointer to kernel space buffer
 	char buf_kern[NAME_MAX];
 	size_t buf_kern_size = 0;
@@ -163,26 +167,30 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen) {
 	struct uio u;
 	uio_kinit(&iov, &u, buf_kern, buflen, fds[fd]->file->offset, UIO_READ);
 
+	size_t resid = u.uio_resid;
 	VOP_READ(v, &u);
 
-	// Advance the file offset
-	// TODO THIS ASSUMES THAT BUFLEN BYTES ARE READ - NOT ALWAYS THE CASE
-	fds[fd]->file->offset += strlen(buf_kern); //TODO: check this
+	/* copy data from kernel buffer into user buffer */
+	//copyoutstr(buf_kern, buf, buflen, &buf_kern_size); //TODO
+
+	/* advance the file offset */
+	fds[fd]->file->offset += resid - u.uio_resid;
 
 	// TODO ERROR CHECK
 
 	// TODO REMOVE THIS JUST SHOWS READ SUCCEEDED
-	kprintf("BUF CONTENTS: \n");
+	kprintf("(kernel) BUF CONTENTS: \n");
 	kprintf("###################\n");
 	kprintf("%s", buf_kern);
 	kprintf("###################\n");
 
 	//TODO: connect stdout/err to console to support printing in user prog
 
-	return strlen(buf_kern); //TODO: check this
+	*read = resid - u.uio_resid;
+	return 0;
 }
 
-int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes) {
+int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) {
 	// Copy user space pointer to kernel space buffer
 	char buf_kern[NAME_MAX];
 	size_t buf_kern_size = 0;
@@ -205,14 +213,14 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes) {
 	struct vnode *v = fds[fd]->file->v;
 	struct uio u;
 	uio_kinit(&iov, &u, buf_kern, nbytes, fds[fd]->file->offset, UIO_WRITE);
-
+	size_t resid = u.uio_resid;
 	VOP_WRITE(v, &u);
 
-	// Advance the file offset
-	// TODO THIS ASSUMES THAT BUFLEN BYTES ARE READ - NOT ALWAYS THE CASE
-	fds[fd]->file->offset += strlen(buf_kern); //TODO: check this
+	/* advance the file offset */
+	fds[fd]->file->offset += resid - u.uio_resid;
 
 	// TODO ERROR CHECK
 
-	return strlen(buf_kern); // TODO: check this
+	*written = resid - u.uio_resid;
+	return 0;
 }

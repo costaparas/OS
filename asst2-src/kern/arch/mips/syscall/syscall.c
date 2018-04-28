@@ -35,6 +35,7 @@
 #include <thread.h>
 #include <current.h>
 #include <syscall.h>
+#include <endian.h>
 
 /*
  * System call dispatcher.
@@ -98,6 +99,8 @@ syscall(struct trapframe *tf)
 
 	retval = 0;
 
+	size_t nbytes = 0; /* number of bytes read/written */
+
 	switch (callno) {
 	case SYS_reboot:
 		err = sys_reboot(tf->tf_a0);
@@ -114,11 +117,13 @@ syscall(struct trapframe *tf)
 		break;
 	case SYS_read:
 		err = sys_read((uint32_t) tf->tf_a0, (const_userptr_t) tf->tf_a1,
-			       (uint32_t) tf->tf_a2);
+			       (uint32_t) tf->tf_a2, &nbytes);
+kprintf("nbytes read/written: %d\n", nbytes); //TODO: remove this print
 		break;
 	case SYS_write:
 		err = sys_write((uint32_t) tf->tf_a0, (const_userptr_t) tf->tf_a1,
-				(uint32_t) tf->tf_a2);
+				(uint32_t) tf->tf_a2, &nbytes);
+kprintf("nbytes read/written: %d\n", nbytes); //TODO: remove this print
 		break;
 	default:
 		kprintf("Unknown syscall %d\n", callno);
@@ -137,7 +142,11 @@ syscall(struct trapframe *tf)
 	}
 	else {
 		/* Success. */
-		tf->tf_v0 = retval;
+		if (callno == SYS_read || callno == SYS_write) {
+			split64to32((uint64_t) nbytes, &tf->tf_v0, &tf->tf_v1);
+		} else {
+			tf->tf_v0 = retval;
+		}
 		tf->tf_a3 = 0; /* signal no error */
 	}
 

@@ -19,16 +19,19 @@ int main(int argc, char *argv[]) {
 	//fd = open("file.txt", O_WRONLY | O_CREAT);
 	fd = open("file.txt", O_RDONLY);
 	char buf[101];
-	read(fd, buf, 99);
-	buf[100] = '\0';
+	int bytes_read = read(fd, buf, 99);
+	buf[bytes_read] = '\0';
+//	printf("bytes read: %d\n", bytes_read);
 
 	// TEST TO CHECK THAT FILE OFFSET INCREASED - SHOULD PRINT NOTHING
 	char buf2[101];
+	bytes_read = read(fd, buf2, 99);
 	read(fd, buf2, 99);
-	buf2[100] = '\0';
+	buf2[bytes_read] = '\0';
+//	printf("bytes read: %d\n", bytes_read);
 
 	close(fd);
-	printf("HELLO FROM ASST2!!!!!!!!!!!!!!! CHECKING WRITE WORKS\n");
+//	printf("HELLO FROM ASST2!!!!!!!!!!!!!!! CHECKING WRITE WORKS\n");
 	return 0;
 	/* end custom test */
 

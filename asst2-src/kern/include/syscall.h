@@ -60,7 +60,7 @@ int sys_reboot(int code);
 int sys___time(userptr_t user_seconds, userptr_t user_nanoseconds);
 int sys_open(const_userptr_t path, uint32_t flags, mode_t mode);
 int sys_close(uint32_t fd);
-int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen);
-int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes);
+int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read);
+int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written);
 
 #endif /* _SYSCALL_H_ */
