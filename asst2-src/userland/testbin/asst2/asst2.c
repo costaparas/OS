@@ -23,6 +23,11 @@ int main(int argc, char *argv[]) {
 	buf[bytes_read] = '\0';
 //	printf("(user) bytes read: %d\n", bytes_read);
 
+	//attempt to write to a file - works but causes the next read to fail
+//	char f[] = "hello world";
+//	int fd2 = open("write.txt", O_WRONLY | O_CREAT);
+//	write(fd2, f, 10);
+
 	// TEST TO CHECK THAT FILE OFFSET INCREASED - SHOULD PRINT NOTHING
 	char buf2[101];
 	bytes_read = read(fd, buf2, 99);
