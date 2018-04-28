@@ -38,32 +38,32 @@ void fs_clear_tables() {
 /*
  * Check if the fd is valid for the current process.
  */
-bool valid_fd(uint32_t fd, struct FD *fds) {
+bool valid_fd(uint32_t fd) {
 	if (fd <= 0 || fd >= __OPEN_MAX) {
 		return false; /* invalid file descriptor */
-	}
-	if (fds == NULL) {
-		return false; /* this process has no open files */
 	}
 	return true;
 }
 
+///////////////////////////////////////
 //TODO: in proc_end, kfree the fd table
+///////////////////////////////////////
 
 /*
  * Initialise the fd table for the process.
  */
-void init_fd_table() {
+int init_fd_table() {
 	struct FD **fds = kmalloc(sizeof(struct FD *) * __OPEN_MAX);
-	KASSERT(fds != NULL);
+	if (fds == NULL) return ENOMEM;
 	curproc->fds = fds;
 	for (int i = 0 ; i < __OPEN_MAX; ++i) {
 		curproc->fds[i] = kmalloc(sizeof(FD));
-		KASSERT(curproc->fds[i] != NULL);
+		if (curproc->fds[i] == NULL) return ENOMEM;
 		curproc->fds[i]->free = true;
 	}
 	curproc->fds[0]->free = false; /* skip stdin fd, so stdout/err will
 	be opened on fd 1 and 2 respectively */
+	return 0;
 }
 
 /*
@@ -149,7 +149,7 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 int sys_close(uint32_t fd) {
 	kprintf("\nCLOSING FILE...%d\n", fd);
 	struct FD **fds = curproc->fds;
-	if (!valid_fd(fd, *fds)) {
+	if (!valid_fd(fd)) {
 		return EBADF;
 	}
 	if (fds[fd]->free == false) {
@@ -173,7 +173,7 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	kprintf("\nREADING FILE...%d %d\n", fd, buflen);
 
 	struct FD **fds = curproc->fds;
-	if (!valid_fd(fd, *fds)) {
+	if (!valid_fd(fd)) {
 		return EBADF;
 	} else if (fds[fd]->free == true) {
 		return EBADF; /* file must not be not open */
@@ -221,7 +221,7 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
 
 	kprintf("\nWRITING FILE...%d %s %d\n", fd, buf_kern, nbytes);
 	struct FD **fds = curproc->fds;
-	if (!valid_fd(fd, *fds)) {
+	if (!valid_fd(fd)) {
 		return EBADF;
 	} else if (fds[fd]->free == true) {
 		return EBADF; /* file must not be not open */

@@ -101,7 +101,10 @@ runprogram(char *progname)
 		return result;
 	}
 
-	init_fd_table(); /* initialise state for the proc's fd table */
+	/* initialise state for the proc's fd table */
+	if (init_fd_table()) {
+		return ENOMEM;
+	}
 
 	/* open stdout/err and connect to console device */
 	struct vnode *v1;
@@ -110,9 +113,9 @@ runprogram(char *progname)
 	char c1[] = "con:";
 	char c2[] = "con:";
 	int r = vfs_open(c1, O_WRONLY, m, &v1);
-	KASSERT(r == 0);
+	if (r) return r;
 	r = vfs_open(c2, O_WRONLY, m, &v2);
-	KASSERT(r == 0);
+	if (r) return r;
 	struct OF file1;
 	struct OF file2;
 	file1.v = v1;
@@ -120,7 +123,7 @@ runprogram(char *progname)
 	file1.offset = 0;
 	file2.offset = 0;
 	open_files = kmalloc(sizeof(struct OF) * 2);
-	KASSERT(open_files != NULL);
+	if (open_files == NULL) return ENOMEM;
 	open_files[0] = file1; /* stdin not open, so start from entry 0 */
 	open_files[1] = file2;
 	num_files = 2; /* ignore stdin */

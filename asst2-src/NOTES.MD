@@ -27,9 +27,7 @@ FD/OF design
 ------------
 * Need to maintain reference count - other FDs might point to open file table
 * Use spinlock in proc struct to handle concurrent access
-* Change KASSERT to return ERNOMEM
 * In proc_end (WHEREVER THAT IS), kfree the fd_table
-* Check assert for each individual kmalloc in init_fd_table()
 
 NOTES FROM TUTORIAL
 ===================
@@ -39,7 +37,9 @@ NOTES FROM TUTORIAL
 DONE
 ====
 * userptr_t - differentiate (originating from user-level) pointers from kernel-level - can't dereference without casting
+* Check assert for each individual kmalloc in init_fd_table()
 * Use copyin/copyout if dealing with user pointers
 * CAN'T JUST USE PATH DIRECTLY - COPY INTO KERNEL BUFFER
 * struct proc: - ADD PER-PROCESS MATERIAL IN PROC.H
 * Move krealloc to malloc.h/c
+* Change KASSERT to return ERNOMEM
