@@ -187,7 +187,7 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	struct uio u;
 
 	char buf_kern[PATH_MAX] = {0};
-	uio_kinit(&iov, &u, (void *) buf_kern, buflen, fds[fd]->file->offset, UIO_READ);
+	uio_kinit(&iov, &u, buf_kern, buflen, fds[fd]->file->offset, UIO_READ);
 
 	size_t resid = u.uio_resid;
 	// Read vnode contents into buf_kern
@@ -212,7 +212,7 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 
 int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) {
 	/* copy user space pointer to kernel space buffer */
-	char buf_kern[NAME_MAX];
+	char buf_kern[PATH_MAX] = {0};
 	size_t buf_kern_size = 0;
 	copyinstr(buf, buf_kern, nbytes, &buf_kern_size);
 
@@ -232,7 +232,7 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
 
 	struct vnode *v = curproc->fds[fd]->file->v;
 	struct uio u;
-	uio_uinit(&iov, &u, (void *) buf, nbytes, fds[fd]->file->offset, UIO_WRITE);
+	uio_kinit(&iov, &u, buf_kern, nbytes, fds[fd]->file->offset, UIO_WRITE);
 	size_t resid = u.uio_resid;
 	int ret = VOP_WRITE(v, &u);
 	if (ret) return ret; /* rest of error-checking handled here */
