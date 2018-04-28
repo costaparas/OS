@@ -44,9 +44,11 @@
 #include <vfs.h>
 #include <syscall.h>
 #include <test.h>
-//#include <file.h>
-extern void init_fd_table(void);
+#include <file.h>
+#include <vnode.h>
+#include <proc.h>
 
+extern struct OF *open_files;
 /*
  * Load program "progname" and start running it in usermode.
  * Does not return except on error.
@@ -102,26 +104,35 @@ runprogram(char *progname)
 	init_fd_table(); /* initialise state for the proc's fd table */
 
 	/* open stdout/err and connect to console device */
-/*
-	struct vnode v1;
-	struct vnode v2;
-	mode_t m;
+	struct vnode *v1;
+	struct vnode *v2;
+	mode_t m = 0;
 	char c1[] = "con:";
 	char c2[] = "con:";
-	int r1 = vfs_open(c1, O_WRONLY, m, &v1);
-	int r2 = vfs_open(c2, O_WRONLY, m, &v2);
+	int r = vfs_open(c1, O_WRONLY, m, &v1);
+	KASSERT(r == 0);
+	r = vfs_open(c2, O_WRONLY, m, &v2);
+	KASSERT(r == 0);
 	struct OF file1;
 	struct OF file2;
-	curproc->fds[1].free = false;
-	curproc->fds[2].free = false;
-	curproc->fds[1].free = true;
-	curproc->fds[2].free = true;
 	file1.v = v1;
 	file2.v = v2;
 	file1.offset = 0;
 	file2.offset = 0;
-	num_files = 2;
-*/
+	open_files = kmalloc(sizeof(struct OF) * 2);
+	KASSERT(open_files != NULL);
+	open_files[0] = file1; /* stdin not open, so start from entry 0 */
+	open_files[1] = file2;
+	num_files = 2; /* ignore stdin */
+	curproc->fds[1]->free = false;
+	curproc->fds[2]->free = false;
+	curproc->fds[1]->can_write = true;
+	curproc->fds[2]->can_read = false;
+	curproc->fds[1]->can_write = true;
+	curproc->fds[2]->can_read = false;
+	curproc->fds[1]->file = &open_files[0];
+	curproc->fds[2]->file = &open_files[1];
+
 	/* Warp to user mode. */
 	enter_new_process(0 /*argc*/, NULL /*userspace addr of argv*/,
 			  NULL /*userspace addr of environment*/,

@@ -20,10 +20,11 @@ typedef struct OF {
 typedef struct FD {
 	bool free; /* used to mark this fd as available */
 	OF *file; /* ptr to the open file entry */
-	bool can_write; /* used to handle O_RDONLY open mode */
+	bool can_read; /* used to handle O_RDONLY open mode */
+	bool can_write; /* used to handle O_WRONLY open mode */
 } FD;
 
-struct OF *open_files = NULL; /* dynamically allocated open file table */
+extern struct OF *open_files; /* dynamically allocated open file table */
 uint32_t num_files; /* number of open files on the system */
 
 /* function prototypes for helpers */

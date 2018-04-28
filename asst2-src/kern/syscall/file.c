@@ -16,12 +16,15 @@
 #include <copyinout.h>
 #include <proc.h>
 
+struct OF *open_files = NULL;
+
 /*
  * Initialize state required for the open file and file descriptor tables.
  */
 void fs_bootstrap() {
 	kprintf("\nINIT FS...\n");
 	num_files = 0;
+	open_files = NULL;
 }
 
 /*
@@ -36,7 +39,7 @@ void fs_clear_tables() {
  * Check if the fd is valid for the current process.
  */
 bool valid_fd(uint32_t fd, struct FD *fds) {
-	if (fd >= __OPEN_MAX) {
+	if (fd <= 0 || fd >= __OPEN_MAX) {
 		return false; /* invalid file descriptor */
 	}
 	if (fds == NULL) {
@@ -59,19 +62,21 @@ void init_fd_table() {
 		KASSERT(curproc->fds[i] != NULL);
 		curproc->fds[i]->free = true;
 	}
+	curproc->fds[0]->free = false; /* skip stdin fd, so stdout/err will
+	be opened on fd 1 and 2 respectively */
 }
 
 /*
  * Open a file in the specified mode. Return a process-unique file
  * descriptor on success; otherwise, return an appropriate errno.
  */
-int sys_open(const_userptr_t path, uint32_t flags, mode_t mode) {
-	// Copy user space pointer to kernel space buffer
+int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
+	/* copy user space pointer to kernel space buffer */
 	char path_kern[PATH_MAX];
 	size_t path_kern_size = 0;
 	copyinstr(path, path_kern, (size_t) PATH_MAX, &path_kern_size);
 
-	kprintf("\nNOOOOOOOOOOOoOPENING FILE...%s %d\n", path_kern, flags);
+	kprintf("\nOPENING FILE...%s %d\n", path_kern, flags);
 	struct FD **fds = curproc->fds;
 
 	/* look for an available fd */
@@ -83,15 +88,26 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode) {
 		}
 	}
 	if (fd_found == -1) {
+		kprintf("Ran out of file descriptors\n");
 		return EMFILE; /* reached max open files for this process */
 	}
 
-	// Check whether O_WRONLY or O_RDWR in flags; update can_write flag if true
-	if ((flags & O_WRONLY) != 0 || (flags & O_RDWR) != 0) {
-		kprintf("CAN_WRITE FLAG ENABLED!\n");
+	/* set can_read/can_write flags according to flags argument */
+	if ((flags & O_RDWR) != 0) {
+		kprintf("CAN READ AND WRITE\n");
+		fds[fd_found]->can_read = true;
 		fds[fd_found]->can_write = true;
-	} else {
+	} else if ((flags & O_WRONLY) != 0) {
+		kprintf("CAN WRITE ONLY\n");
+		fds[fd_found]->can_read = false;
+		fds[fd_found]->can_write = true;
+	} else if (flags == O_RDONLY) {
+		kprintf("CAN READ ONLY\n");
+		fds[fd_found]->can_read = true;
 		fds[fd_found]->can_write = false;
+	} else {
+		kprintf("Invalid flags to open %d\n", flags);
+		return EINVAL; /* unknown flags */
 	}
 
 	/* TODO: implement more error handling before calling vfs_open */
@@ -99,7 +115,10 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode) {
 	/* open the file - will increase the ref count in vnode */
 	struct vnode *v;
 	int result = vfs_open(path_kern, flags, mode, &v);
-	if (result != 0) return result;
+	if (result != 0) {
+		kprintf("Error being returned from vfs_open %d\n", result);
+		return result;
+	}
 
 	/* look for vnode in open file table */
 	fds[fd_found]->file = NULL;
@@ -120,7 +139,8 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode) {
 	}
 
 	fds[fd_found]->free = false; /* mark this fd as used */
-	return fd_found;
+	*fd = fd_found;
+	return 0;
 }
 
 /*
@@ -145,12 +165,12 @@ int sys_close(uint32_t fd) {
  * Read up to buflen bytes into the buffer buf and return number of bytes read.
  */
 int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
-	// Copy user space pointer to kernel space buffer
+	/* copy user space pointer to kernel space buffer */
 	char buf_kern[NAME_MAX];
 	size_t buf_kern_size = 0;
 	copyinstr(buf, buf_kern, buflen, &buf_kern_size);
 
-	kprintf("\nREADING FILE...%d %s %d\n", fd, buf_kern, buflen);
+	kprintf("\nREADING FILE...%d %d\n", fd, buflen);
 
 	struct FD **fds = curproc->fds;
 	if (!valid_fd(fd, *fds)) {
@@ -181,6 +201,7 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	// TODO REMOVE THIS JUST SHOWS READ SUCCEEDED
 	kprintf("(kernel) BUF CONTENTS: \n");
 	kprintf("###################\n");
+	buf_kern[resid - u.uio_resid] = '\0';
 	kprintf("%s", buf_kern);
 	kprintf("###################\n");
 
@@ -191,7 +212,7 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 }
 
 int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) {
-	// Copy user space pointer to kernel space buffer
+	/* copy user space pointer to kernel space buffer */
 	char buf_kern[NAME_MAX];
 	size_t buf_kern_size = 0;
 	copyinstr(buf, buf_kern, nbytes, &buf_kern_size);
