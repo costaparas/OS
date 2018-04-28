@@ -33,6 +33,7 @@ FD/OF design
 * Need to maintain reference count - other FDs might point to open file table
 * Use spinlock in proc struct to handle concurrent access
 * In proc_end (WHEREVER THAT IS), kfree the fd_table
+* Don't reallocate new open file table on each new program run
 
 NOTES FROM TUTORIAL
 ===================
