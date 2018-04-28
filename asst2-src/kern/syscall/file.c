@@ -177,6 +177,8 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 		return EBADF;
 	} else if (fds[fd]->free == true) {
 		return EBADF; /* file must not be not open */
+	} else if (!fds[fd]->can_read) {
+		return EBADF; /* file was not opened for reading */
 	}
 
 	struct iovec iov;
