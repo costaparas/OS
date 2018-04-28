@@ -160,6 +160,7 @@ int sys_close(uint32_t fd) {
 		vfs_close((fds[fd]->file)->v); /* hard i/o error is unlikely and
 		rarely checked - see kern/vfs/vfspath.c */
 		fds[fd]->free = true; /* fd can be re-used for this process */
+		fds[fd]->file->offset = 0;
 		return 0;
 	}
 	return EBADF; /* fd must not be open */
@@ -170,10 +171,6 @@ int sys_close(uint32_t fd) {
  */
 int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	/* copy user space pointer to kernel space buffer */
-	char buf_kern[NAME_MAX];
-	size_t buf_kern_size = 0;
-	copyinstr(buf, buf_kern, buflen, &buf_kern_size);
-
 	kprintf("\nREADING FILE...%d %d\n", fd, buflen); /* TODO: debug-only */
 
 	struct FD **fds = curproc->fds;
@@ -186,12 +183,9 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	}
 
 	struct iovec iov;
-	iov.iov_kbase = buf_kern;
-	iov.iov_len = buflen;
-
 	struct vnode *v = fds[fd]->file->v;
 	struct uio u;
-	uio_kinit(&iov, &u, buf_kern, buflen, fds[fd]->file->offset, UIO_READ);
+	uio_uinit(&iov, &u, (void *) buf, buflen, fds[fd]->file->offset, UIO_READ);
 
 	size_t resid = u.uio_resid;
 	int ret = VOP_READ(v, &u);
@@ -206,8 +200,7 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	/* TODO: debug-only */
 	kprintf("(kernel) BUF CONTENTS: \n");
 	kprintf("###################\n");
-	buf_kern[resid - u.uio_resid] = '\0';
-	kprintf("%s", buf_kern);
+	kprintf("%s", (char *) buf);
 	kprintf("###################\n");
 
 	*read = resid - u.uio_resid;
@@ -236,7 +229,7 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
 
 	struct vnode *v = curproc->fds[fd]->file->v;
 	struct uio u;
-	uio_kinit(&iov, &u, buf_kern, nbytes, fds[fd]->file->offset, UIO_WRITE);
+	uio_uinit(&iov, &u, (void *) buf, nbytes, fds[fd]->file->offset, UIO_WRITE);
 	size_t resid = u.uio_resid;
 	int ret = VOP_WRITE(v, &u);
 	if (ret) return ret; /* rest of error-checking handled here */
