@@ -99,7 +99,8 @@ syscall(struct trapframe *tf)
 
 	retval = 0;
 
-	size_t nbytes = 0; /* number of bytes read/written */
+	// This is defined as uint64_t so that it works with split64to32
+	uint64_t nbytes = 0; /* number of bytes read/written */
 	int fd = 0; /* file descriptor of file being opened */
 
 	switch (callno) {
@@ -119,13 +120,13 @@ kprintf("fd returned: %d\n", fd); //TODO: remove this print
 		break;
 	case SYS_read:
 		err = sys_read((uint32_t) tf->tf_a0, (const_userptr_t) tf->tf_a1,
-	       (uint32_t) tf->tf_a2, &nbytes);
-kprintf("nbytes read/written: %d\n", nbytes); //TODO: remove this print
+			       (uint32_t) tf->tf_a2, (size_t *) &nbytes);
+		kprintf("nbytes read/written: %d\n", (int) nbytes); //TODO: remove this print
 		break;
 	case SYS_write:
 		err = sys_write((uint32_t) tf->tf_a0, (const_userptr_t) tf->tf_a1,
-				(uint32_t) tf->tf_a2, &nbytes);
-kprintf("nbytes read/written: %d\n", nbytes); //TODO: remove this print
+				(uint32_t) tf->tf_a2, (size_t *) &nbytes);
+		kprintf("nbytes read/written: %d\n", (int) nbytes); //TODO: remove this print
 		break;
 	default:
 		kprintf("Unknown syscall %d\n", callno);
