@@ -24,7 +24,7 @@ typedef struct FD {
 	bool can_write; /* used to handle O_WRONLY open mode */
 } FD;
 
-extern struct OF *open_files; /* dynamically allocated open file table */
+extern struct OF **open_files; /* dynamically allocated open file table */
 uint32_t num_files; /* number of open files on the system */
 
 /* function prototypes for helpers */

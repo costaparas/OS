@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 //	printf("(user) bytes read: %d\n", bytes_read);
 
 	close(fd);
-//	printf("HELLO FROM ASST2!!!!!!!!!!!!!!! CHECKING WRITE WORKS\n");
+	printf("HELLO FROM ASST2!!!!!!!!!!!!!!! CHECKING WRITE WORKS\n");
 	return 0;
 	/* end custom test */
 

@@ -16,7 +16,7 @@
 #include <copyinout.h>
 #include <proc.h>
 
-struct OF *open_files = NULL;
+struct OF **open_files = NULL;
 
 /*
  * Initialize state required for the open file and file descriptor tables.
@@ -32,6 +32,9 @@ void fs_bootstrap() {
  */
 void fs_clear_tables() {
 	kprintf("\nFREEING FS...\n"); /* TODO: debug-only */
+	for (uint32_t i = 0; i < num_files; i++) {
+		kfree(open_files[i]);
+	}
 	kfree(open_files);
 }
 
@@ -123,19 +126,20 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 	/* look for vnode in open file table */
 	fds[fd_found]->file = NULL;
 	for (uint32_t i = 0; i < num_files; ++i) {
-		if (open_files[i].v == v) {
-			fds[fd_found]->file = &open_files[i];
+		if (open_files[i]->v == v) {
+			fds[fd_found]->file = open_files[i];
 			break;
 		}
 	}
 
 	/* otherwise, create a new entry in open file table for the vnode */
 	if (fds[fd_found]->file == NULL) {
-		open_files = (struct OF *) krealloc(open_files,
-			sizeof(OF) * num_files, sizeof(OF) * (num_files + 1));
-		open_files[num_files].offset = 0;
-		open_files[num_files].v = v;
-		fds[fd_found]->file = &open_files[num_files++];
+		open_files = (struct OF **) krealloc(open_files,
+			sizeof(OF *) * num_files, sizeof(OF *) * (num_files + 1));
+		open_files[num_files] = kmalloc(sizeof(struct OF));
+		open_files[num_files]->offset = 0;
+		open_files[num_files]->v = v;
+		fds[fd_found]->file = open_files[num_files++];
 	}
 
 	fds[fd_found]->free = false; /* mark this fd as used */
@@ -230,7 +234,7 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
 	iov.iov_kbase = buf_kern;
 	iov.iov_len = nbytes;
 
-	struct vnode *v = fds[fd]->file->v;
+	struct vnode *v = curproc->fds[fd]->file->v;
 	struct uio u;
 	uio_kinit(&iov, &u, buf_kern, nbytes, fds[fd]->file->offset, UIO_WRITE);
 	size_t resid = u.uio_resid;
