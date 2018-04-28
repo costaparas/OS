@@ -6,9 +6,7 @@ read
 
 write
 -----
-* COSTA: Attach stdout/stderr to console and check that it works
 * More error handling and checking (comes under flowchart below)
-* Check why random garbage data gets written as well 
 
 lseek
 -----
@@ -41,6 +39,8 @@ NOTES FROM TUTORIAL
 
 DONE
 ====
+* COSTA: Attach stdout/stderr to console and check that it works
+* Check why random garbage data gets written as well 
 * DOM: USE UIO_USERSPACE INSTEAD OF SYS - CHECK SAMPLE HELPER FUNCTION IN ASST2.PDF INSTEAD OF UIO_KINIT()
 * userptr_t - differentiate (originating from user-level) pointers from kernel-level - can't dereference without casting
 * Check assert for each individual kmalloc in init_fd_table()
