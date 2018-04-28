@@ -2,7 +2,6 @@ UPCOMING CONSIDERATIONS
 =======================
 read
 ----
-* DOM: USE UIO_USERSPACE INSTEAD OF SYS - CHECK SAMPLE HELPER FUNCTION IN ASST2.PDF INSTEAD OF UIO_KINIT()
 * More error handling and checking (comes under flowchart below)
 
 write
@@ -42,6 +41,7 @@ NOTES FROM TUTORIAL
 
 DONE
 ====
+* DOM: USE UIO_USERSPACE INSTEAD OF SYS - CHECK SAMPLE HELPER FUNCTION IN ASST2.PDF INSTEAD OF UIO_KINIT()
 * userptr_t - differentiate (originating from user-level) pointers from kernel-level - can't dereference without casting
 * Check assert for each individual kmalloc in init_fd_table()
 * Use copyin/copyout if dealing with user pointers
