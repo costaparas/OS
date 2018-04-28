@@ -185,14 +185,17 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	struct iovec iov;
 	struct vnode *v = fds[fd]->file->v;
 	struct uio u;
-	uio_uinit(&iov, &u, (void *) buf, buflen, fds[fd]->file->offset, UIO_READ);
+
+	char buf_kern[PATH_MAX] = {0};
+	uio_kinit(&iov, &u, (void *) buf_kern, buflen, fds[fd]->file->offset, UIO_READ);
 
 	size_t resid = u.uio_resid;
+	// Read vnode contents into buf_kern
 	int ret = VOP_READ(v, &u);
 	if (ret) return ret; /* rest of error-checking handled here */
 
 	/* copy data from kernel buffer into user buffer */
-	/* copyoutstr(buf_kern, buf, buflen, &buf_kern_size); TODO: fix this */
+	copyout(buf_kern, (userptr_t) buf, resid - u.uio_resid);
 
 	/* advance the file offset */
 	fds[fd]->file->offset += resid - u.uio_resid;
