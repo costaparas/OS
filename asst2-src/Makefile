@@ -83,7 +83,7 @@ q:
 	bmake k > /dev/null && bmake u > /dev/null
 
 run: # Run kernel
-	cd ../root && sys161 kernel "p /testbin/asst2"
+	cd ../root && rm -f t1.txt && sys161 kernel "p /testbin/asst2"
 	# cd ../root && sys161 kernel "$(args)"
 
 conf: # Full reconfigure

@@ -22,7 +22,7 @@ struct OF **open_files = NULL;
  * Initialize state required for the open file and file descriptor tables.
  */
 void fs_bootstrap() {
-	kprintf("\nINIT FS...\n"); /* TODO: debug-only */
+	kprintf("INIT FS...\n"); /* TODO: debug-only */
 	num_files = 0;
 	open_files = NULL;
 }
@@ -31,7 +31,7 @@ void fs_bootstrap() {
  * Free memory used by the open file and file descriptor tables.
  */
 void fs_clear_tables() {
-	kprintf("\nFREEING FS...\n"); /* TODO: debug-only */
+	kprintf("FREEING FS...\n"); /* TODO: debug-only */
 	for (uint32_t i = 0; i < num_files; i++) {
 		kfree(open_files[i]);
 	}
@@ -75,7 +75,7 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 	size_t path_kern_size = 0;
 	copyinstr(path, path_kern, (size_t) PATH_MAX, &path_kern_size);
 
-	kprintf("\nOPENING FILE...%s %d\n", path_kern, flags); /* TODO: debug-only */
+	kprintf("OPENING FILE...%s %d\n", path_kern, flags); /* TODO: debug-only */
 	struct FD **fds = curproc->fds;
 
 	/* look for an available fd */
@@ -147,7 +147,7 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
  * Close an open file. Return EBADF for an invalid fd.
  */
 int sys_close(uint32_t fd) {
-	kprintf("\nCLOSING FILE...%d\n", fd); /* TODO: debug-only */
+	kprintf("CLOSING FILE...%d\n\n", fd); /* TODO: debug-only */
 	struct FD **fds = curproc->fds;
 	if (!valid_fd(fd)) {
 		return EBADF;
@@ -167,7 +167,7 @@ int sys_close(uint32_t fd) {
  */
 int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	/* copy user space pointer to kernel space buffer */
-	kprintf("\nREADING FILE...%d %d\n", fd, buflen); /* TODO: debug-only */
+	kprintf("READING FILE...%d %d\n", fd, buflen); /* TODO: debug-only */
 
 	struct FD **fds = curproc->fds;
 	if (!valid_fd(fd)) {
@@ -198,7 +198,7 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	/* TODO: debug-only */
 	kprintf("(kernel) BUF CONTENTS:\n");
 	kprintf("###################\n");
-	kprintf("%s", (char *) buf);
+	kprintf("%s", (char *) buf_kern);
 	kprintf("###################\n");
 
 	*read = resid - u.uio_resid;

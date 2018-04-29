@@ -11,33 +11,23 @@
 char teststr[] = "The quick brown fox jumped over the lazy dog.";
 char buf[MAX_BUF];
 
+void test_open(void);
+void test_close(void);
+void test_read(void);
+void test_write(void);
+
 int main(int argc, char *argv[]) {
 	int fd, r, i, j, k;
 	(void) argc;
 	(void) argv;
-	/* begin custom test */
-	fd = open("file.txt", O_RDONLY);
-	char buf[101];
-	int bytes_read = read(fd, buf, 99);
-	buf[bytes_read] = '\0';
-	printf("(user) bytes read: %d\n", bytes_read);
-	printf("read:\n%s", buf);
 
-	char f[] = "hello world\n";
-	int fd2 = open("write.txt", O_WRONLY | O_CREAT);
-	write(fd2, f, 12);
-
-	/* check offset increased - should print nothing */
-	char buf2[101];
-	bytes_read = read(fd, buf2, 99);
-	buf2[bytes_read] = '\0';
-	printf("(user) bytes read: %d\n", bytes_read);
-
-	close(fd);
-	close(fd2);
-	printf("HELLO FROM ASST2!!!!!!!!!!!!!!! CHECKING WRITE WORKS\n");
+	/* begin custom tests */
+	test_open();
+	test_close();
+	test_read();
+	test_write();
 	return 0;
-	/* end custom test */
+	/* end custom tests */
 
 	printf("\n**********\n* File Tester\n");
 
@@ -144,4 +134,211 @@ int main(int argc, char *argv[]) {
 	close(fd);
 
 	return 0;
+}
+
+void test_open(void) {
+	printf("TESTING OPEN...\n\n");
+
+	printf("open a file for reading that doesn't exist\n");
+	int fd = open("t1.txt", O_RDONLY);
+	if (fd > 0) {
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error: %s\n\n", strerror(errno));
+	}
+
+	printf("open a file for writing that doesn't exist\n");
+	fd = open("t1.txt", O_WRONLY);
+	if (fd > 0) {
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error: %s\n\n", strerror(errno));
+	}
+
+	printf("open a file for reading and writing that doesn't exist\n");
+	fd = open("t1.txt", O_RDWR);
+	if (fd > 0) {
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error: %s\n\n", strerror(errno));
+	}
+
+	printf("open a file for writing with O_CREAT\n");
+	fd = open("t1.txt", O_WRONLY | O_CREAT);
+	if (fd > 0) {
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+
+	printf("open a file for writing with O_EXCL but not O_CREAT\n");
+	fd = open("t1.txt", O_WRONLY | O_EXCL);
+	if (fd > 0) {
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+
+	printf("open a file for writing with O_EXCL and O_CREAT\n");
+	fd = open("t1.txt", O_WRONLY | O_CREAT | O_EXCL);
+	if (fd > 0) {
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error: %s\n\n", strerror(errno));
+	}
+
+	printf("open an existing file for reading\n");
+	fd = open("t1.txt", O_RDONLY);
+	if (fd > 0) {
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error: %s\n\n", strerror(errno));
+	}
+
+	printf("open an existing file for writing\n");
+	fd = open("t1.txt", O_WRONLY);
+	if (fd > 0) {
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error: %s\n\n", strerror(errno));
+	}
+
+	printf("open an existing file for reading and writing\n");
+	fd = open("t1.txt", O_RDWR);
+	if (fd > 0) {
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error: %s\n\n", strerror(errno));
+	}
+}
+
+void test_close(void) {
+	printf("TESTING CLOSE...\n\n");
+
+	printf("close an open file\n");
+	int fd = open("t1.txt", O_RDONLY);
+	int ret = close(fd);
+	if (ret) {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+
+	printf("close an unopened file\n");
+	ret = close(10);
+	if (ret) {
+		printf("error: %s\n\n", strerror(errno));
+	}
+
+	printf("close a file with fd >= OPEN_MAX\n");
+	ret = close(1000);
+	if (ret) {
+		printf("error: %s\n\n", strerror(errno));
+	}
+}
+
+void test_read(void) {
+	printf("TESTING READ...\n\n");
+
+	printf("read from a file opened for reading only\n");
+	int fd = open("file.txt", O_RDONLY);
+	if (fd > 0) {
+		char buf[101];
+		int bytes = read(fd, buf, 99);
+		buf[bytes] = '\0';
+		printf("bytes read - should be 27: %d\n", bytes);
+		printf("check if buffer is correct - "
+			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
+		printf("check that subsequent read returns nothing\n");
+		bytes = read(fd, buf, 99);
+		printf("bytes read - should be 0: %d\n", bytes);
+		printf("check buffer is still in tact - "
+			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+
+	printf("read from a file opened for writing only\n");
+	fd = open("t1.txt", O_WRONLY);
+	if (fd > 0) {
+		char buf[11];
+		read(fd, buf, 9);
+		printf("error: %s\n\n", strerror(errno));
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+
+	printf("read from a file opened for reading and writing\n");
+	fd = open("file.txt", O_RDWR);
+	if (fd > 0) {
+		char buf[101];
+		int bytes = read(fd, buf, 99);
+		buf[bytes] = '\0';
+		printf("bytes read - should be 27: %d\n", bytes);
+		printf("check if buffer is correct - "
+			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
+		printf("check that subsequent read returns nothing\n");
+		bytes = read(fd, buf, 99);
+		printf("bytes read - should be 0: %d\n", bytes);
+		printf("check buffer is still in tact - "
+			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+}
+
+void test_write(void) {
+	printf("TESTING WRITE...\n\n");
+
+	printf("write to a file opened for writing only\n");
+	int fd = open("t1.txt", O_WRONLY);
+	if (fd > 0) {
+		char buf[] = "hello world\n";
+		int bytes = write(fd, buf, 12);
+		printf("(bytes written - should be 12: %d\n", bytes);
+		printf("check buffer is still in tact - "
+			"should be 'hello world\\n': '%s'\n", buf);
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+
+	printf("write to a file opened for reading only\n");
+	fd = open("t1.txt", O_RDONLY);
+	if (fd > 0) {
+		char buf[11];
+		write(fd, buf, 9);
+		printf("error: %s\n\n", strerror(errno));
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+
+	printf("write to a file opened for reading and writing\n");
+	fd = open("t1.txt", O_RDWR);
+	if (fd > 0) {
+		char buf[] = "hello world\n";
+		int bytes = write(fd, buf, 12);
+		printf("bytes written - should be 12: %d\n", bytes);
+		printf("check buffer is still in tact 'hello world': %s\n", buf);
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
 }
