@@ -29,8 +29,6 @@ FD/OF design
 ------------
 * Need to maintain reference count - other FDs might point to open file table
 * Use spinlock in proc struct to handle concurrent access
-* In proc_end (WHEREVER THAT IS), kfree the fd_table
-* Don't reallocate new open file table on each new program run
 
 NOTES FROM TUTORIAL
 ===================
@@ -39,6 +37,8 @@ NOTES FROM TUTORIAL
 
 DONE
 ====
+* Don't reallocate new open file table on each new program run
+* In proc_end (WHEREVER THAT IS), kfree the fd_table
 * COSTA: Attach stdout/stderr to console and check that it works
 * Check why random garbage data gets written as well 
 * DOM: USE UIO_USERSPACE INSTEAD OF SYS - CHECK SAMPLE HELPER FUNCTION IN ASST2.PDF INSTEAD OF UIO_KINIT()

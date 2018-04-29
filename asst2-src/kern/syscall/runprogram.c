@@ -102,9 +102,8 @@ runprogram(char *progname)
 	}
 
 	/* initialise state for the proc's fd table */
-	if (init_fd_table()) {
-		return ENOMEM;
-	}
+	int r = init_fd_table();
+	if (r) return r;
 
 	/* open stdout/err and connect to console device */
 	struct vnode *v1;
@@ -112,7 +111,7 @@ runprogram(char *progname)
 	mode_t m = 0;
 	char c1[] = "con:";
 	char c2[] = "con:";
-	int r = vfs_open(c1, O_WRONLY, m, &v1);
+	r = vfs_open(c1, O_WRONLY, m, &v1);
 	if (r) return r;
 	r = vfs_open(c2, O_WRONLY, m, &v2);
 	if (r) return r;

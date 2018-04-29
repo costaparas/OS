@@ -48,10 +48,6 @@ bool valid_fd(uint32_t fd) {
 	return true;
 }
 
-///////////////////////////////////////////
-/* TODO: in proc_end, kfree the fd table */
-///////////////////////////////////////////
-
 /*
  * Initialise the fd table for the process.
  */
@@ -160,7 +156,7 @@ int sys_close(uint32_t fd) {
 		vfs_close((fds[fd]->file)->v); /* hard i/o error is unlikely and
 		rarely checked - see kern/vfs/vfspath.c */
 		fds[fd]->free = true; /* fd can be re-used for this process */
-		fds[fd]->file->offset = 0;
+		fds[fd]->file->offset = 0; /* TODO: double-check this */
 		return 0;
 	}
 	return EBADF; /* fd must not be open */
@@ -190,8 +186,7 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	uio_kinit(&iov, &u, buf_kern, buflen, fds[fd]->file->offset, UIO_READ);
 
 	size_t resid = u.uio_resid;
-	// Read vnode contents into buf_kern
-	int ret = VOP_READ(v, &u);
+	int ret = VOP_READ(v, &u); /* read vnode contents into buf_kern */
 	if (ret) return ret; /* rest of error-checking handled here */
 
 	/* copy data from kernel buffer into user buffer */
@@ -216,7 +211,7 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
 	size_t buf_kern_size = 0;
 	copyinstr(buf, buf_kern, nbytes, &buf_kern_size);
 
-	kprintf("\nWRITING FILE...%d %s %d\n", fd, buf_kern, nbytes);
+	kprintf("\nWRITING FILE...%d %s %d\n", fd, buf_kern, nbytes); /* TODO: debug-only */
 	struct FD **fds = curproc->fds;
 	if (!valid_fd(fd)) {
 		return EBADF;
@@ -230,7 +225,7 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
 	iov.iov_kbase = buf_kern;
 	iov.iov_len = nbytes;
 
-	struct vnode *v = curproc->fds[fd]->file->v;
+	struct vnode *v = fds[fd]->file->v;
 	struct uio u;
 	uio_kinit(&iov, &u, buf_kern, nbytes, fds[fd]->file->offset, UIO_WRITE);
 	size_t resid = u.uio_resid;

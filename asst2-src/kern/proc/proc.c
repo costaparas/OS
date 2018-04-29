@@ -170,6 +170,12 @@ proc_destroy(struct proc *proc)
 
 	kfree(proc->p_name);
 	kfree(proc);
+
+	/* free the per-process fd table */
+	for (int i = 0; i < OPEN_MAX; ++i) {
+		kfree(proc->fds[i]);
+	}
+	kfree(proc->fds);
 }
 
 /*

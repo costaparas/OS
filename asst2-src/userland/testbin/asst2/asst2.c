@@ -16,26 +16,24 @@ int main(int argc, char *argv[]) {
 	(void) argc;
 	(void) argv;
 	/* begin custom test */
-	//fd = open("file.txt", O_WRONLY | O_CREAT);
 	fd = open("file.txt", O_RDONLY);
 	char buf[101];
 	int bytes_read = read(fd, buf, 99);
 	buf[bytes_read] = '\0';
-//	printf("(user) bytes read: %d\n", bytes_read);
+//	printf("(user) bytes read: %d %s\n", bytes_read, buf);
 
-	//attempt to write to a file - works but causes the next read to fail
-//	char f[] = "hello world";
-//	int fd2 = open("write.txt", O_WRONLY | O_CREAT);
-//	write(fd2, f, 10);
+	char f[] = "hello world\n";
+	int fd2 = open("write.txt", O_WRONLY | O_CREAT);
+	write(fd2, f, 12);
 
-	// TEST TO CHECK THAT FILE OFFSET INCREASED - SHOULD PRINT NOTHING
+	/* check offset increased - should print nothing */
 	char buf2[101];
 	bytes_read = read(fd, buf2, 99);
 	buf2[bytes_read] = '\0';
 //	printf("(user) bytes read: %d\n", bytes_read);
 
 	close(fd);
-	printf("HELLO FROM ASST2!!!!!!!!!!!!!!! CHECKING WRITE WORKS\n");
+//	printf("HELLO FROM ASST2!!!!!!!!!!!!!!! CHECKING WRITE WORKS\n");
 	return 0;
 	/* end custom test */
 
