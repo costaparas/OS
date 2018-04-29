@@ -16,6 +16,8 @@ void test_close(void);
 void test_read(void);
 void test_write(void);
 void test_std_streams(void);
+void test_lseek(void);
+void test_dup2(void);
 
 int main(int argc, char *argv[]) {
 	int fd, r, i, j, k;
@@ -28,6 +30,8 @@ int main(int argc, char *argv[]) {
 	test_read();
 	test_write();
 	test_std_streams();
+	test_lseek();
+	test_dup2();
 	return 0;
 	/* end custom tests */
 
@@ -90,7 +94,7 @@ int main(int argc, char *argv[]) {
 	r = strlen(teststr);
 	do {
 		if (buf[k] != teststr[j]) {
-			printf("ERROR  file contents mismatch\n");
+			printf("ERROR file contents mismatch\n");
 			exit(1);
 		}
 		k++;
@@ -124,14 +128,14 @@ int main(int argc, char *argv[]) {
 	r = strlen(teststr);
 	do {
 		if (buf[k] != teststr[j]) {
-			printf("ERROR  file contents mismatch\n");
+			printf("ERROR file contents mismatch\n");
 			exit(1);
 		}
 		k++;
 		j = (k + 5) % r;
 	} while (k < 5);
 
-	printf("* file lseek  okay\n");
+	printf("* file lseek okay\n");
 	printf("* closing file\n");
 	close(fd);
 
@@ -382,6 +386,7 @@ void test_write(void) {
 		fd = open("t1.txt", O_RDONLY);
 		char buf2[51];
 		bytes = read(fd, buf2, 49);
+		buf[bytes] = '\0';
 		printf("bytes read - should be 12: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'hello world\\n': '%s'\n", buf2);
@@ -417,6 +422,7 @@ void test_write(void) {
 		fd = open("t1.txt", O_RDONLY);
 		char buf2[51];
 		bytes = read(fd, buf2, 49);
+		buf[bytes] = '\0';
 		printf("bytes read - should be 15: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'this is a test\\n': '%s'\n", buf2);
@@ -440,6 +446,7 @@ void test_write(void) {
 		fd = open("t1.txt", O_RDONLY);
 		char buf2[51];
 		bytes = read(fd, buf2, 49);
+		buf[bytes] = '\0';
 		printf("bytes read - should be 10: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'blablabla\\n': '%s'\n", buf2);
@@ -463,6 +470,7 @@ void test_write(void) {
 		fd = open("t1.txt", O_RDONLY);
 		char buf2[51];
 		bytes = read(fd, buf2, 49);
+		buf[bytes] = '\0';
 		printf("bytes read - should be 29: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'blablabla\\nshould be appended\\n': '%s'\n", buf2);
@@ -489,23 +497,23 @@ void test_std_streams(void) {
 	printf("close std streams\n");
 	int ret = close(1);
 	if (ret) {
-		//printf("error (should not print!): %s\n\n", strerror(errno));
+		/* printf("error (should not print!): %s\n\n", strerror(errno)); */
 	}
 	ret = close(2);
 	if (ret) {
-		//printf("error (should not print!): %s\n\n", strerror(errno));
+		/* printf("error (should not print!): %s\n\n", strerror(errno)); */
 	}
 
-	//printf("check that fds 1 and 2 can be used subsequently\n");
+	/* printf("check that fds 1 and 2 can be used subsequently\n"); */
 	int fd1 = open("file.txt", O_RDONLY);
 	int fd2 = open("file.txt", O_RDONLY);
 	int fd3 = open("file.txt", O_RDONLY);
-	//printf("fds: %d %d %d\n", fd1, fd2, fd3);
+	/* printf("fds: %d %d %d\n", fd1, fd2, fd3); */
 	close(fd1);
 	close(fd2);
 	close(fd3);
 
-	//printf("reopen std streams\n");
+	/* printf("reopen std streams\n"); */
 	int fd = open("con:", O_WRONLY);
 	printf("stdout open on fd %d\n", fd);
 	fd = open("con:", O_WRONLY);
@@ -516,4 +524,12 @@ void test_std_streams(void) {
 	printf("print to stderr\n");
 	write(2, buf, strlen(buf));
 	printf("wrote %d bytes to stderr\n", bytes);
+}
+
+void test_lseek(void) {
+
+}
+
+void test_dup2(void) {
+
 }

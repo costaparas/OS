@@ -49,6 +49,7 @@
 #include <proc.h>
 
 extern struct OF **open_files;
+
 /*
  * Load program "progname" and start running it in usermode.
  * Does not return except on error.
@@ -102,8 +103,8 @@ runprogram(char *progname)
 	}
 
 	/* initialise state for the proc's fd table */
-	int r = init_fd_table();
-	if (r) return r;
+	result = init_fd_table();
+	if (result) return result;
 
 	/* open stdout/err and connect to console device */
 	struct vnode *v1;
@@ -111,12 +112,14 @@ runprogram(char *progname)
 	mode_t m = 0;
 	char c1[] = "con:";
 	char c2[] = "con:";
-	r = vfs_open(c1, O_WRONLY, m, &v1);
-	if (r) return r;
-	r = vfs_open(c2, O_WRONLY, m, &v2);
-	if (r) return r;
+	result = vfs_open(c1, O_WRONLY, m, &v1);
+	if (result) return result;
+	result = vfs_open(c2, O_WRONLY, m, &v2);
+	if (result) return result;
 	struct OF *file1 = kmalloc(sizeof(struct OF));
+	if (file1 == NULL) return ENOMEM;
 	struct OF *file2 = kmalloc(sizeof(struct OF));
+	if (file2 == NULL) return ENOMEM;
 	file1->v = v1;
 	file2->v = v2;
 	file1->offset = 0;
@@ -145,4 +148,3 @@ runprogram(char *progname)
 	panic("enter_new_process returned\n");
 	return EINVAL;
 }
-
