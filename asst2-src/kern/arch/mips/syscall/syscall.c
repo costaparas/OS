@@ -99,8 +99,7 @@ syscall(struct trapframe *tf)
 
 	retval = 0;
 
-	// This is defined as uint64_t so that it works with split64to32
-	uint64_t nbytes = 0; /* number of bytes read/written */
+	size_t nbytes = 0; /* number of bytes read/written */
 	int fd = 0; /* file descriptor of file being opened */
 
 	switch (callno) {
@@ -112,21 +111,22 @@ syscall(struct trapframe *tf)
 		(userptr_t)tf->tf_a1);
 		break;
 	case SYS_open:
-		err = sys_open((const_userptr_t) tf->tf_a0, (uint32_t) tf->tf_a1, (mode_t) tf->tf_a2, &fd);
-kprintf("fd returned: %d\n", fd); /* TODO: debug-only */
+		err = sys_open((const_userptr_t) tf->tf_a0,
+			(uint32_t) tf->tf_a1, (mode_t) tf->tf_a2, &fd);
+		kprintf("fd returned: %d\n", fd); /* TODO: debug-only */
 		break;
 	case SYS_close:
 		err = sys_close((uint32_t) tf->tf_a0);
 		break;
 	case SYS_read:
 		err = sys_read((uint32_t) tf->tf_a0, (const_userptr_t) tf->tf_a1,
-			       (uint32_t) tf->tf_a2, (size_t *) &nbytes);
-		kprintf("nbytes read/written: %d\n", (size_t) nbytes); /* TODO: debug-only */
+			(uint32_t) tf->tf_a2, &nbytes);
+//		kprintf("nbytes read/written: %d\n", nbytes); /* TODO: debug-only */
 		break;
 	case SYS_write:
 		err = sys_write((uint32_t) tf->tf_a0, (const_userptr_t) tf->tf_a1,
-				(uint32_t) tf->tf_a2, (size_t *) &nbytes);
-		kprintf("nbytes read/written: %d\n", (size_t) nbytes); /* TODO: debug-only */
+			(uint32_t) tf->tf_a2, &nbytes);
+//		kprintf("nbytes read/written: %d\n", nbytes); /* TODO: debug-only */
 		break;
 	default:
 		kprintf("Unknown syscall %d\n", callno);
@@ -147,7 +147,7 @@ kprintf("fd returned: %d\n", fd); /* TODO: debug-only */
 		if (callno == SYS_open) {
 			tf->tf_v0 = fd;
 		} else if (callno == SYS_read || callno == SYS_write) {
-			split64to32((uint64_t) nbytes, &tf->tf_v0, &tf->tf_v1);
+			tf->tf_v0 = nbytes;
 		} else {
 			tf->tf_v0 = retval;
 		}

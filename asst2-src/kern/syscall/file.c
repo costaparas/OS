@@ -196,7 +196,7 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	fds[fd]->file->offset += resid - u.uio_resid;
 
 	/* TODO: debug-only */
-	kprintf("(kernel) BUF CONTENTS: \n");
+	kprintf("(kernel) BUF CONTENTS:\n");
 	kprintf("###################\n");
 	kprintf("%s", (char *) buf);
 	kprintf("###################\n");
@@ -211,7 +211,7 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
 	size_t buf_kern_size = 0;
 	copyinstr(buf, buf_kern, nbytes, &buf_kern_size);
 
-	kprintf("\nWRITING FILE...%d %s %d\n", fd, buf_kern, nbytes); /* TODO: debug-only */
+//	kprintf("\nWRITING FILE...%d %s %d\n", fd, buf_kern, nbytes); /* TODO: debug-only */
 	struct FD **fds = curproc->fds;
 	if (!valid_fd(fd)) {
 		return EBADF;

@@ -20,7 +20,8 @@ int main(int argc, char *argv[]) {
 	char buf[101];
 	int bytes_read = read(fd, buf, 99);
 	buf[bytes_read] = '\0';
-//	printf("(user) bytes read: %d %s\n", bytes_read, buf);
+	printf("(user) bytes read: %d\n", bytes_read);
+	printf("read:\n%s", buf);
 
 	char f[] = "hello world\n";
 	int fd2 = open("write.txt", O_WRONLY | O_CREAT);
@@ -30,10 +31,11 @@ int main(int argc, char *argv[]) {
 	char buf2[101];
 	bytes_read = read(fd, buf2, 99);
 	buf2[bytes_read] = '\0';
-//	printf("(user) bytes read: %d\n", bytes_read);
+	printf("(user) bytes read: %d\n", bytes_read);
 
 	close(fd);
-//	printf("HELLO FROM ASST2!!!!!!!!!!!!!!! CHECKING WRITE WORKS\n");
+	close(fd2);
+	printf("HELLO FROM ASST2!!!!!!!!!!!!!!! CHECKING WRITE WORKS\n");
 	return 0;
 	/* end custom test */
 
