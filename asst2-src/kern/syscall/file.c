@@ -78,7 +78,7 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 	kprintf("OPENING FILE...%s %d\n", path_kern, flags); /* TODO: debug-only */
 	struct FD **fds = curproc->fds;
 
-	/* look for an available fd */
+	/* look for the first available fd */
 	int fd_found = -1;
 	for (int i = 0; i < OPEN_MAX; i++) {
 		if (fds[i]->free) {
@@ -92,17 +92,15 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 	}
 
 	/* set can_read/can_write flags according to flags argument */
+	fds[fd_found]->can_read = true;
+	fds[fd_found]->can_write = true;
 	if ((flags & O_RDWR) != 0) {
 		kprintf("CAN READ AND WRITE\n"); /* TODO: debug-only */
-		fds[fd_found]->can_read = true;
-		fds[fd_found]->can_write = true;
 	} else if ((flags & O_WRONLY) != 0) {
 		kprintf("CAN WRITE ONLY\n"); /* TODO: debug-only */
 		fds[fd_found]->can_read = false;
-		fds[fd_found]->can_write = true;
 	} else if (flags == O_RDONLY) {
 		kprintf("CAN READ ONLY\n"); /* TODO: debug-only */
-		fds[fd_found]->can_read = true;
 		fds[fd_found]->can_write = false;
 	} else {
 		kprintf("Invalid flags to open %d\n", flags); /* TODO: debug-only */
@@ -117,24 +115,13 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 		return result; /* rest of error-checking handled here */
 	}
 
-	/* look for vnode in open file table */
-	fds[fd_found]->file = NULL;
-	for (uint32_t i = 0; i < num_files; ++i) {
-		if (open_files[i]->v == v) {
-			fds[fd_found]->file = open_files[i];
-			break;
-		}
-	}
-
-	/* otherwise, create a new entry in open file table for the vnode */
-	if (fds[fd_found]->file == NULL) {
-		open_files = (struct OF **) krealloc(open_files,
-			sizeof(OF *) * num_files, sizeof(OF *) * (num_files + 1));
-		open_files[num_files] = kmalloc(sizeof(struct OF));
-		open_files[num_files]->offset = 0;
-		open_files[num_files]->v = v;
-		fds[fd_found]->file = open_files[num_files++];
-	}
+	/* create a new entry in open file table for the vnode */
+	open_files = (struct OF **) krealloc(open_files,
+		sizeof(OF *) * num_files, sizeof(OF *) * (num_files + 1));
+	open_files[num_files] = kmalloc(sizeof(struct OF));
+	open_files[num_files]->offset = 0;
+	open_files[num_files]->v = v;
+	fds[fd_found]->file = open_files[num_files++];
 
 	/* adjust file pointer in the case of O_APPEND being specified */
 	if ((flags & O_APPEND) != 0) {
@@ -145,6 +132,7 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 
 	fds[fd_found]->free = false; /* mark this fd as used */
 	*fd = fd_found;
+	kprintf("fd returned: %d\n", fd_found); /* TODO: debug-only */
 	return 0;
 }
 

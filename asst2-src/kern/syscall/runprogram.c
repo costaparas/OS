@@ -28,7 +28,7 @@
  */
 
 /*
- * Sample/test code for running a user program.  You can use this for
+ * Sample/test code for running a user program. You can use this for
  * reference when implementing the execv() system call. Remember though
  * that execv() needs to do more than runprogram() does.
  */
@@ -141,8 +141,8 @@ runprogram(char *progname)
 
 	/* Warp to user mode. */
 	enter_new_process(0 /*argc*/, NULL /*userspace addr of argv*/,
-			  NULL /*userspace addr of environment*/,
-			  stackptr, entrypoint);
+		NULL /*userspace addr of environment*/,
+		stackptr, entrypoint);
 
 	/* enter_new_process does not return. */
 	panic("enter_new_process returned\n");

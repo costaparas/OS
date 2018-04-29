@@ -147,7 +147,7 @@ void test_open(void) {
 
 	printf("open a file for reading that doesn't exist\n");
 	int fd = open("t1.txt", O_RDONLY);
-	if (fd > 0) {
+	if (fd >= 0) {
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -156,7 +156,7 @@ void test_open(void) {
 
 	printf("open a file for writing that doesn't exist\n");
 	fd = open("t1.txt", O_WRONLY);
-	if (fd > 0) {
+	if (fd >= 0) {
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -165,7 +165,7 @@ void test_open(void) {
 
 	printf("open a file for reading and writing that doesn't exist\n");
 	fd = open("t1.txt", O_RDWR);
-	if (fd > 0) {
+	if (fd >= 0) {
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -174,7 +174,7 @@ void test_open(void) {
 
 	printf("open a file for writing with O_CREAT\n");
 	fd = open("t1.txt", O_WRONLY | O_CREAT);
-	if (fd > 0) {
+	if (fd >= 0) {
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -183,7 +183,7 @@ void test_open(void) {
 
 	printf("open a file for writing with O_EXCL but not O_CREAT\n");
 	fd = open("t1.txt", O_WRONLY | O_EXCL);
-	if (fd > 0) {
+	if (fd >= 0) {
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -192,7 +192,7 @@ void test_open(void) {
 
 	printf("open a file for writing with O_EXCL and O_CREAT\n");
 	fd = open("t1.txt", O_WRONLY | O_CREAT | O_EXCL);
-	if (fd > 0) {
+	if (fd >= 0) {
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -201,7 +201,7 @@ void test_open(void) {
 
 	printf("open an existing file for reading\n");
 	fd = open("t1.txt", O_RDONLY);
-	if (fd > 0) {
+	if (fd >= 0) {
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -210,7 +210,7 @@ void test_open(void) {
 
 	printf("open an existing file for writing\n");
 	fd = open("t1.txt", O_WRONLY);
-	if (fd > 0) {
+	if (fd >= 0) {
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -219,7 +219,7 @@ void test_open(void) {
 
 	printf("open an existing file for reading and writing\n");
 	fd = open("t1.txt", O_RDWR);
-	if (fd > 0) {
+	if (fd >= 0) {
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -228,7 +228,7 @@ void test_open(void) {
 
 	printf("open an existing file for writing with O_TRUNC\n");
 	fd = open("t1.txt", O_WRONLY | O_TRUNC);
-	if (fd > 0) {
+	if (fd >= 0) {
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -237,7 +237,7 @@ void test_open(void) {
 
 	printf("open an existing file for writing with O_APPEND\n");
 	fd = open("t1.txt", O_WRONLY | O_APPEND);
-	if (fd > 0) {
+	if (fd >= 0) {
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -246,7 +246,7 @@ void test_open(void) {
 
 	printf("open a file with invalid flags\n");
 	fd = open("t1.txt", 999);
-	if (fd > 0) {
+	if (fd >= 0) {
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -255,7 +255,7 @@ void test_open(void) {
 
 	printf("open a NULL file\n");
 	fd = open(NULL, O_RDONLY);
-	if (fd > 0) {
+	if (fd >= 0) {
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -264,7 +264,7 @@ void test_open(void) {
 
 	printf("open a directory for reading\n");
 	fd = open("dir", O_RDONLY);
-	if (fd > 0) {
+	if (fd >= 0) {
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -273,7 +273,7 @@ void test_open(void) {
 
 	printf("open a directory for writing\n");
 	fd = open("dir", O_WRONLY);
-	if (fd > 0) {
+	if (fd >= 0) {
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -282,7 +282,7 @@ void test_open(void) {
 
 	printf("open a file in a non-existent directory\n");
 	fd = open("fake-dir/file.txt", O_RDONLY);
-	if (fd > 0) {
+	if (fd >= 0) {
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -318,7 +318,7 @@ void test_read(void) {
 
 	printf("read from a file opened for reading only\n");
 	int fd = open("file.txt", O_RDONLY);
-	if (fd > 0) {
+	if (fd >= 0) {
 		char buf[101];
 		int bytes = read(fd, buf, 99);
 		buf[bytes] = '\0';
@@ -338,7 +338,7 @@ void test_read(void) {
 
 	printf("read from a file opened for writing only\n");
 	fd = open("t1.txt", O_WRONLY);
-	if (fd > 0) {
+	if (fd >= 0) {
 		char buf[11];
 		read(fd, buf, 9);
 		printf("error: %s\n\n", strerror(errno));
@@ -350,7 +350,7 @@ void test_read(void) {
 
 	printf("read from a file opened for reading and writing\n");
 	fd = open("file.txt", O_RDWR);
-	if (fd > 0) {
+	if (fd >= 0) {
 		char buf[101];
 		int bytes = read(fd, buf, 99);
 		buf[bytes] = '\0';
@@ -367,6 +367,30 @@ void test_read(void) {
 	} else {
 		printf("error (should not print!): %s\n\n", strerror(errno));
 	}
+
+	printf("opening two instances of the same file for reading\n");
+	int fd1 = open("file.txt", O_RDONLY);
+	int fd2 = open("file.txt", O_RDONLY);
+	if (fd1 >= 0 && fd2 >= 0) {
+		char buf1[101];
+		int bytes = read(fd1, buf1, 99);
+		buf1[bytes] = '\0';
+		printf("bytes read - should be 27: %d\n", bytes);
+		printf("check if buffer is correct - "
+			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf1);
+		char buf2[101];
+		read(fd2, buf2, 99);
+		buf2[bytes] = '\0';
+		printf("bytes read - should be 27: %d\n", bytes);
+		printf("check if buffer is correct - "
+			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf2);
+		int r = close(fd1);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+		r = close(fd2);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
 }
 
 void test_write(void) {
@@ -374,7 +398,7 @@ void test_write(void) {
 
 	printf("write to a file opened for writing only\n");
 	int fd = open("t1.txt", O_WRONLY);
-	if (fd > 0) {
+	if (fd >= 0) {
 		char buf[] = "hello world\n";
 		int bytes = write(fd, buf, 12);
 		printf("bytes written - should be 12: %d\n", bytes);
@@ -398,7 +422,7 @@ void test_write(void) {
 
 	printf("write to a file opened for reading only\n");
 	fd = open("t1.txt", O_RDONLY);
-	if (fd > 0) {
+	if (fd >= 0) {
 		char buf[11];
 		write(fd, buf, 9);
 		printf("error: %s\n\n", strerror(errno));
@@ -410,7 +434,7 @@ void test_write(void) {
 
 	printf("write to a file opened for reading and writing\n");
 	fd = open("t1.txt", O_RDWR);
-	if (fd > 0) {
+	if (fd >= 0) {
 		char buf[] = "this is a test\n";
 		int bytes = write(fd, buf, 15);
 		printf("bytes written - should be 15: %d\n", bytes);
@@ -434,7 +458,7 @@ void test_write(void) {
 
 	printf("write to a file opened for writing with O_TRUNC\n");
 	fd = open("t1.txt", O_WRONLY | O_TRUNC);
-	if (fd > 0) {
+	if (fd >= 0) {
 		char buf[] = "blablabla\n";
 		int bytes = write(fd, buf, 10);
 		printf("bytes written - should be 10: %d\n", bytes);
@@ -458,7 +482,7 @@ void test_write(void) {
 
 	printf("write to a file opened for writing with O_APPEND\n");
 	fd = open("t1.txt", O_WRONLY | O_APPEND);
-	if (fd > 0) {
+	if (fd >= 0) {
 		char buf[] = "should be appended\n";
 		int bytes = write(fd, buf, 19);
 		printf("bytes written - should be 19: %d\n", bytes);
@@ -527,9 +551,11 @@ void test_std_streams(void) {
 }
 
 void test_lseek(void) {
+	printf("TESTING LSEEK...\n\n");
 
 }
 
 void test_dup2(void) {
+	printf("TESTING DUP2...\n\n");
 
 }
