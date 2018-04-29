@@ -239,6 +239,51 @@ void test_open(void) {
 	} else {
 		printf("error: %s\n\n", strerror(errno));
 	}
+
+	printf("open a file with invalid flags\n");
+	fd = open("t1.txt", 999);
+	if (fd > 0) {
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error: %s\n\n", strerror(errno));
+	}
+
+	printf("open a NULL file\n");
+	fd = open(NULL, O_RDONLY);
+	if (fd > 0) {
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error: %s\n\n", strerror(errno));
+	}
+
+	printf("open a directory for reading\n");
+	fd = open("dir", O_RDONLY);
+	if (fd > 0) {
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+
+	printf("open a directory for writing\n");
+	fd = open("dir", O_WRONLY);
+	if (fd > 0) {
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error: %s\n\n", strerror(errno));
+	}
+
+	printf("open a file in a non-existent directory\n");
+	fd = open("fake-dir/file.txt", O_RDONLY);
+	if (fd > 0) {
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error: %s\n\n", strerror(errno));
+	}
 }
 
 void test_close(void) {
