@@ -91,8 +91,6 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 		return EMFILE; /* reached max open files for this process */
 	}
 
-	/* TODO: handle O_APPEND and O_TRUNC flag by setting offset */
-
 	/* set can_read/can_write flags according to flags argument */
 	if ((flags & O_RDWR) != 0) {
 		kprintf("CAN READ AND WRITE\n"); /* TODO: debug-only */
@@ -136,6 +134,13 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 		open_files[num_files]->offset = 0;
 		open_files[num_files]->v = v;
 		fds[fd_found]->file = open_files[num_files++];
+	}
+
+	/* adjust file pointer in the case of O_APPEND being specified */
+	if ((flags & O_APPEND) != 0) {
+		struct stat stats;
+		VOP_STAT(fds[fd_found]->file->v, &stats);
+		fds[fd_found]->file->offset = stats.st_size;
 	}
 
 	fds[fd_found]->free = false; /* mark this fd as used */

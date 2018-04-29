@@ -219,6 +219,24 @@ void test_open(void) {
 	} else {
 		printf("error: %s\n\n", strerror(errno));
 	}
+
+	printf("open an existing file for writing with O_TRUNC\n");
+	fd = open("t1.txt", O_WRONLY | O_TRUNC);
+	if (fd > 0) {
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error: %s\n\n", strerror(errno));
+	}
+
+	printf("open an existing file for writing with O_APPEND\n");
+	fd = open("t1.txt", O_WRONLY | O_APPEND);
+	if (fd > 0) {
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error: %s\n\n", strerror(errno));
+	}
 }
 
 void test_close(void) {
@@ -308,10 +326,19 @@ void test_write(void) {
 	if (fd > 0) {
 		char buf[] = "hello world\n";
 		int bytes = write(fd, buf, 12);
-		printf("(bytes written - should be 12: %d\n", bytes);
+		printf("bytes written - should be 12: %d\n", bytes);
 		printf("check buffer is still in tact - "
 			"should be 'hello world\\n': '%s'\n", buf);
 		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+		printf("check that the file was actually written to\n");
+		fd = open("t1.txt", O_RDONLY);
+		char buf2[51];
+		bytes = read(fd, buf2, 49);
+		printf("bytes read - should be 12: %d\n", bytes);
+		printf("check if buffer is correct - "
+			"should be 'hello world\\n': '%s'\n", buf2);
+		r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
 		printf("error (should not print!): %s\n\n", strerror(errno));
@@ -332,11 +359,67 @@ void test_write(void) {
 	printf("write to a file opened for reading and writing\n");
 	fd = open("t1.txt", O_RDWR);
 	if (fd > 0) {
-		char buf[] = "hello world\n";
-		int bytes = write(fd, buf, 12);
-		printf("bytes written - should be 12: %d\n", bytes);
-		printf("check buffer is still in tact 'hello world': %s\n", buf);
+		char buf[] = "this is a test\n";
+		int bytes = write(fd, buf, 15);
+		printf("bytes written - should be 15: %d\n", bytes);
+		printf("check buffer is still in tact - "
+			"should be 'this is a test': '%s'\n", buf);
 		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+		printf("check that the file was overwritten from earlier write\n");
+		fd = open("t1.txt", O_RDONLY);
+		char buf2[51];
+		bytes = read(fd, buf2, 49);
+		printf("bytes read - should be 15: %d\n", bytes);
+		printf("check if buffer is correct - "
+			"should be 'this is a test\\n': '%s'\n", buf2);
+		r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+
+	printf("write to a file opened for writing with O_TRUNC\n");
+	fd = open("t1.txt", O_WRONLY | O_TRUNC);
+	if (fd > 0) {
+		char buf[] = "blablabla\n";
+		int bytes = write(fd, buf, 10);
+		printf("bytes written - should be 10: %d\n", bytes);
+		printf("check buffer is still in tact - "
+			"should be 'blablabla\\n': '%s'\n", buf);
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+		printf("check that the file was overwritten from earlier write\n");
+		fd = open("t1.txt", O_RDONLY);
+		char buf2[51];
+		bytes = read(fd, buf2, 49);
+		printf("bytes read - should be 10: %d\n", bytes);
+		printf("check if buffer is correct - "
+			"should be 'blablabla\\n': '%s'\n", buf2);
+		r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+
+	printf("write to a file opened for writing with O_APPEND\n");
+	fd = open("t1.txt", O_WRONLY | O_APPEND);
+	if (fd > 0) {
+		char buf[] = "should be appended\n";
+		int bytes = write(fd, buf, 19);
+		printf("bytes written - should be 19: %d\n", bytes);
+		printf("check buffer is still in tact - "
+			"should be 'should be appended\\n': '%s'\n", buf);
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+		printf("check that the file was appended to\n");
+		fd = open("t1.txt", O_RDONLY);
+		char buf2[51];
+		bytes = read(fd, buf2, 49);
+		printf("bytes read - should be 29: %d\n", bytes);
+		printf("check if buffer is correct - "
+			"should be 'blablabla\\nshould be appended\\n': '%s'\n", buf2);
+		r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
 		printf("error (should not print!): %s\n\n", strerror(errno));
