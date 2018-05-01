@@ -5,7 +5,7 @@ OS/161 base system version 2.0.3
 Copyright (c) 2000, 2001-2005, 2008-2011, 2013, 2014
    President and Fellows of Harvard College.  All rights reserved.
 
-Put-your-group-name-here's system version 0 (ASST2 #199)
+Put-your-group-name-here's system version 0 (ASST2 #200)
 
 16224k physical memory available
 INIT FS...
@@ -26,7 +26,8 @@ con0 at lser0
 cpu0: MIPS/161 (System/161 2.x) features 0x0
 OS/161 kernel: p /testbin/asst2
 Operation took 0.000122200 seconds
-OS/161 kernel [? for menu]: TESTING OPEN...
+OS/161 kernel [? for menu]: BEGIN CUSTOM TESTS
+TESTING OPEN...
 
 open a file for reading that doesn't exist
 OPENING FILE...t1.txt 0
@@ -231,6 +232,31 @@ CLOSING FILE...3
 
 CLOSING FILE...4
 
+read into a null buffer from a file opened for reading
+OPENING FILE...file.txt 0
+CAN READ ONLY
+fd returned: 3
+READING FILE...3 10
+error: Bad memory reference
+
+CLOSING FILE...3
+
+check that the file did not change
+OPENING FILE...file.txt 0
+CAN READ ONLY
+fd returned: 3
+READING FILE...3 99
+(kernel) BUF CONTENTS:
+###################
+hello world
+this is a test
+###################
+bytes read - should be 27: 27
+check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+CLOSING FILE...3
+
 TESTING WRITE...
 
 write to a file opened for writing only
@@ -307,7 +333,6 @@ blablabla
 ###################
 bytes read - should be 10: 10
 check if buffer is correct - should be 'blablabla\n': 'blablabla
-test
 '
 CLOSING FILE...3
 
@@ -321,6 +346,30 @@ check buffer is still in tact - should be 'should be appended\n': 'should be app
 CLOSING FILE...3
 
 check that the file was appended to
+OPENING FILE...t1.txt 0
+CAN READ ONLY
+fd returned: 3
+READING FILE...3 49
+(kernel) BUF CONTENTS:
+###################
+blablabla
+should be appended
+###################
+bytes read - should be 29: 29
+check if buffer is correct - should be 'blablabla\nshould be appended\n': 'blablabla
+should be appended
+'
+CLOSING FILE...3
+
+write a null buffer to a file opened for writing
+OPENING FILE...t1.txt 1
+CAN WRITE ONLY
+fd returned: 3
+error: Bad memory reference
+
+CLOSING FILE...3
+
+check that the file did not change
 OPENING FILE...t1.txt 0
 CAN READ ONLY
 fd returned: 3
@@ -382,6 +431,7 @@ TESTING LSEEK...
 
 TESTING DUP2...
 
+END CUSTOM TESTS
 Unknown syscall 3
-Fatal user mode trap 4 sig 10 (Address error on load, epc 0x4017d4, vaddr 0xeeeee00f)
+Fatal user mode trap 4 sig 10 (Address error on load, epc 0x401a14, vaddr 0xeeeee00f)
 panic: I don't know how to handle this

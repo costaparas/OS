@@ -160,7 +160,6 @@ int sys_close(uint32_t fd) {
  * Read up to buflen bytes into the buffer buf and return number of bytes read.
  */
 int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
-	/* copy user space pointer to kernel space buffer */
 	kprintf("READING FILE...%d %d\n", fd, buflen); /* TODO: debug-only */
 
 	struct FD **fds = curproc->fds;
@@ -208,7 +207,6 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
 	int ret = copyin(buf, buf_kern, nbytes);
 	if (ret) return ret; /* rest of error-checking handled here */
 
-//	kprintf("\nWRITING FILE...%d %s %d\n", fd, buf_kern, nbytes); /* TODO: debug-only */
 	struct FD **fds = curproc->fds;
 	if (!valid_fd(fd)) {
 		return EBADF;

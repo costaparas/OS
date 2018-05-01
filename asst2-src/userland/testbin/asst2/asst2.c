@@ -25,6 +25,7 @@ int main(int argc, char *argv[]) {
 	(void) argv;
 
 	/* begin custom tests */
+	printf("BEGIN CUSTOM TESTS\n");
 	test_open();
 	test_close();
 	test_read();
@@ -32,6 +33,7 @@ int main(int argc, char *argv[]) {
 	test_std_streams();
 	test_lseek();
 	test_dup2();
+	printf("END CUSTOM TESTS\n");
 	return 0;
 	/* end custom tests */
 
@@ -379,7 +381,7 @@ void test_read(void) {
 		printf("check if buffer is correct - "
 			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf1);
 		char buf2[101];
-		read(fd2, buf2, 99);
+		bytes = read(fd2, buf2, 99);
 		buf2[bytes] = '\0';
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
@@ -387,6 +389,27 @@ void test_read(void) {
 		int r = close(fd1);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 		r = close(fd2);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+
+	printf("read into a null buffer from a file opened for reading\n");
+	fd = open("file.txt", O_RDONLY);
+	if (fd >= 0) {
+		read(fd, NULL, 10);
+		printf("error: %s\n\n", strerror(errno));
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+		printf("check that the file did not change\n");
+		fd = open("file.txt", O_RDONLY);
+		char buf[101];
+		int bytes = read(fd, buf, 99);
+		buf[bytes] = '\0';
+		printf("bytes read - should be 27: %d\n", bytes);
+		printf("check if buffer is correct - "
+			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
+		r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
 		printf("error (should not print!): %s\n\n", strerror(errno));
@@ -410,7 +433,7 @@ void test_write(void) {
 		fd = open("t1.txt", O_RDONLY);
 		char buf2[51];
 		bytes = read(fd, buf2, 49);
-		buf[bytes] = '\0';
+		buf2[bytes] = '\0';
 		printf("bytes read - should be 12: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'hello world\\n': '%s'\n", buf2);
@@ -446,7 +469,7 @@ void test_write(void) {
 		fd = open("t1.txt", O_RDONLY);
 		char buf2[51];
 		bytes = read(fd, buf2, 49);
-		buf[bytes] = '\0';
+		buf2[bytes] = '\0';
 		printf("bytes read - should be 15: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'this is a test\\n': '%s'\n", buf2);
@@ -470,7 +493,7 @@ void test_write(void) {
 		fd = open("t1.txt", O_RDONLY);
 		char buf2[51];
 		bytes = read(fd, buf2, 49);
-		buf[bytes] = '\0';
+		buf2[bytes] = '\0';
 		printf("bytes read - should be 10: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'blablabla\\n': '%s'\n", buf2);
@@ -494,10 +517,31 @@ void test_write(void) {
 		fd = open("t1.txt", O_RDONLY);
 		char buf2[51];
 		bytes = read(fd, buf2, 49);
-		buf[bytes] = '\0';
+		buf2[bytes] = '\0';
 		printf("bytes read - should be 29: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'blablabla\\nshould be appended\\n': '%s'\n", buf2);
+		r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+
+	printf("write a null buffer to a file opened for writing\n");
+	fd = open("t1.txt", O_WRONLY);
+	if (fd >= 0) {
+		write(fd, NULL, 10);
+		printf("error: %s\n\n", strerror(errno));
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+		printf("check that the file did not change\n");
+		fd = open("t1.txt", O_RDONLY);
+		char buf[51];
+		int bytes = read(fd, buf, 49);
+		buf[bytes] = '\0';
+		printf("bytes read - should be 29: %d\n", bytes);
+		printf("check if buffer is correct - "
+			"should be 'blablabla\\nshould be appended\\n': '%s'\n", buf);
 		r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
