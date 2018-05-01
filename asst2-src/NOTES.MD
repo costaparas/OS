@@ -1,12 +1,5 @@
 UPCOMING CONSIDERATIONS
 =======================
-read
-----
-* More error handling and checking (comes under flowchart below)
-
-write
------
-* More error handling and checking (comes under flowchart below)
 
 lseek
 -----
@@ -20,15 +13,14 @@ Combinations
 * All syscalls: error handling - write up a flowchart with each of the different cases to handle
 * VERY DETAILED TESTING
 
-NOTE:
-need to handle concurrency issues using locks - open_file table & num_files
-since processes can be assumed to be single-threaded so ignore fd table
-synchronization (may need to use spinlock in struct proc anyway though?)
-
 FD/OF design
 ------------
 * Need to maintain reference count - other FDs might point to open file table
 * Use spinlock in proc struct to handle concurrent access
+* need to handle concurrency issues using locks - open_file table &
+num_files since processes can be assumed to be single-threaded so ignore
+fd table synchronization (may need to use spinlock in struct proc anyway
+though?)
 
 NOTES FROM TUTORIAL
 ===================
@@ -49,3 +41,4 @@ DONE
 * struct proc: - ADD PER-PROCESS MATERIAL IN PROC.H
 * Move krealloc to malloc.h/c
 * Change KASSERT to return ERNOMEM
+* More error handling and checking (comes under flowchart below)
