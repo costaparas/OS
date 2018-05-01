@@ -73,7 +73,8 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 	/* copy user space pointer to kernel space buffer */
 	char path_kern[PATH_MAX];
 	size_t path_kern_size = 0;
-	copyinstr(path, path_kern, (size_t) PATH_MAX, &path_kern_size);
+	int ret = copyinstr(path, path_kern, (size_t) PATH_MAX, &path_kern_size);
+	if (ret) return ret; /* rest of error-checking handled here */
 
 	kprintf("OPENING FILE...%s %d\n", path_kern, flags); /* TODO: debug-only */
 	struct FD **fds = curproc->fds;
@@ -109,10 +110,10 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 
 	/* open the file - will increase the ref count in vnode */
 	struct vnode *v;
-	int result = vfs_open(path_kern, flags, mode, &v);
-	if (result != 0) {
-		kprintf("Error being returned from vfs_open %d\n", result); /* TODO: debug-only */
-		return result; /* rest of error-checking handled here */
+	ret = vfs_open(path_kern, flags, mode, &v);
+	if (ret) {
+		kprintf("Error being returned from vfs_open %d\n", ret); /* TODO: debug-only */
+		return ret; /* rest of error-checking handled here */
 	}
 
 	/* create a new entry in open file table for the vnode */
@@ -183,7 +184,10 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	if (ret) return ret; /* rest of error-checking handled here */
 
 	/* copy data from kernel buffer into user buffer */
-	copyout(buf_kern, (userptr_t) buf, resid - u.uio_resid);
+	if (resid - u.uio_resid > 0) {
+		ret = copyout(buf_kern, (userptr_t) buf, resid - u.uio_resid);
+		if (ret) return ret; /* rest of error-checking handled here */
+	}
 
 	/* advance the file offset */
 	fds[fd]->file->offset += resid - u.uio_resid;
@@ -201,8 +205,8 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) {
 	/* copy user space pointer to kernel space buffer */
 	char buf_kern[PATH_MAX] = {0};
-	size_t buf_kern_size = 0;
-	copyinstr(buf, buf_kern, nbytes, &buf_kern_size);
+	int ret = copyin(buf, buf_kern, nbytes);
+	if (ret) return ret; /* rest of error-checking handled here */
 
 //	kprintf("\nWRITING FILE...%d %s %d\n", fd, buf_kern, nbytes); /* TODO: debug-only */
 	struct FD **fds = curproc->fds;
@@ -222,7 +226,7 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
 	struct uio u;
 	uio_kinit(&iov, &u, buf_kern, nbytes, fds[fd]->file->offset, UIO_WRITE);
 	size_t resid = u.uio_resid;
-	int ret = VOP_WRITE(v, &u);
+	ret = VOP_WRITE(v, &u);
 	if (ret) return ret; /* rest of error-checking handled here */
 
 	/* advance the file offset */

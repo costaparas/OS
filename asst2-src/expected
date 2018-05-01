@@ -1,0 +1,387 @@
+cd ../root && rm -f t1.txt && sys161 kernel "p /testbin/asst2"
+
+OS/161 base system version 2.0.3
+(with locks&CVs solution)
+Copyright (c) 2000, 2001-2005, 2008-2011, 2013, 2014
+   President and Fellows of Harvard College.  All rights reserved.
+
+Put-your-group-name-here's system version 0 (ASST2 #199)
+
+16224k physical memory available
+INIT FS...
+Device probe...
+lamebus0 (system main bus)
+emu0 at lamebus0
+ltrace0 at lamebus0
+ltimer0 at lamebus0
+beep0 at ltimer0
+rtclock0 at ltimer0
+lrandom0 at lamebus0
+random0 at lrandom0
+lhd0 at lamebus0
+lhd1 at lamebus0
+lser0 at lamebus0
+con0 at lser0
+
+cpu0: MIPS/161 (System/161 2.x) features 0x0
+OS/161 kernel: p /testbin/asst2
+Operation took 0.000122200 seconds
+OS/161 kernel [? for menu]: TESTING OPEN...
+
+open a file for reading that doesn't exist
+OPENING FILE...t1.txt 0
+CAN READ ONLY
+Error being returned from vfs_open 19
+error: No such file or directory
+
+open a file for writing that doesn't exist
+OPENING FILE...t1.txt 1
+CAN WRITE ONLY
+Error being returned from vfs_open 19
+error: No such file or directory
+
+open a file for reading and writing that doesn't exist
+OPENING FILE...t1.txt 2
+CAN READ AND WRITE
+Error being returned from vfs_open 19
+error: No such file or directory
+
+open a file for writing with O_CREAT
+OPENING FILE...t1.txt 5
+CAN WRITE ONLY
+fd returned: 3
+CLOSING FILE...3
+
+open a file for writing with O_EXCL but not O_CREAT
+OPENING FILE...t1.txt 9
+CAN WRITE ONLY
+fd returned: 3
+CLOSING FILE...3
+
+open a file for writing with O_EXCL and O_CREAT
+OPENING FILE...t1.txt 13
+CAN WRITE ONLY
+Error being returned from vfs_open 22
+error: File or object exists
+
+open an existing file for reading
+OPENING FILE...t1.txt 0
+CAN READ ONLY
+fd returned: 3
+CLOSING FILE...3
+
+open an existing file for writing
+OPENING FILE...t1.txt 1
+CAN WRITE ONLY
+fd returned: 3
+CLOSING FILE...3
+
+open an existing file for reading and writing
+OPENING FILE...t1.txt 2
+CAN READ AND WRITE
+fd returned: 3
+CLOSING FILE...3
+
+open an existing file for writing with O_TRUNC
+OPENING FILE...t1.txt 17
+CAN WRITE ONLY
+fd returned: 3
+CLOSING FILE...3
+
+open an existing file for writing with O_APPEND
+OPENING FILE...t1.txt 33
+CAN WRITE ONLY
+fd returned: 3
+CLOSING FILE...3
+
+open a file with invalid flags
+OPENING FILE...t1.txt 999
+CAN READ AND WRITE
+Error being returned from vfs_open 8
+error: Invalid argument
+
+open a NULL file
+error: Bad memory reference
+
+open a directory for reading
+OPENING FILE...dir 0
+CAN READ ONLY
+fd returned: 3
+CLOSING FILE...3
+
+open a directory for writing
+OPENING FILE...dir 1
+CAN WRITE ONLY
+Error being returned from vfs_open 18
+error: Is a directory
+
+open a file in a non-existent directory
+OPENING FILE...fake-dir/file.txt 0
+CAN READ ONLY
+Error being returned from vfs_open 19
+error: No such file or directory
+
+TESTING CLOSE...
+
+close an open file
+OPENING FILE...t1.txt 0
+CAN READ ONLY
+fd returned: 3
+CLOSING FILE...3
+
+close an unopened file
+CLOSING FILE...10
+
+error: Bad file number
+
+close a file with fd >= OPEN_MAX
+CLOSING FILE...1000
+
+error: Bad file number
+
+TESTING READ...
+
+read from a file opened for reading only
+OPENING FILE...file.txt 0
+CAN READ ONLY
+fd returned: 3
+READING FILE...3 99
+(kernel) BUF CONTENTS:
+###################
+hello world
+this is a test
+###################
+bytes read - should be 27: 27
+check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+check that subsequent read returns nothing
+READING FILE...3 99
+(kernel) BUF CONTENTS:
+###################
+###################
+bytes read - should be 0: 0
+check buffer is still in tact - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+CLOSING FILE...3
+
+read from a file opened for writing only
+OPENING FILE...t1.txt 1
+CAN WRITE ONLY
+fd returned: 3
+READING FILE...3 9
+error: Bad file number
+
+CLOSING FILE...3
+
+read from a file opened for reading and writing
+OPENING FILE...file.txt 2
+CAN READ AND WRITE
+fd returned: 3
+READING FILE...3 99
+(kernel) BUF CONTENTS:
+###################
+hello world
+this is a test
+###################
+bytes read - should be 27: 27
+check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+check that subsequent read returns nothing
+READING FILE...3 99
+(kernel) BUF CONTENTS:
+###################
+###################
+bytes read - should be 0: 0
+check buffer is still in tact - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+CLOSING FILE...3
+
+opening two instances of the same file for reading
+OPENING FILE...file.txt 0
+CAN READ ONLY
+fd returned: 3
+OPENING FILE...file.txt 0
+CAN READ ONLY
+fd returned: 4
+READING FILE...3 99
+(kernel) BUF CONTENTS:
+###################
+hello world
+this is a test
+###################
+bytes read - should be 27: 27
+check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+READING FILE...4 99
+(kernel) BUF CONTENTS:
+###################
+hello world
+this is a test
+###################
+bytes read - should be 27: 27
+check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+CLOSING FILE...3
+
+CLOSING FILE...4
+
+TESTING WRITE...
+
+write to a file opened for writing only
+OPENING FILE...t1.txt 1
+CAN WRITE ONLY
+fd returned: 3
+bytes written - should be 12: 12
+check buffer is still in tact - should be 'hello world\n': 'hello world
+'
+CLOSING FILE...3
+
+check that the file was actually written to
+OPENING FILE...t1.txt 0
+CAN READ ONLY
+fd returned: 3
+READING FILE...3 49
+(kernel) BUF CONTENTS:
+###################
+hello world
+###################
+bytes read - should be 12: 12
+check if buffer is correct - should be 'hello world\n': 'hello world
+'
+CLOSING FILE...3
+
+write to a file opened for reading only
+OPENING FILE...t1.txt 0
+CAN READ ONLY
+fd returned: 3
+error: Bad file number
+
+CLOSING FILE...3
+
+write to a file opened for reading and writing
+OPENING FILE...t1.txt 2
+CAN READ AND WRITE
+fd returned: 3
+bytes written - should be 15: 15
+check buffer is still in tact - should be 'this is a test': 'this is a test
+'
+CLOSING FILE...3
+
+check that the file was overwritten from earlier write
+OPENING FILE...t1.txt 0
+CAN READ ONLY
+fd returned: 3
+READING FILE...3 49
+(kernel) BUF CONTENTS:
+###################
+this is a test
+###################
+bytes read - should be 15: 15
+check if buffer is correct - should be 'this is a test\n': 'this is a test
+'
+CLOSING FILE...3
+
+write to a file opened for writing with O_TRUNC
+OPENING FILE...t1.txt 17
+CAN WRITE ONLY
+fd returned: 3
+bytes written - should be 10: 10
+check buffer is still in tact - should be 'blablabla\n': 'blablabla
+'
+CLOSING FILE...3
+
+check that the file was overwritten from earlier write
+OPENING FILE...t1.txt 0
+CAN READ ONLY
+fd returned: 3
+READING FILE...3 49
+(kernel) BUF CONTENTS:
+###################
+blablabla
+###################
+bytes read - should be 10: 10
+check if buffer is correct - should be 'blablabla\n': 'blablabla
+test
+'
+CLOSING FILE...3
+
+write to a file opened for writing with O_APPEND
+OPENING FILE...t1.txt 33
+CAN WRITE ONLY
+fd returned: 3
+bytes written - should be 19: 19
+check buffer is still in tact - should be 'should be appended\n': 'should be appended
+'
+CLOSING FILE...3
+
+check that the file was appended to
+OPENING FILE...t1.txt 0
+CAN READ ONLY
+fd returned: 3
+READING FILE...3 49
+(kernel) BUF CONTENTS:
+###################
+blablabla
+should be appended
+###################
+bytes read - should be 29: 29
+check if buffer is correct - should be 'blablabla\nshould be appended\n': 'blablabla
+should be appended
+'
+CLOSING FILE...3
+
+TESTING STDOUT AND STDERR...
+
+print to stdout
+some text to be written to the std streams
+wrote 43 bytes to stdout
+print to stderr
+some text to be written to the std streams
+wrote 43 bytes to stderr
+close std streams
+CLOSING FILE...1
+
+CLOSING FILE...2
+
+OPENING FILE...file.txt 0
+CAN READ ONLY
+fd returned: 1
+OPENING FILE...file.txt 0
+CAN READ ONLY
+fd returned: 2
+OPENING FILE...file.txt 0
+CAN READ ONLY
+fd returned: 3
+CLOSING FILE...1
+
+CLOSING FILE...2
+
+CLOSING FILE...3
+
+OPENING FILE...con: 1
+CAN WRITE ONLY
+fd returned: 1
+stdout open on fd 1
+OPENING FILE...con: 1
+CAN WRITE ONLY
+fd returned: 2
+stderr open on fd 2
+check that printing to std streams works again
+some text to be written to the std streams
+wrote 43 bytes to stdout
+print to stderr
+some text to be written to the std streams
+wrote 43 bytes to stderr
+TESTING LSEEK...
+
+TESTING DUP2...
+
+Unknown syscall 3
+Fatal user mode trap 4 sig 10 (Address error on load, epc 0x4017d4, vaddr 0xeeeee00f)
+panic: I don't know how to handle this
