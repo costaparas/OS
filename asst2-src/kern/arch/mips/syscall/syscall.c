@@ -36,6 +36,7 @@
 #include <current.h>
 #include <syscall.h>
 #include <endian.h>
+#include <copyinout.h>
 
 /*
  * System call dispatcher.
@@ -99,8 +100,10 @@ syscall(struct trapframe *tf)
 
 	retval = 0;
 
+	/* return values initialized by certain syscalls */
 	size_t nbytes = 0; /* number of bytes read/written */
 	int fd = 0; /* file descriptor of file being opened */
+	off_t pos; /* new file pointer position */
 
 	switch (callno) {
 	case SYS_reboot:
@@ -125,6 +128,13 @@ syscall(struct trapframe *tf)
 		err = sys_write((uint32_t) tf->tf_a0, (const_userptr_t) tf->tf_a1,
 			(uint32_t) tf->tf_a2, &nbytes);
 		break;
+	case SYS_lseek: ;
+		int64_t offset;
+		int whence;
+		join32to64(tf->tf_a2, tf->tf_a3, (uint64_t *) &offset);
+		copyin((userptr_t)tf->tf_sp + 16, &whence, sizeof(int));
+		err = sys_lseek((uint32_t) tf->tf_a0, offset, whence, &pos);
+		break;
 	default:
 		kprintf("Unknown syscall %d\n", callno);
 		err = ENOSYS;
@@ -145,6 +155,8 @@ syscall(struct trapframe *tf)
 			tf->tf_v0 = fd;
 		} else if (callno == SYS_read || callno == SYS_write) {
 			tf->tf_v0 = nbytes;
+		} else if (callno == SYS_lseek) {
+			split64to32(pos, &tf->tf_v0, &tf->tf_v1);
 		} else {
 			tf->tf_v0 = retval;
 		}

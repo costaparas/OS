@@ -201,6 +201,9 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	return 0;
 }
 
+/*
+ * Write up to nbytes bytes to a file and return number of bytes written.
+ */
 int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) {
 	/* copy user space pointer to kernel space buffer */
 	char buf_kern[PATH_MAX] = {0};
@@ -233,5 +236,16 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
 	fds[fd]->file->offset += resid - u.uio_resid;
 
 	*written = resid - u.uio_resid;
+	return 0;
+}
+
+/*
+ * Change the file pointer offset of an open file.
+ */
+int sys_lseek(uint32_t fd, off_t pos, int whence, off_t *ret) {
+	kprintf("SEEKING FILE...%d %lld %d\n", fd, pos, whence); /* TODO: debug-only */
+	*ret = 0;
+	/* call VOP_ISSEEKABLE() first to check */
+	/* use VOP_STAT() to find the size of the file (for SEEK_END) */
 	return 0;
 }

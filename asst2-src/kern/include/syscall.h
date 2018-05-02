@@ -60,5 +60,6 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd);
 int sys_close(uint32_t fd);
 int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read);
 int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written);
+int sys_lseek(uint32_t fd, off_t pos, int whence, off_t *ret);
 
 #endif /* _SYSCALL_H_ */
