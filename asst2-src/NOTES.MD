@@ -1,18 +1,6 @@
 UPCOMING CONSIDERATIONS
 =======================
 
-lseek
------
-* lseek - offset is 64 bits - can't store in a0-a3, flags goes onto stack as well, sp + 16. CHECK OUT join32to64, split64to32
-* vnode.h - will need to check vop_isseekable in lseek() - STDIN/STDOUT/STDERR (stream files) and dirs (ESPIPE) - "cache" isseekable in our tables
-
-Combinations
-------------
-* write/lseek: might need to modify return code to populate v0 and v1 if returning 64 bit value
-* write/read: (extra argument in syscall) handle returning byte sizes etc. - add extra int/whatev variable in syscall() to track and pass pointer to implementation
-* All syscalls: error handling - write up a flowchart with each of the different cases to handle
-* VERY DETAILED TESTING
-
 FD/OF design
 ------------
 * Need to maintain reference count - other FDs might point to open file table
@@ -42,3 +30,9 @@ DONE
 * Move krealloc to malloc.h/c
 * Change KASSERT to return ERNOMEM
 * More error handling and checking (comes under flowchart below)
+* lseek - offset is 64 bits - can't store in a0-a3, flags goes onto stack as well, sp + 16. CHECK OUT join32to64, split64to32
+* vnode.h - will need to check vop_isseekable in lseek() - STDIN/STDOUT/STDERR (stream files) and dirs (ESPIPE) - "cache" isseekable in our tables
+* write/lseek: might need to modify return code to populate v0 and v1 if returning 64 bit value
+* write/read: (extra argument in syscall) handle returning byte sizes etc. - add extra int/whatev variable in syscall() to track and pass pointer to implementation
+* All syscalls: error handling - write up a flowchart with each of the different cases to handle
+* VERY DETAILED TESTING
