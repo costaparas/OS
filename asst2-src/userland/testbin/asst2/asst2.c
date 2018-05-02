@@ -793,6 +793,12 @@ void test_lseek(void) {
 		lseek(2, 14, SEEK_CUR);
 		printf("error: %s\n\n", strerror(errno));
 
+		printf("try to lseek a directory\n");
+		int dir = open("dir", O_RDONLY);
+		lseek(dir, 0, SEEK_END);
+		printf("error: %s\n\n", strerror(errno));
+		close(dir);
+
 		printf("try to seek with an invalid whence\n");
 		lseek(fd, 38, 999);
 		printf("error: %s\n\n", strerror(errno));

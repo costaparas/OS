@@ -5,7 +5,7 @@ OS/161 base system version 2.0.3
 Copyright (c) 2000, 2001-2005, 2008-2011, 2013, 2014
    President and Fellows of Harvard College.  All rights reserved.
 
-Put-your-group-name-here's system version 0 (ASST2 #213)
+Put-your-group-name-here's system version 0 (ASST2 #214)
 
 16224k physical memory available
 INIT FS...
@@ -635,6 +635,15 @@ try to lseek stderr
 SEEKING FILE...2 14 1
 error: Illegal seek
 
+try to lseek a directory
+OPENING FILE...dir 0
+CAN READ ONLY
+fd returned: 4
+SEEKING FILE...4 0 2
+error: Illegal seek
+
+CLOSING FILE...4
+
 try to seek with an invalid whence
 SEEKING FILE...3 38 999
 error: Invalid argument
@@ -796,5 +805,5 @@ uick brown###################
 CLOSING FILE...3
 
 Unknown syscall 3
-Fatal user mode trap 4 sig 10 (Address error on load, epc 0x402c64, vaddr 0xeeeee00f)
+Fatal user mode trap 4 sig 10 (Address error on load, epc 0x402cb4, vaddr 0xeeeee00f)
 panic: I don't know how to handle this
