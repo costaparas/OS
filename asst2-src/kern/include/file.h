@@ -14,12 +14,13 @@
 typedef struct OF {
 	struct vnode *v; /* ptr to the underlying vnode */
 	off_t offset; /* current index into the file, i.e. the file pointer */
+	bool can_seek; /* true if the related file object can be lseek'd */
 } OF;
 
 /* state relating to a file descriptor in a process */
 typedef struct FD {
 	bool free; /* used to mark this fd as available */
-	OF *file; /* ptr to the open file entry */
+	OF *file; /* ptr to the open file entry associated with this fd */
 	bool can_read; /* used to handle O_RDONLY open mode */
 	bool can_write; /* used to handle O_WRONLY open mode */
 } FD;

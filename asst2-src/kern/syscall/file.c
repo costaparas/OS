@@ -124,6 +124,7 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 	open_files[num_files] = kmalloc(sizeof(struct OF));
 	open_files[num_files]->offset = 0;
 	open_files[num_files]->v = v;
+	open_files[num_files]->can_seek = VOP_ISSEEKABLE(v);
 	fds[fd_found]->file = open_files[num_files++];
 
 	/* adjust file pointer in the case of O_APPEND being specified */
@@ -243,7 +244,7 @@ int sys_lseek(uint32_t fd, off_t pos, int whence, off_t *ret) {
 	if (!valid_fd(fd)) return EBADF;
 
 	/* only proceed if underlying file object is seekable */
-	if (!VOP_ISSEEKABLE(fds[fd]->file->v)) {
+	if (!fds[fd]->file->can_seek) {
 		return ESPIPE;
 	}
 
