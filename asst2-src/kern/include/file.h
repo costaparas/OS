@@ -28,7 +28,7 @@ extern struct OF **open_files; /* dynamically allocated open file table */
 uint32_t num_files; /* number of open files on the system */
 
 /* function prototypes for helpers */
-bool valid_fd(uint32_t);
+bool valid_fd(uint32_t fd, struct FD *fds);
 void fs_bootstrap(void);
 void fs_clear_tables(void);
 int init_fd_table(void);

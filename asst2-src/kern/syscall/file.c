@@ -40,10 +40,13 @@ void fs_clear_tables() {
 
 /*
  * Check if the fd is valid for the current process.
+ * Open status of file is checked only if fds is not NULL.
  */
-bool valid_fd(uint32_t fd) {
+bool valid_fd(uint32_t fd, struct FD *fds) {
 	if (fd <= 0 || fd >= OPEN_MAX) {
 		return false; /* invalid file descriptor */
+	} else if (fds != NULL && fds[fd].free == true) {
+		return EBADF; /* file must not be not open */
 	}
 	return true;
 }
@@ -143,7 +146,7 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 int sys_close(uint32_t fd) {
 	kprintf("CLOSING FILE...%d\n\n", fd); /* TODO: debug-only */
 	struct FD **fds = curproc->fds;
-	if (!valid_fd(fd)) {
+	if (!valid_fd(fd, NULL)) {
 		return EBADF;
 	}
 	if (fds[fd]->free == false) {
@@ -163,10 +166,8 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	kprintf("READING FILE...%d %d\n", fd, buflen); /* TODO: debug-only */
 
 	struct FD **fds = curproc->fds;
-	if (!valid_fd(fd)) {
+	if (!valid_fd(fd, *fds)) {
 		return EBADF;
-	} else if (fds[fd]->free == true) {
-		return EBADF; /* file must not be not open */
 	} else if (!fds[fd]->can_read) {
 		return EBADF; /* file was not opened for reading */
 	}
@@ -213,10 +214,8 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
 	}
 
 	struct FD **fds = curproc->fds;
-	if (!valid_fd(fd)) {
+	if (!valid_fd(fd, *fds)) {
 		return EBADF;
-	} else if (fds[fd]->free == true) {
-		return EBADF; /* file must not be not open */
 	} else if (!fds[fd]->can_write) {
 		return EBADF; /* file was not opened for writing */
 	}
@@ -244,8 +243,26 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
  */
 int sys_lseek(uint32_t fd, off_t pos, int whence, off_t *ret) {
 	kprintf("SEEKING FILE...%d %lld %d\n", fd, pos, whence); /* TODO: debug-only */
-	*ret = 0;
-	/* call VOP_ISSEEKABLE() first to check */
-	/* use VOP_STAT() to find the size of the file (for SEEK_END) */
+	struct FD **fds = curproc->fds;
+	if (!valid_fd(fd, *fds)) {
+		return EBADF;
+	}
+
+	/* only proceed if underlying file object is seekable */
+	if (!VOP_ISSEEKABLE(fds[fd]->file->v)) {
+		return ESPIPE;
+	}
+
+	if (whence == SEEK_SET) {
+		
+	} else if (whence == SEEK_CUR) {
+		
+	} else if (whence == SEEK_END) {
+		/* use VOP_STAT() to find the size of the file */
+	} else {
+		return EINVAL; /* unknown whence */
+	}
+
+	*ret = fds[fd]->file->offset;
 	return 0;
 }
