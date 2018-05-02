@@ -284,25 +284,22 @@ int sys_dup2(int32_t oldfd, int32_t newfd, int32_t *retfd) {
 	kprintf("(kern) OLD: %d, NEW: %d\n", oldfd, newfd);
 	if (!valid_fd(oldfd) || newfd < 0 || newfd >= OPEN_MAX) return EBADF;
 
-	// Both fds identical - do nothing and return newfd
-	if (oldfd == newfd) {
-		*retfd = newfd;
-		return 0;
-	}
+	// Do nothing if both FDs are identical
+	if (oldfd != newfd) {
+		struct FD **fds = curproc->fds;
+		// newfd refers to an already open file descriptor - close it
+		// TODO requires concurrency control
+		if (!fds[newfd]->free) {
+			sys_close(newfd);
+		}
 
-	struct FD **fds = curproc->fds;
-	// newfd refers to an already open file descriptor - close it
-	// TODO requires concurrency control
-	if (!fds[newfd]->free) {
-		sys_close(newfd);
+		// Clone properties of oldfd onto newfd and increment refcount
+		fds[oldfd]->file->refcount++;
+		fds[newfd]->file = fds[oldfd]->file;
+		fds[newfd]->free = false;
+		fds[newfd]->can_read = fds[oldfd]->can_read;
+		fds[newfd]->can_write = fds[oldfd]->can_write;
 	}
-
-	// Clone properties of oldfd onto newfd and increment refcount
-	fds[oldfd]->file->refcount++;
-	fds[newfd]->file = fds[oldfd]->file;
-	fds[newfd]->free = false;
-	fds[newfd]->can_read = fds[oldfd]->can_read;
-	fds[newfd]->can_write = fds[oldfd]->can_write;
 
 	*retfd = newfd;
 	return 0;
