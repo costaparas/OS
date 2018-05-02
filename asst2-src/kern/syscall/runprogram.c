@@ -124,6 +124,8 @@ runprogram(char *progname)
 	file2->v = v2;
 	file1->offset = 0;
 	file2->offset = 0;
+	file1->refcount = 1;
+	file2->refcount = 1;
 	open_files = (struct OF **) krealloc(open_files,
 		sizeof(OF *) * num_files, sizeof(OF *) * (num_files + 2));
 	if (open_files == NULL) return ENOMEM;

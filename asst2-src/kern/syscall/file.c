@@ -123,6 +123,7 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 		sizeof(OF *) * num_files, sizeof(OF *) * (num_files + 1));
 	open_files[num_files] = kmalloc(sizeof(struct OF));
 	open_files[num_files]->offset = 0;
+	open_files[num_files]->refcount = 1;
 	open_files[num_files]->v = v;
 	open_files[num_files]->can_seek = VOP_ISSEEKABLE(v);
 	fds[fd_found]->file = open_files[num_files++];
