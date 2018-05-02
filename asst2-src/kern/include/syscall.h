@@ -61,5 +61,6 @@ int sys_close(uint32_t fd);
 int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read);
 int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written);
 int sys_lseek(uint32_t fd, off_t pos, int whence, off_t *ret);
+int sys_dup2(int32_t oldfd, int32_t newfd, int *retfd);
 
 #endif /* _SYSCALL_H_ */

@@ -275,3 +275,35 @@ int sys_lseek(uint32_t fd, off_t pos, int whence, off_t *ret) {
 	*ret = fds[fd]->file->offset;
 	return 0;
 }
+
+/*
+ * Clone file handles
+ */
+int sys_dup2(int32_t oldfd, int32_t newfd, int32_t *retfd) {
+	kprintf("(kern) DUPLICATING FD...old:%d new:%d\n", oldfd, newfd);
+	kprintf("(kern) OLD: %d, NEW: %d\n", oldfd, newfd);
+	if (!valid_fd(oldfd) || newfd < 0 || newfd >= OPEN_MAX) return EBADF;
+
+	// Both fds identical - do nothing and return newfd
+	if (oldfd == newfd) {
+		*retfd = newfd;
+		return 0;
+	}
+
+	struct FD **fds = curproc->fds;
+	// newfd refers to an already open file descriptor - close it
+	// TODO requires concurrency control
+	if (!fds[newfd]->free) {
+		sys_close(newfd);
+	}
+
+	// Clone properties of oldfd onto newfd and increment refcount
+	fds[oldfd]->file->refcount++;
+	fds[newfd]->file = fds[oldfd]->file;
+	fds[newfd]->free = false;
+	fds[newfd]->can_read = fds[oldfd]->can_read;
+	fds[newfd]->can_write = fds[oldfd]->can_write;
+
+	*retfd = newfd;
+	return 0;
+}

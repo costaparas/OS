@@ -904,7 +904,7 @@ void test_lseek(void) {
 		printf("'\n");
 
 		int r = close(fd);
-		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+		if (r) printf("errintor (should not print!): %s\n\n", strerror(errno));
 	} else {
 		printf("error (should not print!): %s\n\n", strerror(errno));
 	}
@@ -913,4 +913,48 @@ void test_lseek(void) {
 void test_dup2(void) {
 	printf("TESTING DUP2...\n\n");
 
+	// Magic constant
+	int STDOUT_COPY = 24;
+
+	// Some lines to print out
+	const char *DUP_LINE1 = "hello there mr duplicated fd\n";
+	const char *DUP_LINE2 = "stdout or stdsnout that is the question\n";
+	const char *DUP_LINE3 = "s u p e r  s t r e t c h y  l i n e\n";
+
+	printf("duplicate stdout to a file and print some lines\n");
+	int fd = open("dup2.txt", O_WRONLY | O_CREAT);
+	if (fd >= 0) {
+		// Keep a copy of STDOUT
+		int stdout_copy = dup2(STDOUT_FILENO, STDOUT_COPY);
+		if (stdout_copy == -1) printf("error (should not print!): %s\n\n", strerror(errno));
+
+		printf("##############################################\n");
+		printf("All stdout after this block should be in dup2.txt...\n");
+		printf("dup2.txt should contain:\n");
+		printf(DUP_LINE1);
+		printf(DUP_LINE2);
+		printf(DUP_LINE3);
+		printf("##############################################\n");
+
+		// Duplicate fd to STDOUT
+		dup2(fd, STDOUT_FILENO);
+
+		// Write some lines to dup2.txt
+		printf(DUP_LINE1);
+		printf(DUP_LINE2);
+		printf(DUP_LINE3);
+
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+
+		// Restore STDOUT to STDOUT_FILENO
+		int stdout_restored = dup2(stdout_copy, STDOUT_FILENO);
+		if (stdout_restored == -1) printf("error (should not print!): %s\n\n", strerror(errno));
+
+		printf("##############################################\n");
+		printf("All stdout before here should be in dup2.txt...\n");
+		printf("##############################################\n");
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
 }

@@ -102,7 +102,7 @@ syscall(struct trapframe *tf)
 
 	/* return values initialized by certain syscalls */
 	size_t nbytes = 0; /* number of bytes read/written */
-	int fd = 0; /* file descriptor of file being opened */
+	int fd = 0; /* file descriptor of file being opened or duplicated */
 	off_t pos; /* new file pointer position */
 
 	switch (callno) {
@@ -135,6 +135,9 @@ syscall(struct trapframe *tf)
 		copyin((userptr_t)tf->tf_sp + 16, &whence, sizeof(int));
 		err = sys_lseek((uint32_t) tf->tf_a0, offset, whence, &pos);
 		break;
+	case SYS_dup2:
+		err = sys_dup2((int32_t) tf->tf_a0, (int32_t) tf->tf_a1, &fd);
+		break;
 	default:
 		kprintf("Unknown syscall %d\n", callno);
 		err = ENOSYS;
@@ -151,7 +154,7 @@ syscall(struct trapframe *tf)
 		tf->tf_a3 = 1; /* signal an error */
 	} else {
 		/* Success. */
-		if (callno == SYS_open) {
+		if (callno == SYS_open || callno == SYS_dup2) {
 			tf->tf_v0 = fd;
 		} else if (callno == SYS_read || callno == SYS_write) {
 			tf->tf_v0 = nbytes;
