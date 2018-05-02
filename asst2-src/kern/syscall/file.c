@@ -195,10 +195,10 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	fds[fd]->file->offset += resid - u.uio_resid;
 
 	/* TODO: debug-only */
-	kprintf("(kernel) BUF CONTENTS:\n");
+	/*kprintf("(kernel) BUF CONTENTS:\n");
 	kprintf("###################\n");
 	kprintf("%s", (char *) buf_kern);
-	kprintf("###################\n");
+	kprintf("###################\n");*/
 
 	*read = resid - u.uio_resid;
 	return 0;
