@@ -204,8 +204,10 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) {
 	/* copy user space pointer to kernel space buffer */
 	char buf_kern[PATH_MAX] = {0};
-	int ret = copyin(buf, buf_kern, nbytes);
-	if (ret) return ret; /* rest of error-checking handled here */
+	if (nbytes > 0) {
+		int ret = copyin(buf, buf_kern, nbytes);
+		if (ret) return ret; /* rest of error-checking handled here */
+	}
 
 	struct FD **fds = curproc->fds;
 	if (!valid_fd(fd)) {
@@ -224,7 +226,7 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
 	struct uio u;
 	uio_kinit(&iov, &u, buf_kern, nbytes, fds[fd]->file->offset, UIO_WRITE);
 	size_t resid = u.uio_resid;
-	ret = VOP_WRITE(v, &u);
+	int ret = VOP_WRITE(v, &u);
 	if (ret) return ret; /* rest of error-checking handled here */
 
 	/* advance the file offset */

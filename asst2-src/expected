@@ -5,7 +5,7 @@ OS/161 base system version 2.0.3
 Copyright (c) 2000, 2001-2005, 2008-2011, 2013, 2014
    President and Fellows of Harvard College.  All rights reserved.
 
-Put-your-group-name-here's system version 0 (ASST2 #200)
+Put-your-group-name-here's system version 0 (ASST2 #203)
 
 16224k physical memory available
 INIT FS...
@@ -257,6 +257,33 @@ this is a test
 '
 CLOSING FILE...3
 
+read 0 bytes into a buffer from a file opened for reading
+OPENING FILE...file.txt 0
+CAN READ ONLY
+fd returned: 3
+READING FILE...3 0
+(kernel) BUF CONTENTS:
+###################
+###################
+bytes read - should be 0: 0
+CLOSING FILE...3
+
+check that the file did not change
+OPENING FILE...file.txt 0
+CAN READ ONLY
+fd returned: 3
+READING FILE...3 99
+(kernel) BUF CONTENTS:
+###################
+hello world
+this is a test
+###################
+bytes read - should be 27: 27
+check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+CLOSING FILE...3
+
 TESTING WRITE...
 
 write to a file opened for writing only
@@ -385,6 +412,29 @@ should be appended
 '
 CLOSING FILE...3
 
+write 0 bytes from a buffer to a file opened for writing
+OPENING FILE...t1.txt 1
+CAN WRITE ONLY
+fd returned: 3
+bytes written - should be 0: 0
+CLOSING FILE...3
+
+check that the file did not change
+OPENING FILE...t1.txt 0
+CAN READ ONLY
+fd returned: 3
+READING FILE...3 49
+(kernel) BUF CONTENTS:
+###################
+blablabla
+should be appended
+###################
+bytes read - should be 29: 29
+check if buffer is correct - should be 'blablabla\nshould be appended\n': 'blablabla
+should be appended
+'
+CLOSING FILE...3
+
 TESTING STDOUT AND STDERR...
 
 print to stdout
@@ -433,5 +483,5 @@ TESTING DUP2...
 
 END CUSTOM TESTS
 Unknown syscall 3
-Fatal user mode trap 4 sig 10 (Address error on load, epc 0x401a14, vaddr 0xeeeee00f)
+Fatal user mode trap 4 sig 10 (Address error on load, epc 0x401c24, vaddr 0xeeeee00f)
 panic: I don't know how to handle this

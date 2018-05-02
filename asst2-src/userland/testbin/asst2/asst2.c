@@ -414,6 +414,28 @@ void test_read(void) {
 	} else {
 		printf("error (should not print!): %s\n\n", strerror(errno));
 	}
+
+	printf("read 0 bytes into a buffer from a file opened for reading\n");
+	fd = open("file.txt", O_RDONLY);
+	if (fd >= 0) {
+		char buf[101];
+		int bytes = read(fd, buf, 0);
+		printf("bytes read - should be 0: %d\n", bytes);
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+		printf("check that the file did not change\n");
+		fd = open("file.txt", O_RDONLY);
+		char buf2[101];
+		bytes = read(fd, buf2, 99);
+		buf2[bytes] = '\0';
+		printf("bytes read - should be 27: %d\n", bytes);
+		printf("check if buffer is correct - "
+			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf2);
+		r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
 }
 
 void test_write(void) {
@@ -542,6 +564,28 @@ void test_write(void) {
 		printf("bytes read - should be 29: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'blablabla\\nshould be appended\\n': '%s'\n", buf);
+		r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+
+	printf("write 0 bytes from a buffer to a file opened for writing\n");
+	fd = open("t1.txt", O_WRONLY);
+	if (fd >= 0) {
+		char buf[101];
+		int bytes = write(fd, buf, 0);
+		printf("bytes written - should be 0: %d\n", bytes);
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+		printf("check that the file did not change\n");
+		fd = open("t1.txt", O_RDONLY);
+		char buf2[51];
+		bytes = read(fd, buf2, 49);
+		buf[bytes] = '\0';
+		printf("bytes read - should be 29: %d\n", bytes);
+		printf("check if buffer is correct - "
+			"should be 'blablabla\\nshould be appended\\n': '%s'\n", buf2);
 		r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
