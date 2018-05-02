@@ -40,15 +40,14 @@ void fs_clear_tables() {
 
 /*
  * Check if the fd is valid for the current process.
- * Open status of file is checked only if fds is not NULL.
  */
-bool valid_fd(uint32_t fd, struct FD *fds) {
+bool valid_fd(uint32_t fd) {
 	if (fd <= 0 || fd >= OPEN_MAX) {
 		return false; /* invalid file descriptor */
-	} else if (fds != NULL && fds[fd].free == true) {
-		return EBADF; /* file must not be not open */
+	} else if (curproc->fds[fd]->free == true) {
+		return false; /* file must not be not open */
 	}
-	return true;
+	return true; /* this is an allocated fd for this process */
 }
 
 /*
@@ -146,17 +145,14 @@ int sys_open(const_userptr_t path, uint32_t flags, mode_t mode, int *fd) {
 int sys_close(uint32_t fd) {
 	kprintf("CLOSING FILE...%d\n\n", fd); /* TODO: debug-only */
 	struct FD **fds = curproc->fds;
-	if (!valid_fd(fd, NULL)) {
-		return EBADF;
-	}
-	if (fds[fd]->free == false) {
-		vfs_close((fds[fd]->file)->v); /* hard i/o error is unlikely and
-		rarely checked - see kern/vfs/vfspath.c */
-		fds[fd]->free = true; /* fd can be re-used for this process */
-		fds[fd]->file->offset = 0; /* TODO: double-check this */
-		return 0;
-	}
-	return EBADF; /* fd must not be open */
+	if (!valid_fd(fd)) return EBADF;
+
+	/* hard i/o error is unlikely and rarely checked - see kern/vfs/vfspath.c */
+	vfs_close((fds[fd]->file)->v);
+
+	fds[fd]->free = true; /* fd can be re-used for this process */
+	fds[fd]->file->offset = 0; /* TODO: double-check this */
+	return 0;
 }
 
 /*
@@ -166,7 +162,7 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	kprintf("READING FILE...%d %d\n", fd, buflen); /* TODO: debug-only */
 
 	struct FD **fds = curproc->fds;
-	if (!valid_fd(fd, *fds)) {
+	if (!valid_fd(fd)) {
 		return EBADF;
 	} else if (!fds[fd]->can_read) {
 		return EBADF; /* file was not opened for reading */
@@ -214,7 +210,7 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
 	}
 
 	struct FD **fds = curproc->fds;
-	if (!valid_fd(fd, *fds)) {
+	if (!valid_fd(fd)) {
 		return EBADF;
 	} else if (!fds[fd]->can_write) {
 		return EBADF; /* file was not opened for writing */
@@ -244,23 +240,30 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
 int sys_lseek(uint32_t fd, off_t pos, int whence, off_t *ret) {
 	kprintf("SEEKING FILE...%d %lld %d\n", fd, pos, whence); /* TODO: debug-only */
 	struct FD **fds = curproc->fds;
-	if (!valid_fd(fd, *fds)) {
-		return EBADF;
-	}
+	if (!valid_fd(fd)) return EBADF;
 
 	/* only proceed if underlying file object is seekable */
 	if (!VOP_ISSEEKABLE(fds[fd]->file->v)) {
 		return ESPIPE;
 	}
 
+	off_t old_offset = fds[fd]->file->offset;
 	if (whence == SEEK_SET) {
-		
+		fds[fd]->file->offset = pos;
 	} else if (whence == SEEK_CUR) {
-		
+		fds[fd]->file->offset += pos;
 	} else if (whence == SEEK_END) {
-		/* use VOP_STAT() to find the size of the file */
+		struct stat stats;
+		VOP_STAT(fds[fd]->file->v, &stats);
+		fds[fd]->file->offset = stats.st_size + pos;
 	} else {
 		return EINVAL; /* unknown whence */
+	}
+
+	/* revert to old offset if new offset < 0 */
+	if (fds[fd]->file->offset < 0) {
+		fds[fd]->file->offset = old_offset;
+		return EINVAL;
 	}
 
 	*ret = fds[fd]->file->offset;

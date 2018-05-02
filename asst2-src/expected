@@ -5,7 +5,7 @@ OS/161 base system version 2.0.3
 Copyright (c) 2000, 2001-2005, 2008-2011, 2013, 2014
    President and Fellows of Harvard College.  All rights reserved.
 
-Put-your-group-name-here's system version 0 (ASST2 #205)
+Put-your-group-name-here's system version 0 (ASST2 #213)
 
 16224k physical memory available
 INIT FS...
@@ -498,9 +498,156 @@ some text to be written to the std streams
 wrote 43 bytes to stderr
 TESTING LSEEK...
 
+change seek position on a file opened for reading
+OPENING FILE...seek.txt 0
+CAN READ ONLY
+fd returned: 3
+READING FILE...3 4
+(kernel) BUF CONTENTS:
+###################
+a
+b
+###################
+bytes read - should be 4: 4
+check if buffer is correct - a\nb\n': 'a
+b
+'
+start reading from end of file
+SEEKING FILE...3 20 0
+READING FILE...3 4
+(kernel) BUF CONTENTS:
+###################
+###################
+bytes read - should be 0: 0
+restart reading from start of file
+SEEKING FILE...3 0 0
+READING FILE...3 4
+(kernel) BUF CONTENTS:
+###################
+a
+b
+###################
+bytes read - should be 4: 4
+check if buffer is correct - a\nb\n': 'a
+b
+'
+start reading from middle of file
+SEEKING FILE...3 8 0
+READING FILE...3 4
+(kernel) BUF CONTENTS:
+###################
+e
+f
+###################
+bytes read - should be 4: 4
+check if buffer is correct - e\nf\n': 'e
+f
+'
+offset reading position using relative +ve offset
+SEEKING FILE...3 2 1
+READING FILE...3 4
+(kernel) BUF CONTENTS:
+###################
+h
+i
+###################
+bytes read - should be 4: 4
+check if buffer is correct - h\ni\n': 'h
+i
+'
+offset reading position using relative -ve offset
+SEEKING FILE...3 -4 1
+READING FILE...3 4
+(kernel) BUF CONTENTS:
+###################
+h
+i
+###################
+bytes read - should be 4: 4
+check if buffer is correct - h\ni\n': 'h
+i
+'
+offset reading position by 0 using relative offset
+SEEKING FILE...3 0 1
+READING FILE...3 4
+(kernel) BUF CONTENTS:
+###################
+j
+###################
+bytes read - should be 2: 2
+check if buffer is correct - j\n': 'j
+'
+offset reading position to 0 bytes past end of file
+SEEKING FILE...3 0 2
+READING FILE...3 11
+(kernel) BUF CONTENTS:
+###################
+###################
+bytes read - should be 0: 0
+offset reading position to 7 bytes past end of file
+SEEKING FILE...3 7 2
+READING FILE...3 3
+(kernel) BUF CONTENTS:
+###################
+###################
+bytes read - should be 0: 0
+offset reading position by -8 from the end
+SEEKING FILE...3 -8 2
+READING FILE...3 4
+(kernel) BUF CONTENTS:
+###################
+g
+h
+###################
+bytes read - should be 4: 4
+check if buffer is correct - g\nh\n': 'g
+h
+'
+offset reading position by -20 from the end
+SEEKING FILE...3 -20 2
+READING FILE...3 4
+(kernel) BUF CONTENTS:
+###################
+a
+b
+###################
+bytes read - should be 4: 4
+check if buffer is correct - a\nb\n': 'a
+b
+'
+offset reading position by -3 from the start
+SEEKING FILE...3 -3 0
+error: Invalid argument
+
+offset reading position by -5 using relative offset
+SEEKING FILE...3 -5 1
+error: Invalid argument
+
+offset reading position by -21 from the end
+SEEKING FILE...3 -21 2
+error: Invalid argument
+
+try to lseek stdout
+SEEKING FILE...1 -12 0
+error: Illegal seek
+
+try to lseek stderr
+SEEKING FILE...2 14 1
+error: Illegal seek
+
+try to seek with an invalid whence
+SEEKING FILE...3 38 999
+error: Invalid argument
+
+try to lseek an unopened fd
+SEEKING FILE...10 99 0
+error: Bad file number
+
+CLOSING FILE...3
+
 TESTING DUP2...
 
 END CUSTOM TESTS
 Unknown syscall 3
-Fatal user mode trap 4 sig 10 (Address error on load, epc 0x401cf4, vaddr 0xeeeee00f)
+Fatal user mode trap 4 sig 10 (Address error on load, epc 0x402284, vaddr 0xeeeee00f)
 panic: I don't know how to handle this

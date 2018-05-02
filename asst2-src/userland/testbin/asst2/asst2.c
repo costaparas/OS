@@ -659,7 +659,7 @@ void test_std_streams(void) {
 
 void test_lseek(void) {
 	printf("TESTING LSEEK...\n\n");
-	return; /* TODO: uncomment */
+
 	printf("change seek position on a file opened for reading\n");
 	int fd = open("seek.txt", O_RDONLY);
 	if (fd >= 0) {
@@ -730,10 +730,6 @@ void test_lseek(void) {
 		bytes = read(fd, buf6, 3);
 		printf("bytes read - should be 0: %d\n", bytes);
 
-		printf("offset reading position by -3 from the start\n");
-		lseek(fd, -3, SEEK_SET);
-		printf("error: %s\n\n", strerror(errno));
-
 		printf("offset reading position by -8 from the end\n");
 		lseek(fd, -8, SEEK_END);
 		char buf7[101];
@@ -751,6 +747,18 @@ void test_lseek(void) {
 		printf("bytes read - should be 4: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"a\\nb\\n': '%s'\n", buf8);
+
+		printf("offset reading position by -3 from the start\n");
+		lseek(fd, -3, SEEK_SET);
+		printf("error: %s\n\n", strerror(errno));
+
+		printf("offset reading position by -5 using relative offset\n");
+		lseek(fd, -5, SEEK_CUR);
+		printf("error: %s\n\n", strerror(errno));
+
+		printf("offset reading position by -21 from the end\n");
+		lseek(fd, -21, SEEK_END);
+		printf("error: %s\n\n", strerror(errno));
 
 		printf("try to lseek stdout\n");
 		lseek(1, -12, SEEK_SET);
