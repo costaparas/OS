@@ -5,7 +5,7 @@ OS/161 base system version 2.0.3
 Copyright (c) 2000, 2001-2005, 2008-2011, 2013, 2014
    President and Fellows of Harvard College.  All rights reserved.
 
-Put-your-group-name-here's system version 0 (ASST2 #203)
+Put-your-group-name-here's system version 0 (ASST2 #205)
 
 16224k physical memory available
 INIT FS...
@@ -284,6 +284,10 @@ this is a test
 '
 CLOSING FILE...3
 
+try to read from an unopened fd
+READING FILE...10 9
+error: Bad file number
+
 TESTING WRITE...
 
 write to a file opened for writing only
@@ -447,6 +451,9 @@ READING FILE...3 99
 bytes read - should be 0: 0
 CLOSING FILE...3
 
+try to write to an unopened fd
+error: Bad file number
+
 TESTING STDOUT AND STDERR...
 
 print to stdout
@@ -495,5 +502,5 @@ TESTING DUP2...
 
 END CUSTOM TESTS
 Unknown syscall 3
-Fatal user mode trap 4 sig 10 (Address error on load, epc 0x401c64, vaddr 0xeeeee00f)
+Fatal user mode trap 4 sig 10 (Address error on load, epc 0x401cf4, vaddr 0xeeeee00f)
 panic: I don't know how to handle this
