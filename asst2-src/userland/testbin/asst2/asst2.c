@@ -34,7 +34,6 @@ int main(int argc, char *argv[]) {
 	test_lseek();
 	test_dup2();
 	printf("END CUSTOM TESTS\n");
-	return 0;
 	/* end custom tests */
 
 	printf("\n**********\n* File Tester\n");
@@ -321,11 +320,13 @@ void test_read(void) {
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
+
 		printf("check that subsequent read returns nothing\n");
 		bytes = read(fd, buf, 99);
 		printf("bytes read - should be 0: %d\n", bytes);
 		printf("check buffer is still in tact - "
 			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
+
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -353,11 +354,13 @@ void test_read(void) {
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
+
 		printf("check that subsequent read returns nothing\n");
 		bytes = read(fd, buf, 99);
 		printf("bytes read - should be 0: %d\n", bytes);
 		printf("check buffer is still in tact - "
 			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
+
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -374,12 +377,14 @@ void test_read(void) {
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf1);
+
 		char buf2[101];
 		bytes = read(fd2, buf2, 99);
 		buf2[bytes] = '\0';
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf2);
+
 		int r = close(fd1);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 		r = close(fd2);
@@ -395,6 +400,7 @@ void test_read(void) {
 		printf("error: %s\n\n", strerror(errno));
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+
 		printf("check that the file did not change\n");
 		fd = open("file.txt", O_RDONLY);
 		char buf[101];
@@ -403,6 +409,7 @@ void test_read(void) {
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
+
 		r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -417,6 +424,7 @@ void test_read(void) {
 		printf("bytes read - should be 0: %d\n", bytes);
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+
 		printf("check that the file did not change\n");
 		fd = open("file.txt", O_RDONLY);
 		char buf2[101];
@@ -425,6 +433,7 @@ void test_read(void) {
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf2);
+
 		r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -448,8 +457,10 @@ void test_write(void) {
 		printf("bytes written - should be 12: %d\n", bytes);
 		printf("check buffer is still in tact - "
 			"should be 'hello world\\n': '%s'\n", buf);
+
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+
 		printf("check that the file was actually written to\n");
 		fd = open("t1.txt", O_RDONLY);
 		char buf2[51];
@@ -458,6 +469,7 @@ void test_write(void) {
 		printf("bytes read - should be 12: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'hello world\\n': '%s'\n", buf2);
+
 		r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -484,8 +496,10 @@ void test_write(void) {
 		printf("bytes written - should be 15: %d\n", bytes);
 		printf("check buffer is still in tact - "
 			"should be 'this is a test': '%s'\n", buf);
+
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+
 		printf("check that the file was overwritten from earlier write\n");
 		fd = open("t1.txt", O_RDONLY);
 		char buf2[51];
@@ -494,6 +508,7 @@ void test_write(void) {
 		printf("bytes read - should be 15: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'this is a test\\n': '%s'\n", buf2);
+
 		r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -508,8 +523,10 @@ void test_write(void) {
 		printf("bytes written - should be 10: %d\n", bytes);
 		printf("check buffer is still in tact - "
 			"should be 'blablabla\\n': '%s'\n", buf);
+
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+
 		printf("check that the file was overwritten from earlier write\n");
 		fd = open("t1.txt", O_RDONLY);
 		char buf2[51];
@@ -518,6 +535,7 @@ void test_write(void) {
 		printf("bytes read - should be 10: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'blablabla\\n': '%s'\n", buf2);
+
 		r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -532,8 +550,10 @@ void test_write(void) {
 		printf("bytes written - should be 19: %d\n", bytes);
 		printf("check buffer is still in tact - "
 			"should be 'should be appended\\n': '%s'\n", buf);
+
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+
 		printf("check that the file was appended to\n");
 		fd = open("t1.txt", O_RDONLY);
 		char buf2[51];
@@ -542,6 +562,7 @@ void test_write(void) {
 		printf("bytes read - should be 29: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'blablabla\\nshould be appended\\n': '%s'\n", buf2);
+
 		r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -555,6 +576,7 @@ void test_write(void) {
 		printf("error: %s\n\n", strerror(errno));
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+
 		printf("check that the file did not change\n");
 		fd = open("t1.txt", O_RDONLY);
 		char buf[51];
@@ -563,6 +585,7 @@ void test_write(void) {
 		printf("bytes read - should be 29: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'blablabla\\nshould be appended\\n': '%s'\n", buf);
+
 		r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -577,6 +600,7 @@ void test_write(void) {
 		printf("bytes written - should be 0: %d\n", bytes);
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+
 		printf("check that the file did not change\n");
 		fd = open("t1.txt", O_RDONLY);
 		char buf2[51];
@@ -585,6 +609,7 @@ void test_write(void) {
 		printf("bytes read - should be 29: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'blablabla\\nshould be appended\\n': '%s'\n", buf2);
+
 		r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
@@ -775,6 +800,102 @@ void test_lseek(void) {
 		printf("try to lseek an unopened fd\n");
 		lseek(10, 99, SEEK_SET);
 		printf("error: %s\n\n", strerror(errno));
+
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+
+	printf("change seek position on a file opened for writing\n");
+	fd = open("t2.txt", O_WRONLY | O_CREAT);
+	if (fd >= 0) {
+		char buf[] = "hello world\nthis is a test\n";
+		int bytes = write(fd, buf, 27);
+		printf("bytes written - should be 27: %d\n", bytes);
+		printf("check buffer is still in tact - "
+			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
+
+		printf("move to start of file before second write\n");
+		lseek(fd, 0, SEEK_SET);
+		char buf2[] = "blablabla\n";
+		bytes = write(fd, buf2, 10);
+		printf("bytes written - should be 10: %d\n", bytes);
+		printf("check buffer is still in tact - "
+			"should be 'blablabla\\n': '%s'\n", buf2);
+
+		int r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+
+		fd = open("t2.txt", O_RDONLY);
+		char buf3[101];
+		bytes = read(fd, buf3, 99);
+		buf3[bytes] = '\0';
+		printf("bytes read - should be 27: %d\n", bytes);
+		printf("check if buffer is correct - "
+			"should be 'blablabla\\nd\\nthis is a test\\n': '%s'\n", buf3);
+
+		r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+
+	printf("change seek position on a file opened for reading and writing\n");
+	fd = open("t3.txt", O_RDWR | O_CREAT);
+	if (fd >= 0) {
+		char buf[] = "hello world\nthis is a test\n";
+		int bytes = write(fd, buf, 27);
+		printf("bytes written - should be 27: %d\n", bytes);
+		printf("check buffer is still in tact - "
+			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
+
+		printf("check that which was just written by moving to start\n");
+		lseek(fd, 0, SEEK_SET);
+		char buf2[101];
+		bytes = read(fd, buf2, 99);
+		buf2[bytes] = '\0';
+		printf("bytes read - should be 27: %d\n", bytes);
+		printf("check if buffer is correct - "
+			"should be 'hello world\\nthis is a test\\n': '%s'\n", buf2);
+
+		printf("start writing at some offset past end of file\n");
+		lseek(fd, 50, SEEK_END);
+		char buf3[] = "blablabla\n";
+		bytes = write(fd, buf3, 10);
+		printf("bytes written - should be 10: %d\n", bytes);
+		printf("check buffer is still in tact - "
+			"should be 'blablabla\\n': '%s'\n", buf3);
+
+		printf("check new file contents by moving to start\n");
+		lseek(fd, -87, SEEK_END);
+		char buf4[101];
+		bytes = read(fd, buf4, 99);
+		buf4[bytes] = '\0';
+		printf("bytes read - should be 87: %d\n", bytes);
+		printf("check if buffer is correct - "
+			"should be 'hello world\\nthis is a test\\nblablabla\\n': '\n");
+		for (int i = 0; i < bytes; ++i) printf("%c", buf4[i]);
+		printf("'\n");
+
+		printf("overwrite middle of file \n");
+		lseek(fd, 17, SEEK_SET);
+		char buf5[] = "not";
+		bytes = write(fd, buf5, 3);
+		printf("bytes written - should be 3: %d\n", bytes);
+		printf("check buffer is still in tact - "
+			"should be 'not': '%s'\n", buf5);
+
+		printf("check new file contents by moving to start\n");
+		lseek(fd, -20, SEEK_CUR);
+		char buf6[101];
+		bytes = read(fd, buf6, 99);
+		buf6[bytes] = '\0';
+		printf("bytes read - should be 87: %d\n", bytes);
+		printf("check if buffer is correct - "
+			"should be 'hello world\\nthis nota test\\nblablabla\\n': '\n");
+		for (int i = 0; i < bytes; ++i) printf("%c", buf6[i]);
+		printf("'\n");
 
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));

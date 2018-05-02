@@ -73,4 +73,5 @@ cmake-build-debug
 *~
 
 # test-related files
-root/t1.txt
+root/t[123].txt
+root/test.file

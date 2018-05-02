@@ -1,4 +1,4 @@
-cd ../root && rm -f t1.txt && sys161 kernel "p /testbin/asst2"
+cd ../root && rm -f t[123].txt && sys161 kernel "p /testbin/asst2"
 
 OS/161 base system version 2.0.3
 (with locks&CVs solution)
@@ -645,9 +645,156 @@ error: Bad file number
 
 CLOSING FILE...3
 
+change seek position on a file opened for writing
+OPENING FILE...t2.txt 5
+CAN WRITE ONLY
+fd returned: 3
+bytes written - should be 27: 27
+check buffer is still in tact - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+move to start of file before second write
+SEEKING FILE...3 0 0
+bytes written - should be 10: 10
+check buffer is still in tact - should be 'blablabla\n': 'blablabla
+'
+CLOSING FILE...3
+
+OPENING FILE...t2.txt 0
+CAN READ ONLY
+fd returned: 3
+READING FILE...3 99
+(kernel) BUF CONTENTS:
+###################
+blablabla
+d
+this is a test
+###################
+bytes read - should be 27: 27
+check if buffer is correct - should be 'blablabla\nd\nthis is a test\n': 'blablabla
+d
+this is a test
+'
+CLOSING FILE...3
+
+change seek position on a file opened for reading and writing
+OPENING FILE...t3.txt 6
+CAN READ AND WRITE
+fd returned: 3
+bytes written - should be 27: 27
+check buffer is still in tact - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+check that which was just written by moving to start
+SEEKING FILE...3 0 0
+READING FILE...3 99
+(kernel) BUF CONTENTS:
+###################
+hello world
+this is a test
+###################
+bytes read - should be 27: 27
+check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+start writing at some offset past end of file
+SEEKING FILE...3 50 2
+bytes written - should be 10: 10
+check buffer is still in tact - should be 'blablabla\n': 'blablabla
+'
+check new file contents by moving to start
+SEEKING FILE...3 -87 2
+READING FILE...3 99
+(kernel) BUF CONTENTS:
+###################
+hello world
+this is a test
+###################
+bytes read - should be 87: 87
+check if buffer is correct - should be 'hello world\nthis is a test\nblablabla\n': '
+hello world
+this is a test
+                                                  blablabla
+'
+overwrite middle of file 
+SEEKING FILE...3 17 0
+bytes written - should be 3: 3
+check buffer is still in tact - should be 'not': 'not'
+check new file contents by moving to start
+SEEKING FILE...3 -20 1
+READING FILE...3 99
+(kernel) BUF CONTENTS:
+###################
+hello world
+this nota test
+###################
+bytes read - should be 87: 87
+check if buffer is correct - should be 'hello world\nthis nota test\nblablabla\n': '
+hello world
+this nota test
+                                                  blablabla
+'
+CLOSING FILE...3
+
 TESTING DUP2...
 
 END CUSTOM TESTS
+
+**********
+* File Tester
+**********
+* write() works for stdout
+**********
+* write() works for stderr
+**********
+* opening new file "test.file"
+OPENING FILE...test.file 6
+CAN READ AND WRITE
+fd returned: 3
+* open() got fd 3
+* writing test string
+* wrote 45 bytes
+* writing test string again
+* wrote 45 bytes
+* closing file
+CLOSING FILE...3
+
+**********
+* opening old file "test.file"
+OPENING FILE...test.file 0
+CAN READ ONLY
+fd returned: 3
+* open() got fd 3
+* reading entire file into buffer 
+* attempting read of 500 bytes
+READING FILE...3 500
+(kernel) BUF CONTENTS:
+###################
+The quick brown fox jumped over the lazy dog.The quick brown fox jumped over the lazy dog.###################
+* read 90 bytes
+* attempting read of 410 bytes
+READING FILE...3 410
+(kernel) BUF CONTENTS:
+###################
+###################
+* read 0 bytes
+* reading complete
+* file content okay
+**********
+* testing lseek
+SEEKING FILE...3 5 0
+* reading 10 bytes of file into buffer 
+* attempting read of 10 bytes
+READING FILE...3 10
+(kernel) BUF CONTENTS:
+###################
+uick brown###################
+* read 10 bytes
+* reading complete
+* file lseek okay
+* closing file
+CLOSING FILE...3
+
 Unknown syscall 3
-Fatal user mode trap 4 sig 10 (Address error on load, epc 0x402284, vaddr 0xeeeee00f)
+Fatal user mode trap 4 sig 10 (Address error on load, epc 0x402c64, vaddr 0xeeeee00f)
 panic: I don't know how to handle this
