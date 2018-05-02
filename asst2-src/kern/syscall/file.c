@@ -149,8 +149,12 @@ int sys_close(uint32_t fd) {
 	struct FD **fds = curproc->fds;
 	if (!valid_fd(fd)) return EBADF;
 
-	/* hard i/o error is unlikely and rarely checked - see kern/vfs/vfspath.c */
-	vfs_close((fds[fd]->file)->v);
+	// Decrement OF refcount - only close file if no more references to the file
+	if (--fds[fd]->file->refcount == 0) {
+		/* hard i/o error is unlikely and rarely checked - see kern/vfs/vfspath.c */
+		vfs_close((fds[fd]->file)->v);
+		kfree(fds[fd]->file);
+	}
 
 	fds[fd]->free = true; /* fd can be re-used for this process */
 	fds[fd]->file->offset = 0; /* TODO: double-check this */
