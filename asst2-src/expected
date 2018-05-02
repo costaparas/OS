@@ -435,6 +435,18 @@ should be appended
 '
 CLOSING FILE...3
 
+write to a file and then read from it while in RDWR mode
+OPENING FILE...t1.txt 2
+CAN READ AND WRITE
+fd returned: 3
+bytes written - should be 47: 47
+READING FILE...3 99
+(kernel) BUF CONTENTS:
+###################
+###################
+bytes read - should be 0: 0
+CLOSING FILE...3
+
 TESTING STDOUT AND STDERR...
 
 print to stdout
@@ -483,5 +495,5 @@ TESTING DUP2...
 
 END CUSTOM TESTS
 Unknown syscall 3
-Fatal user mode trap 4 sig 10 (Address error on load, epc 0x401c24, vaddr 0xeeeee00f)
+Fatal user mode trap 4 sig 10 (Address error on load, epc 0x401c64, vaddr 0xeeeee00f)
 panic: I don't know how to handle this

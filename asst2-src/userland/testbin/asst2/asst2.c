@@ -582,11 +582,26 @@ void test_write(void) {
 		fd = open("t1.txt", O_RDONLY);
 		char buf2[51];
 		bytes = read(fd, buf2, 49);
-		buf[bytes] = '\0';
+		buf2[bytes] = '\0';
 		printf("bytes read - should be 29: %d\n", bytes);
 		printf("check if buffer is correct - "
 			"should be 'blablabla\\nshould be appended\\n': '%s'\n", buf2);
 		r = close(fd);
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
+	} else {
+		printf("error (should not print!): %s\n\n", strerror(errno));
+	}
+
+	printf("write to a file and then read from it while in RDWR mode\n");
+	fd = open("t1.txt", O_RDWR);
+	if (fd >= 0) {
+		char buf[] = "this new text will overrwite\nthe previous file\n";
+		int bytes = write(fd, buf, 47);
+		printf("bytes written - should be 47: %d\n", bytes);
+		char buf2[101];
+		bytes = read(fd, buf2, 99);
+		printf("bytes read - should be 0: %d\n", bytes);
+		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
 		printf("error (should not print!): %s\n\n", strerror(errno));
