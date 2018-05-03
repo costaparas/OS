@@ -9,12 +9,14 @@ void test_read(void) {
 		char buf[101];
 		int bytes = read(fd, buf, 99);
 		buf[bytes] = '\0';
+		assert(bytes == 27);
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
 
 		printf("check that subsequent read returns nothing\n");
 		bytes = read(fd, buf, 99);
+		assert(bytes == 0);
 		printf("bytes read - should be 0: %d\n", bytes);
 		printf("check buffer is still in tact - "
 		       "should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
@@ -43,12 +45,14 @@ void test_read(void) {
 		char buf[101];
 		int bytes = read(fd, buf, 99);
 		buf[bytes] = '\0';
+		assert(bytes == 27);
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
 
 		printf("check that subsequent read returns nothing\n");
 		bytes = read(fd, buf, 99);
+		assert(bytes == 0);
 		printf("bytes read - should be 0: %d\n", bytes);
 		printf("check buffer is still in tact - "
 		       "should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
@@ -66,6 +70,7 @@ void test_read(void) {
 		char buf1[101];
 		int bytes = read(fd1, buf1, 99);
 		buf1[bytes] = '\0';
+		assert(bytes == 27);
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "should be 'hello world\\nthis is a test\\n': '%s'\n", buf1);
@@ -73,6 +78,7 @@ void test_read(void) {
 		char buf2[101];
 		bytes = read(fd2, buf2, 99);
 		buf2[bytes] = '\0';
+		assert(bytes == 27);
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "should be 'hello world\\nthis is a test\\n': '%s'\n", buf2);
@@ -98,6 +104,7 @@ void test_read(void) {
 		char buf[101];
 		int bytes = read(fd, buf, 99);
 		buf[bytes] = '\0';
+		assert(bytes == 27);
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
@@ -113,6 +120,7 @@ void test_read(void) {
 	if (fd >= 0) {
 		char buf[101];
 		int bytes = read(fd, buf, 0);
+		assert(bytes == 0);
 		printf("bytes read - should be 0: %d\n", bytes);
 		int r = close(fd);
 		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
@@ -122,6 +130,7 @@ void test_read(void) {
 		char buf2[101];
 		bytes = read(fd, buf2, 99);
 		buf2[bytes] = '\0';
+		assert(bytes == 27);
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "should be 'hello world\\nthis is a test\\n': '%s'\n", buf2);
