@@ -1,4 +1,4 @@
-#define NUM_DUP2_TESTCASES 6
+#define NUM_DUP2_TESTCASES 10
 
 #define DUP2_BUF_SIZE 50
 #define TEMP_FD 24
@@ -8,6 +8,10 @@
 const char *DUP_LINE1 = "hello there mr duplicated fd\n";
 const char *DUP_LINE2 = "stdout or stdsnout that is the question\n";
 const char *DUP_LINE3 = "s u p e r  s t r e t c h y  l i n e\n";
+
+const char *ALPHABET_LEFT = "ABCDEFGHIJKLM";
+const char *ALPHABET_RIGHT = "NOPQRSTUVWXYZ";
+const char *ALPHABET_FULL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 /* Some buffers for dup2 testing */
 char dup2_buf1[DUP2_BUF_SIZE] = {0};
@@ -27,12 +31,21 @@ static void test3 (void);
 static void test4 (void);
 static void test5 (void);
 static void test6 (void);
+static void test7 (void);
+static void test8 (void);
+static void test9 (void);
+static void test10 (void);
 
+/*
+ * Driver function to run all test cases
+ */
 void test_dup2() {
 	printf("TESTING DUP2...\n\n");
 
 	/* Array of pointers to each test case */
-	void (*test_cases[NUM_DUP2_TESTCASES])() = {&test1, &test2, &test3, &test4, &test5, &test6};
+	void (*test_cases[NUM_DUP2_TESTCASES])() = {
+		test1, test2, test3, test4, test5, test6, test7, test8, test9, test10
+	};
 
 	/* Run each of the tests in test_cases */
 	for (int i = 0; i < NUM_DUP2_TESTCASES; i++) {
@@ -85,8 +98,8 @@ static void test2 () {
 
 	assert(read(fd, dup2_buf1, 13) == 13);
 	assert(read(fd2, dup2_buf2, 13) == 13);
-	assert(strcmp(dup2_buf1, "ABCDEFGHIJKLM") == 0);
-	assert(strcmp(dup2_buf2, "NOPQRSTUVWXYZ") == 0);
+	assert(strcmp(dup2_buf1, ALPHABET_LEFT) == 0);
+	assert(strcmp(dup2_buf2, ALPHABET_RIGHT) == 0);
 
 	close_fd_helper(fd2);
 	close_fd_helper(fd);
@@ -105,7 +118,7 @@ static void test3 () {
 	assert(read(fd, dup2_buf1, 13) == -1);  /* Should fail since closed FD */
 	assert(read(fd2, dup2_buf2, 13) == 13); /* Read first half of alphabet to dup2_buf2 */
 	assert(strcmp(dup2_buf1, "") == 0);
-	assert(strcmp(dup2_buf2, "ABCDEFGHIJKLM") == 0);
+	assert(strcmp(dup2_buf2, ALPHABET_LEFT) == 0);
 }
 
 /*
@@ -145,7 +158,7 @@ static void test5 () {
 	assert(read(fd3, dup2_buf3, 13) == 13); /* Read first half of alphabet to dup2_buf3 */
 	assert(strcmp(dup2_buf1, "") == 0);
 	assert(strcmp(dup2_buf2, "") == 0);
-	assert(strcmp(dup2_buf3, "ABCDEFGHIJKLM") == 0);
+	assert(strcmp(dup2_buf3, ALPHABET_LEFT) == 0);
 
 	close_fd_helper(fd3);
 }
@@ -185,6 +198,99 @@ static void test6 () {
 	printf("dup2_write.txt should contain (identical to dup2.txt - run `diff dup2_write.txt dup2.txt`):\n");
 	printf(DUP_LINE1); printf(DUP_LINE2); printf(DUP_LINE3);
 	printf("##############################################\n");
+}
+
+/*
+ * Test 7 - duplicate a FD, write from both FDs then lseek and do more writes
+ */
+static void test7 () {
+	int fd = open_fd_helper("dup2_lseek.txt", O_WRONLY | O_CREAT | O_TRUNC);
+	int fd2 = dup2_helper(fd, TEMP_FD);
+
+	assert(write(fd, ALPHABET_LEFT, 13) == 13);
+	for (int i = 1; i < 14; i++) {
+		assert(lseek(fd, i, SEEK_SET) == i);
+		assert(write(fd, ALPHABET_LEFT, 13) == 13);
+	}
+
+	assert(lseek(fd, 13, SEEK_SET) == 13);
+	assert(write(fd, ALPHABET_RIGHT, 13));
+
+	/* Cleanup */
+	close_fd_helper(fd);
+	close_fd_helper(fd2);
+
+	/* Reopen the file, read from it into dup2_buf1 and check that our write was successful. */
+	fd = open_fd_helper("dup2_lseek.txt", O_RDONLY);
+
+	assert(read(fd, dup2_buf1, 500) == 26); /* Read line to dup2_buf1 */
+	assert(strcmp(dup2_buf1, "AAAAAAAAAAAAANOPQRSTUVWXYZ") == 0);
+
+	/* lseek to position 13 and read remaining data into buf2 */
+	assert(lseek(fd, 13, SEEK_SET) == 13);
+	assert(read(fd, dup2_buf2, 500) == 13); /* Read remaining file to dup2_buf2 */
+	assert(strcmp(dup2_buf2, "NOPQRSTUVWXYZ") == 0);
+
+	close_fd_helper(fd);
+
+	printf("##############################################\n");
+	printf("dup2_lseek.txt should contain:\n");
+	printf("AAAAAAAAAAAAANOPQRSTUVWXYZ\n");
+	printf("##############################################\n");
+}
+
+/*
+ * Test 8 - duplicate on top of an already opened fd and check that they point to the same file
+ */
+
+static void test8 () {
+	int fd = open("dup2_alphabet.txt", O_RDONLY);
+	int fd2 = open("dup2.txt", O_RDONLY); /* File choice doesn't matter - will be closed */
+	assert(fd != fd2);
+
+	int fd3 = dup2(fd, fd2);
+	assert(fd3 == fd2);
+
+	/* Check that fd and fd2 point to the same file by reading their contents into buffers and comparing */
+	assert(read(fd, dup2_buf1, 500) == 26); /* Read file to dup2_buf1 */
+	assert(lseek(fd2, 0, SEEK_SET) == 0);
+	assert(read(fd2, dup2_buf2, 500) == 26); /* Read file to dup2_buf2 */
+	assert(strcmp(dup2_buf1, dup2_buf2) == 0);
+	assert(strcmp(dup2_buf1, ALPHABET_FULL) == 0);
+}
+
+/*
+ * Test 9 - test duplicating invalid FDs (free (i.e. unused), negative and FDs outside of valid range)
+ * We can't use dup2_helper since it will fail the assertion
+ */
+static void test9 () {
+	int unopenedFd = TEMP_FD;
+	int fd2 = dup2(unopenedFd, TEMP_FD2);
+
+	assert(fd2 == -1);
+	assert(read(fd2, dup2_buf1, 500) == -1);
+
+	int invalidFd1 = 99999;
+	fd2 = dup2(invalidFd1, TEMP_FD2);
+
+	assert(fd2 == -1);
+	assert(read(fd2, dup2_buf1, 500) == -1);
+
+	int invalidFd2 = -10;
+	fd2 = dup2(invalidFd2, TEMP_FD2);
+
+	assert(fd2 == -1);
+	assert(read(fd2, dup2_buf1, 500) == -1);
+}
+
+/*
+ * Test 10 - try use the same fd as old and new
+ */
+static void test10 () {
+	int fd = open("dup2.txt", O_RDONLY);
+	int fd2 = dup2(fd, fd);
+	assert(fd != -1);
+	assert(fd == fd2);
 }
 
 /* Calls close on a FD and checks for errors, terminating (via failed assert) if unsuccessful */
