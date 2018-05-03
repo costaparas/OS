@@ -157,7 +157,6 @@ int sys_close(uint32_t fd) {
 	}
 
 	fds[fd]->free = true; /* fd can be re-used for this process */
-	fds[fd]->file->offset = 0; /* TODO: double-check this */
 	return 0;
 }
 
