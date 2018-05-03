@@ -1,4 +1,4 @@
-#define NUM_DUP2_TESTCASES 5
+#define NUM_DUP2_TESTCASES 6
 
 #define DUP2_BUF_SIZE 50
 #define TEMP_FD 24
@@ -26,12 +26,13 @@ static void test2 (void);
 static void test3 (void);
 static void test4 (void);
 static void test5 (void);
+static void test6 (void);
 
 void test_dup2() {
 	printf("TESTING DUP2...\n\n");
 
 	/* Array of pointers to each test case */
-	void (*test_cases[NUM_DUP2_TESTCASES])() = {&test1, &test2, &test3, &test4, &test5};
+	void (*test_cases[NUM_DUP2_TESTCASES])() = {&test1, &test2, &test3, &test4, &test5, &test6};
 
 	/* Run each of the tests in test_cases */
 	for (int i = 0; i < NUM_DUP2_TESTCASES; i++) {
@@ -91,8 +92,10 @@ static void test2 () {
 	close_fd_helper(fd);
 }
 
-/* Test 3 - duplicate a FD for reading, close the original FD and try to read from it (should fail),
- * then read from duplicated fd */
+/*
+ * Test 3 - duplicate a FD for reading, close the original FD and try to read from it (should fail),
+ * then read from duplicated fd
+ */
 static void test3 () {
 	int fd = open_fd_helper("dup2_alphabet.txt", O_RDONLY);
 	int fd2 = dup2_helper(fd, TEMP_FD);
@@ -105,7 +108,8 @@ static void test3 () {
 	assert(strcmp(buf2, "ABCDEFGHIJKLM") == 0);
 }
 
-/* Test 4 - duplicate a FD for reading, and close both the duplicated and original FDs.
+/*
+ * Test 4 - duplicate a FD for reading, and close both the duplicated and original FDs.
  * Try to read from them (both should fail)
  */
 static void test4 () {
@@ -123,7 +127,8 @@ static void test4 () {
 	assert(strcmp(buf2, "") == 0);
 }
 
-/* Test 5 - duplicate a FD and make a duplicate of the duplicated FD, then close the original 2 FDs.
+/*
+ * Test 5 - duplicate a FD and make a duplicate of the duplicated FD, then close the original 2 FDs.
  * Try read from all three (first 2 should fail, last duplicate should succeed)
  */
 static void test5 () {
@@ -143,6 +148,27 @@ static void test5 () {
 	assert(strcmp(buf3, "ABCDEFGHIJKLM") == 0);
 
 	close_fd_helper(fd3);
+}
+
+/*
+ * Test 6 - duplicate a FD and write from both FDs
+ */
+static void test6 () {
+	int fd = open_fd_helper("dup2_write.txt", O_WRONLY | O_CREAT);
+	int fd2 = dup2_helper(fd, TEMP_FD);
+
+	assert(write(fd, DUP_LINE1, 29) == 29);
+	assert(write(fd2, DUP_LINE2, 40) == 40);
+	assert(write(fd2, DUP_LINE3, 36) == 36);
+
+	/* Cleanup */
+	close_fd_helper(fd);
+	close_fd_helper(fd2);
+
+	printf("##############################################\n");
+	printf("dup2_write.txt should contain (identical to dup2.txt - run `diff dup2_write.txt dup2.txt`):\n");
+	printf(DUP_LINE1); printf(DUP_LINE2); printf(DUP_LINE3);
+	printf("##############################################\n");
 }
 
 /* Calls close on a FD and checks for errors, terminating (via failed assert) if unsuccessful */
@@ -169,4 +195,3 @@ static int open_fd_helper(const char *path, int flags) {
 	assert(fd >= 0);
 	return fd;
 }
-
