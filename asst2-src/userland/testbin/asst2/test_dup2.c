@@ -1,4 +1,4 @@
-#define NUM_DUP2_TESTCASES 10
+#define NUM_DUP2_TESTCASES 11
 
 #define DUP2_BUF_SIZE 50
 #define TEMP_FD 24
@@ -35,6 +35,7 @@ static void test7 (void);
 static void test8 (void);
 static void test9 (void);
 static void test10 (void);
+static void test11 (void);
 
 /*
  * Driver function to run all test cases
@@ -44,7 +45,7 @@ void test_dup2() {
 
 	/* Array of pointers to each test case */
 	void (*test_cases[NUM_DUP2_TESTCASES])() = {
-		test1, test2, test3, test4, test5, test6, test7, test8, test9, test10
+		test1, test2, test3, test4, test5, test6, test7, test8, test9, test10, test11
 	};
 
 	/* Run each of the tests in test_cases */
@@ -257,6 +258,9 @@ static void test8 () {
 	assert(read(fd2, dup2_buf2, 500) == 26); /* Read file to dup2_buf2 */
 	assert(strcmp(dup2_buf1, dup2_buf2) == 0);
 	assert(strcmp(dup2_buf1, ALPHABET_FULL) == 0);
+
+	close_fd_helper(fd);
+	close_fd_helper(fd2); /* fd2 == fd3 so don't need to close fd3 */
 }
 
 /*
@@ -291,6 +295,27 @@ static void test10 () {
 	int fd2 = dup2(fd, fd);
 	assert(fd != -1);
 	assert(fd == fd2);
+}
+
+/*
+ * Test 11 - open a file, dupe its file descriptor, do a read, close it and do another read from the duplicated FD.
+ * Check that the offset hasn't been reset!
+ */
+static void test11 () {
+	int fd = open("dup2_alphabet.txt", O_RDONLY);
+	int fd2 = dup2_helper(fd, TEMP_FD);
+
+	assert(read(fd, dup2_buf1, 13) == 13);
+	assert(strcmp(dup2_buf1, ALPHABET_LEFT) == 0);
+
+	close_fd_helper(fd);
+
+	assert(read(fd2, dup2_buf2, 13) == 13);
+	assert(strcmp(dup2_buf2, ALPHABET_RIGHT) == 0);
+
+	assert(read(fd2, dup2_buf3, 13) == 0);
+
+	close_fd_helper(fd2);
 }
 
 /* Calls close on a FD and checks for errors, terminating (via failed assert) if unsuccessful */
