@@ -84,7 +84,6 @@ void test_lseek(void) {
 		buf6[bytes] = '\0';
 		assert(bytes == 2);
 		assert(strcmp(buf6, "j\n") == 0);
-		printf("bytes read - should be 4: %d\n", bytes);
 		printf("bytes read - should be 2: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "j\\n': '%s'\n", buf6);
@@ -289,7 +288,7 @@ void test_lseek(void) {
 
 		/* We need two assertions since there is a gap in the middle of the file which strcmp doesn't know about */
 		assert(strcmp(buf6, "hello world\nthis nota test\n") == 0);
-		assert(strcmp(&buf4[77], "blablabla\n") == 0);
+		assert(strcmp(&buf6[77], "blablabla\n") == 0);
 		printf("bytes read - should be 87: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "should be 'hello world\\nthis nota test\\nblablabla\\n': '\n");

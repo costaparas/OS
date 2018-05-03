@@ -61,8 +61,6 @@ void test_dup2() {
 	}
 
 	printf("############################################\n");
-
-	/* TODO: test dup2 with lseek (different offsets etc.), invalid file names, invalid file descriptors, writing */
 }
 
 /* Test 1 - connect a file to stdout, temporarily close original stdout, then print some lines to the file */
@@ -215,7 +213,7 @@ static void test7 () {
 	}
 
 	assert(lseek(fd, 13, SEEK_SET) == 13);
-	assert(write(fd, ALPHABET_RIGHT, 13));
+	assert(write(fd, ALPHABET_RIGHT, 13) == 13);
 
 	/* Cleanup */
 	close_fd_helper(fd);
