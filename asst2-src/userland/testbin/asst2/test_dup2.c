@@ -10,9 +10,9 @@ const char *DUP_LINE2 = "stdout or stdsnout that is the question\n";
 const char *DUP_LINE3 = "s u p e r  s t r e t c h y  l i n e\n";
 
 /* Some buffers for dup2 testing */
-char buf1[DUP2_BUF_SIZE] = {0};
-char buf2[DUP2_BUF_SIZE] = {0};
-char buf3[DUP2_BUF_SIZE] = {0};
+char dup2_buf1[DUP2_BUF_SIZE] = {0};
+char dup2_buf2[DUP2_BUF_SIZE] = {0};
+char dup2_buf3[DUP2_BUF_SIZE] = {0};
 
 /* Function prototypes */
 void test_dup2(void);
@@ -40,7 +40,7 @@ void test_dup2() {
 		printf("dup2 test %d\n", i + 1);
 
 		/* Clear out our buffers and run the test case */
-		memset(buf1, 0, DUP2_BUF_SIZE); memset(buf2, 0, DUP2_BUF_SIZE); memset(buf3, 0, DUP2_BUF_SIZE);
+		memset(dup2_buf1, 0, DUP2_BUF_SIZE); memset(dup2_buf2, 0, DUP2_BUF_SIZE); memset(dup2_buf3, 0, DUP2_BUF_SIZE);
 		(test_cases[i])();
 
 		printf("dup2 test %d passed\n", i + 1);
@@ -83,10 +83,10 @@ static void test2 () {
 	int fd = open_fd_helper("dup2_alphabet.txt", O_RDONLY);
 	int fd2 = dup2_helper(fd, TEMP_FD);
 
-	assert(read(fd, buf1, 13) == 13);
-	assert(read(fd2, buf2, 13) == 13);
-	assert(strcmp(buf1, "ABCDEFGHIJKLM") == 0);
-	assert(strcmp(buf2, "NOPQRSTUVWXYZ") == 0);
+	assert(read(fd, dup2_buf1, 13) == 13);
+	assert(read(fd2, dup2_buf2, 13) == 13);
+	assert(strcmp(dup2_buf1, "ABCDEFGHIJKLM") == 0);
+	assert(strcmp(dup2_buf2, "NOPQRSTUVWXYZ") == 0);
 
 	close_fd_helper(fd2);
 	close_fd_helper(fd);
@@ -102,10 +102,10 @@ static void test3 () {
 
 	close_fd_helper(fd); /* Close original FD */
 
-	assert(read(fd, buf1, 13) == -1);  /* Should fail since closed FD */
-	assert(read(fd2, buf2, 13) == 13); /* Read first half of alphabet to buf2 */
-	assert(strcmp(buf1, "") == 0);
-	assert(strcmp(buf2, "ABCDEFGHIJKLM") == 0);
+	assert(read(fd, dup2_buf1, 13) == -1);  /* Should fail since closed FD */
+	assert(read(fd2, dup2_buf2, 13) == 13); /* Read first half of alphabet to dup2_buf2 */
+	assert(strcmp(dup2_buf1, "") == 0);
+	assert(strcmp(dup2_buf2, "ABCDEFGHIJKLM") == 0);
 }
 
 /*
@@ -121,10 +121,10 @@ static void test4 () {
 	close_fd_helper(fd2);
 
 	/* Both should be -1 since FDs are closed */
-	assert(read(fd, buf1, 13) == -1);
-	assert(read(fd2, buf2, 13) == -1);
-	assert(strcmp(buf1, "") == 0);
-	assert(strcmp(buf2, "") == 0);
+	assert(read(fd, dup2_buf1, 13) == -1);
+	assert(read(fd2, dup2_buf2, 13) == -1);
+	assert(strcmp(dup2_buf1, "") == 0);
+	assert(strcmp(dup2_buf2, "") == 0);
 }
 
 /*
@@ -140,12 +140,12 @@ static void test5 () {
 	close_fd_helper(fd);
 	close_fd_helper(fd2);
 
-	assert(read(fd, buf1, 13) == -1); /* Should be -1 since fd is closed */
-	assert(read(fd2, buf2, 13) == -1); /* Should be -1 since fd is closed */
-	assert(read(fd3, buf3, 13) == 13); /* Read first half of alphabet to buf3 */
-	assert(strcmp(buf1, "") == 0);
-	assert(strcmp(buf2, "") == 0);
-	assert(strcmp(buf3, "ABCDEFGHIJKLM") == 0);
+	assert(read(fd, dup2_buf1, 13) == -1); /* Should be -1 since fd is closed */
+	assert(read(fd2, dup2_buf2, 13) == -1); /* Should be -1 since fd is closed */
+	assert(read(fd3, dup2_buf3, 13) == 13); /* Read first half of alphabet to dup2_buf3 */
+	assert(strcmp(dup2_buf1, "") == 0);
+	assert(strcmp(dup2_buf2, "") == 0);
+	assert(strcmp(dup2_buf3, "ABCDEFGHIJKLM") == 0);
 
 	close_fd_helper(fd3);
 }
@@ -162,6 +162,22 @@ static void test6 () {
 	assert(write(fd2, DUP_LINE3, 36) == 36);
 
 	/* Cleanup */
+	close_fd_helper(fd);
+	close_fd_helper(fd2);
+
+	/* Reopen the file, read from it into dup2_buf1/2/3 and check that our write was successful.
+	   Uses the other fd from writing to check reading (e.g. line 1: write fd, read fd2) */
+	fd = open_fd_helper("dup2_write.txt", O_RDONLY);
+	fd2 = dup2_helper(fd, TEMP_FD);
+
+	assert(read(fd2, dup2_buf1, 29) == 29); /* Read first line to dup2_buf1 */
+	assert(read(fd, dup2_buf2, 40) == 40); /* Read second line to dup2_buf2 */
+	assert(read(fd, dup2_buf3, 36) == 36); /* Read third line to dup2_buf3 */
+
+	assert(strcmp(dup2_buf1, DUP_LINE1) == 0);
+	assert(strcmp(dup2_buf2, DUP_LINE2) == 0);
+	assert(strcmp(dup2_buf3, DUP_LINE3) == 0);
+
 	close_fd_helper(fd);
 	close_fd_helper(fd2);
 
