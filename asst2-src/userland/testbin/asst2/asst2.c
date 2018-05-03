@@ -9,9 +9,24 @@
 #include <assert.h>
 
 #define MAX_BUF 500
+
+// Magic constants for dup2 testing
 #define DUP2_BUF_SIZE 50
+#define TEMP_FD 24
+#define TEMP_FD2 30
+
 char teststr[] = "The quick brown fox jumped over the lazy dog.";
 char buf[MAX_BUF];
+
+// Some strings for dup2 testing
+const char *DUP_LINE1 = "hello there mr duplicated fd\n";
+const char *DUP_LINE2 = "stdout or stdsnout that is the question\n";
+const char *DUP_LINE3 = "s u p e r  s t r e t c h y  l i n e\n";
+
+// Some buffers for dup2 testing
+char buf1[DUP2_BUF_SIZE] = {0};
+char buf2[DUP2_BUF_SIZE] = {0};
+char buf3[DUP2_BUF_SIZE] = {0};
 
 void test_open(void);
 void test_close(void);
@@ -937,28 +952,10 @@ static int open_fd_helper(const char *path, int flags) {
 	return fd;
 }
 
-void test_dup2(void) {
-	printf("TESTING DUP2...\n\n");
+// Test 1 - connect a file to stdout, temporarily close original stdout, then print some lines to the file
+static void dup2_test1 () {
+	int fd = open_fd_helper("dup2.txt", O_WRONLY || O_CREAT);
 
-	// Magic constants
-	const int TEMP_FD = 24;
-	const int TEMP_FD2 = 30;
-
-	// Some lines to print out
-	const char *DUP_LINE1 = "hello there mr duplicated fd\n";
-	const char *DUP_LINE2 = "stdout or stdsnout that is the question\n";
-	const char *DUP_LINE3 = "s u p e r  s t r e t c h y  l i n e\n";
-
-	char buf1[DUP2_BUF_SIZE] = {0};
-	char buf2[DUP2_BUF_SIZE] = {0};
-	char buf3[DUP2_BUF_SIZE] = {0};
-
-	int fd, fd2, fd3;
-
-	// Test 1 - connect a file to stdout, temporarily close original stdout, then print some lines to the file
-	printf("############################################\n");
-	printf("dup2 test 1\n");
-	fd = open_fd_helper("dup2.txt", O_WRONLY || O_CREAT);
 	// Keep a copy of STDOUT
 	int stdout_copy = dup2_helper(STDOUT_FILENO, TEMP_FD);
 
@@ -980,16 +977,12 @@ void test_dup2(void) {
 
 	printf("##############################################\n");
 	printf("All stdout before here should be in dup2.txt...\n");
-	printf("##############################################\n");
-	printf("dup2 test 1 passed\n");
-	printf("############################################\n");
+}
 
-	// Test 2 - duplicate a FD for reading, and try read from both FDs
-	memset(buf1, 0, DUP2_BUF_SIZE); memset(buf2, 0, DUP2_BUF_SIZE); memset(buf3, 0, DUP2_BUF_SIZE);
-	printf("############################################\n");
-	printf("dup2 test 2\n");
-	fd = open_fd_helper("dup2_alphabet.txt", O_RDONLY);
-	fd2 = dup2_helper(fd, TEMP_FD);
+// Test 2 - duplicate a FD for reading, and try read from both FDs
+static void dup2_test2 () {
+	int fd = open_fd_helper("dup2_alphabet.txt", O_RDONLY);
+	int fd2 = dup2_helper(fd, TEMP_FD);
 
 	assert(read(fd, buf1, 13) == 13);
 	assert(read(fd2, buf2, 13) == 13);
@@ -998,17 +991,12 @@ void test_dup2(void) {
 
 	close_fd_helper(fd2);
 	close_fd_helper(fd);
-	printf("dup2 test 2 passed\n");
-	printf("############################################\n");
+}
 
-	// Test 3 - duplicate a FD for reading, close the original FD and try to read from it (should fail),
-	// then read from duplicated fd
-	memset(buf1, 0, DUP2_BUF_SIZE); memset(buf2, 0, DUP2_BUF_SIZE); memset(buf3, 0, DUP2_BUF_SIZE);
-	printf("############################################\n");
-	printf("dup2 test 3\n");
-	printf("BUF1: |%s|\n", buf1);
-	fd = open_fd_helper("dup2_alphabet.txt", O_RDONLY);
-	fd2 = dup2_helper(fd, TEMP_FD);
+// Test 3 - duplicate a FD for reading, close the original FD and try to read from it (should fail), then read from duplicated fd
+static void dup2_test3 () {
+	int fd = open_fd_helper("dup2_alphabet.txt", O_RDONLY);
+	int fd2 = dup2_helper(fd, TEMP_FD);
 
 	close_fd_helper(fd); // Close original FD
 
@@ -1016,17 +1004,12 @@ void test_dup2(void) {
 	assert(read(fd2, buf2, 13) == 13); // Read first half of alphabet to buf2
 	assert(strcmp(buf1, "") == 0);
 	assert(strcmp(buf2, "ABCDEFGHIJKLM") == 0);
+}
 
-	printf("dup2 test 3 passed\n");
-	printf("############################################\n");
-
-	// Test 4 - duplicate a FD for reading, and close both the duplicated and original FDs.
-	// Try to read from them (both should fail)
-	printf("############################################\n");
-	printf("dup2 test 4\n");
-	memset(buf1, 0, DUP2_BUF_SIZE); memset(buf2, 0, DUP2_BUF_SIZE); memset(buf3, 0, DUP2_BUF_SIZE);
-	fd = open_fd_helper("dup2_alphabet.txt", O_RDONLY);
-	fd2 = dup2_helper(fd, TEMP_FD);
+// Test 4 - duplicate a FD for reading, and close both the duplicated and original FDs. Try to read from them (both should fail)
+static void dup2_test4 () {
+	int fd = open_fd_helper("dup2_alphabet.txt", O_RDONLY);
+	int fd2 = dup2_helper(fd, TEMP_FD);
 
 	// Close both FDs
 	close_fd_helper(fd);
@@ -1037,19 +1020,14 @@ void test_dup2(void) {
 	assert(read(fd2, buf2, 13) == -1);
 	assert(strcmp(buf1, "") == 0);
 	assert(strcmp(buf2, "") == 0);
+}
 
-	printf("dup2 test 4 passed\n");
-	printf("############################################\n");
-
-	// Test 5 - duplicate a FD and make a duplicate of the duplicated FD, then close the original 2 FDs.
-	// Try read from all three (first 2 should fail, last duplicate should succeed)
-	printf("############################################\n");
-	printf("dup2 test 5\n");
-	memset(buf1, 0, DUP2_BUF_SIZE); memset(buf2, 0, DUP2_BUF_SIZE); memset(buf3, 0, DUP2_BUF_SIZE);
-
-	fd = open_fd_helper("dup2_alphabet.txt", O_RDONLY);
-	fd2 = dup2_helper(fd, TEMP_FD);
-	fd3 = dup2_helper(fd2, TEMP_FD2);
+// Test 5 - duplicate a FD and make a duplicate of the duplicated FD, then close the original 2 FDs.
+// Try read from all three (first 2 should fail, last duplicate should succeed)
+static void dup2_test5 () {
+	int fd = open_fd_helper("dup2_alphabet.txt", O_RDONLY);
+	int fd2 = dup2_helper(fd, TEMP_FD);
+	int fd3 = dup2_helper(fd2, TEMP_FD2);
 
 	// Close the first 2 FDs
 	close_fd_helper(fd);
@@ -1063,7 +1041,27 @@ void test_dup2(void) {
 	assert(strcmp(buf3, "ABCDEFGHIJKLM") == 0);
 
 	close_fd_helper(fd3);
-	printf("dup2 test 5 passed\n");
+}
+
+#define NUM_DUP2_TESTCASES 5
+void test_dup2(void) {
+	printf("TESTING DUP2...\n\n");
+
+
+	void (*test_cases[NUM_DUP2_TESTCASES])() = {&dup2_test1, &dup2_test2, &dup2_test3, &dup2_test4, &dup2_test5};
+
+	// Run each of the tests in test_cases
+	for (int i = 0; i < NUM_DUP2_TESTCASES; i++) {
+		printf("############################################\n");
+		printf("dup2 test %d\n", i + 1);
+
+		// Clear out our buffers and run the test case
+		memset(buf1, 0, DUP2_BUF_SIZE); memset(buf2, 0, DUP2_BUF_SIZE); memset(buf3, 0, DUP2_BUF_SIZE);
+		(test_cases[i])();
+
+		printf("dup2 test %d passed\n", i + 1);
+	}
+
 	printf("############################################\n");
 
 	// TODO: test dup2 with lseek (different offsets etc.), invalid file names, invalid file descriptors, writing
