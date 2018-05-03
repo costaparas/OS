@@ -644,20 +644,20 @@ void test_std_streams(void) {
 
 	char buf[] = "some text to be written to the std streams\n";
 	printf("print to stdout\n");
-	int bytes = write(1, buf, strlen(buf));
+	int bytes = write(STDOUT_FILENO, buf, strlen(buf));
 	printf("wrote %d bytes to stdout\n", bytes);
 	printf("print to stderr\n");
-	write(2, buf, strlen(buf));
+	write(STDERR_FILENO, buf, strlen(buf));
 	printf("wrote %d bytes to stderr\n", bytes);
 
 	/* NOTE: commented lines won't print anyway since stdout closed */
 
 	printf("close std streams\n");
-	int ret = close(1);
+	int ret = close(STDOUT_FILENO);
 	if (ret) {
 		/* printf("error (should not print!): %s\n\n", strerror(errno)); */
 	}
-	ret = close(2);
+	ret = close(STDERR_FILENO);
 	if (ret) {
 		/* printf("error (should not print!): %s\n\n", strerror(errno)); */
 	}
@@ -677,10 +677,10 @@ void test_std_streams(void) {
 	fd = open("con:", O_WRONLY);
 	printf("stderr open on fd %d\n", fd);
 	printf("check that printing to std streams works again\n");
-	bytes = write(1, buf, strlen(buf));
+	bytes = write(STDOUT_FILENO, buf, strlen(buf));
 	printf("wrote %d bytes to stdout\n", bytes);
 	printf("print to stderr\n");
-	write(2, buf, strlen(buf));
+	write(STDERR_FILENO, buf, strlen(buf));
 	printf("wrote %d bytes to stderr\n", bytes);
 }
 
@@ -788,11 +788,11 @@ void test_lseek(void) {
 		printf("error: %s\n\n", strerror(errno));
 
 		printf("try to lseek stdout\n");
-		lseek(1, -12, SEEK_SET);
+		lseek(STDOUT_FILENO, -12, SEEK_SET);
 		printf("error: %s\n\n", strerror(errno));
 
 		printf("try to lseek stderr\n");
-		lseek(2, 14, SEEK_CUR);
+		lseek(STDERR_FILENO, 14, SEEK_CUR);
 		printf("error: %s\n\n", strerror(errno));
 
 		printf("try to lseek a directory\n");

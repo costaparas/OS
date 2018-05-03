@@ -5,7 +5,7 @@ OS/161 base system version 2.0.3
 Copyright (c) 2000, 2001-2005, 2008-2011, 2013, 2014
    President and Fellows of Harvard College.  All rights reserved.
 
-Put-your-group-name-here's system version 0 (ASST2 #214)
+Put-your-group-name-here's system version 0 (ASST2 #216)
 
 16224k physical memory available
 INIT FS...
@@ -147,20 +147,12 @@ OPENING FILE...file.txt 0
 CAN READ ONLY
 fd returned: 3
 READING FILE...3 99
-(kernel) BUF CONTENTS:
-###################
-hello world
-this is a test
-###################
 bytes read - should be 27: 27
 check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
 this is a test
 '
 check that subsequent read returns nothing
 READING FILE...3 99
-(kernel) BUF CONTENTS:
-###################
-###################
 bytes read - should be 0: 0
 check buffer is still in tact - should be 'hello world\nthis is a test\n': 'hello world
 this is a test
@@ -181,20 +173,12 @@ OPENING FILE...file.txt 2
 CAN READ AND WRITE
 fd returned: 3
 READING FILE...3 99
-(kernel) BUF CONTENTS:
-###################
-hello world
-this is a test
-###################
 bytes read - should be 27: 27
 check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
 this is a test
 '
 check that subsequent read returns nothing
 READING FILE...3 99
-(kernel) BUF CONTENTS:
-###################
-###################
 bytes read - should be 0: 0
 check buffer is still in tact - should be 'hello world\nthis is a test\n': 'hello world
 this is a test
@@ -209,21 +193,11 @@ OPENING FILE...file.txt 0
 CAN READ ONLY
 fd returned: 4
 READING FILE...3 99
-(kernel) BUF CONTENTS:
-###################
-hello world
-this is a test
-###################
 bytes read - should be 27: 27
 check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
 this is a test
 '
 READING FILE...4 99
-(kernel) BUF CONTENTS:
-###################
-hello world
-this is a test
-###################
 bytes read - should be 27: 27
 check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
 this is a test
@@ -246,11 +220,6 @@ OPENING FILE...file.txt 0
 CAN READ ONLY
 fd returned: 3
 READING FILE...3 99
-(kernel) BUF CONTENTS:
-###################
-hello world
-this is a test
-###################
 bytes read - should be 27: 27
 check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
 this is a test
@@ -262,9 +231,6 @@ OPENING FILE...file.txt 0
 CAN READ ONLY
 fd returned: 3
 READING FILE...3 0
-(kernel) BUF CONTENTS:
-###################
-###################
 bytes read - should be 0: 0
 CLOSING FILE...3
 
@@ -273,11 +239,6 @@ OPENING FILE...file.txt 0
 CAN READ ONLY
 fd returned: 3
 READING FILE...3 99
-(kernel) BUF CONTENTS:
-###################
-hello world
-this is a test
-###################
 bytes read - should be 27: 27
 check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
 this is a test
@@ -304,10 +265,6 @@ OPENING FILE...t1.txt 0
 CAN READ ONLY
 fd returned: 3
 READING FILE...3 49
-(kernel) BUF CONTENTS:
-###################
-hello world
-###################
 bytes read - should be 12: 12
 check if buffer is correct - should be 'hello world\n': 'hello world
 '
@@ -335,10 +292,6 @@ OPENING FILE...t1.txt 0
 CAN READ ONLY
 fd returned: 3
 READING FILE...3 49
-(kernel) BUF CONTENTS:
-###################
-this is a test
-###################
 bytes read - should be 15: 15
 check if buffer is correct - should be 'this is a test\n': 'this is a test
 '
@@ -358,10 +311,6 @@ OPENING FILE...t1.txt 0
 CAN READ ONLY
 fd returned: 3
 READING FILE...3 49
-(kernel) BUF CONTENTS:
-###################
-blablabla
-###################
 bytes read - should be 10: 10
 check if buffer is correct - should be 'blablabla\n': 'blablabla
 '
@@ -381,11 +330,6 @@ OPENING FILE...t1.txt 0
 CAN READ ONLY
 fd returned: 3
 READING FILE...3 49
-(kernel) BUF CONTENTS:
-###################
-blablabla
-should be appended
-###################
 bytes read - should be 29: 29
 check if buffer is correct - should be 'blablabla\nshould be appended\n': 'blablabla
 should be appended
@@ -405,11 +349,6 @@ OPENING FILE...t1.txt 0
 CAN READ ONLY
 fd returned: 3
 READING FILE...3 49
-(kernel) BUF CONTENTS:
-###################
-blablabla
-should be appended
-###################
 bytes read - should be 29: 29
 check if buffer is correct - should be 'blablabla\nshould be appended\n': 'blablabla
 should be appended
@@ -428,11 +367,6 @@ OPENING FILE...t1.txt 0
 CAN READ ONLY
 fd returned: 3
 READING FILE...3 49
-(kernel) BUF CONTENTS:
-###################
-blablabla
-should be appended
-###################
 bytes read - should be 29: 29
 check if buffer is correct - should be 'blablabla\nshould be appended\n': 'blablabla
 should be appended
@@ -445,9 +379,6 @@ CAN READ AND WRITE
 fd returned: 3
 bytes written - should be 47: 47
 READING FILE...3 99
-(kernel) BUF CONTENTS:
-###################
-###################
 bytes read - should be 0: 0
 CLOSING FILE...3
 
@@ -503,11 +434,6 @@ OPENING FILE...seek.txt 0
 CAN READ ONLY
 fd returned: 3
 READING FILE...3 4
-(kernel) BUF CONTENTS:
-###################
-a
-b
-###################
 bytes read - should be 4: 4
 check if buffer is correct - a\nb\n': 'a
 b
@@ -515,18 +441,10 @@ b
 start reading from end of file
 SEEKING FILE...3 20 0
 READING FILE...3 4
-(kernel) BUF CONTENTS:
-###################
-###################
 bytes read - should be 0: 0
 restart reading from start of file
 SEEKING FILE...3 0 0
 READING FILE...3 4
-(kernel) BUF CONTENTS:
-###################
-a
-b
-###################
 bytes read - should be 4: 4
 check if buffer is correct - a\nb\n': 'a
 b
@@ -534,11 +452,6 @@ b
 start reading from middle of file
 SEEKING FILE...3 8 0
 READING FILE...3 4
-(kernel) BUF CONTENTS:
-###################
-e
-f
-###################
 bytes read - should be 4: 4
 check if buffer is correct - e\nf\n': 'e
 f
@@ -546,11 +459,6 @@ f
 offset reading position using relative +ve offset
 SEEKING FILE...3 2 1
 READING FILE...3 4
-(kernel) BUF CONTENTS:
-###################
-h
-i
-###################
 bytes read - should be 4: 4
 check if buffer is correct - h\ni\n': 'h
 i
@@ -558,11 +466,6 @@ i
 offset reading position using relative -ve offset
 SEEKING FILE...3 -4 1
 READING FILE...3 4
-(kernel) BUF CONTENTS:
-###################
-h
-i
-###################
 bytes read - should be 4: 4
 check if buffer is correct - h\ni\n': 'h
 i
@@ -570,35 +473,20 @@ i
 offset reading position by 0 using relative offset
 SEEKING FILE...3 0 1
 READING FILE...3 4
-(kernel) BUF CONTENTS:
-###################
-j
-###################
 bytes read - should be 2: 2
 check if buffer is correct - j\n': 'j
 '
 offset reading position to 0 bytes past end of file
 SEEKING FILE...3 0 2
 READING FILE...3 11
-(kernel) BUF CONTENTS:
-###################
-###################
 bytes read - should be 0: 0
 offset reading position to 7 bytes past end of file
 SEEKING FILE...3 7 2
 READING FILE...3 3
-(kernel) BUF CONTENTS:
-###################
-###################
 bytes read - should be 0: 0
 offset reading position by -8 from the end
 SEEKING FILE...3 -8 2
 READING FILE...3 4
-(kernel) BUF CONTENTS:
-###################
-g
-h
-###################
 bytes read - should be 4: 4
 check if buffer is correct - g\nh\n': 'g
 h
@@ -606,11 +494,6 @@ h
 offset reading position by -20 from the end
 SEEKING FILE...3 -20 2
 READING FILE...3 4
-(kernel) BUF CONTENTS:
-###################
-a
-b
-###################
 bytes read - should be 4: 4
 check if buffer is correct - a\nb\n': 'a
 b
@@ -673,12 +556,6 @@ OPENING FILE...t2.txt 0
 CAN READ ONLY
 fd returned: 3
 READING FILE...3 99
-(kernel) BUF CONTENTS:
-###################
-blablabla
-d
-this is a test
-###################
 bytes read - should be 27: 27
 check if buffer is correct - should be 'blablabla\nd\nthis is a test\n': 'blablabla
 d
@@ -697,11 +574,6 @@ this is a test
 check that which was just written by moving to start
 SEEKING FILE...3 0 0
 READING FILE...3 99
-(kernel) BUF CONTENTS:
-###################
-hello world
-this is a test
-###################
 bytes read - should be 27: 27
 check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
 this is a test
@@ -714,11 +586,6 @@ check buffer is still in tact - should be 'blablabla\n': 'blablabla
 check new file contents by moving to start
 SEEKING FILE...3 -87 2
 READING FILE...3 99
-(kernel) BUF CONTENTS:
-###################
-hello world
-this is a test
-###################
 bytes read - should be 87: 87
 check if buffer is correct - should be 'hello world\nthis is a test\nblablabla\n': '
 hello world
@@ -732,11 +599,6 @@ check buffer is still in tact - should be 'not': 'not'
 check new file contents by moving to start
 SEEKING FILE...3 -20 1
 READING FILE...3 99
-(kernel) BUF CONTENTS:
-###################
-hello world
-this nota test
-###################
 bytes read - should be 87: 87
 check if buffer is correct - should be 'hello world\nthis nota test\nblablabla\n': '
 hello world
@@ -747,6 +609,103 @@ CLOSING FILE...3
 
 TESTING DUP2...
 
+############################################
+dup2 test 1
+OPENING FILE...dup2.txt 1
+CAN WRITE ONLY
+fd returned: 3
+(kern) DUPLICATING FD...old:1 new:24
+(kern) OLD: 1, NEW: 24
+##############################################
+All stdout after this block should be in dup2.txt...
+dup2.txt should contain:
+hello there mr duplicated fd
+stdout or stdsnout that is the question
+s u p e r  s t r e t c h y  l i n e
+##############################################
+(kern) DUPLICATING FD...old:3 new:1
+(kern) OLD: 3, NEW: 1
+CLOSING FILE...1
+
+(kern) DUPLICATING FD...old:24 new:1
+(kern) OLD: 24, NEW: 1
+CLOSING FILE...1
+
+CLOSING FILE...24
+
+CLOSING FILE...3
+
+##############################################
+All stdout before here should be in dup2.txt...
+##############################################
+dup2 test 1 passed
+############################################
+############################################
+dup2 test 2
+OPENING FILE...dup2_alphabet.txt 0
+CAN READ ONLY
+fd returned: 3
+(kern) DUPLICATING FD...old:3 new:24
+(kern) OLD: 3, NEW: 24
+READING FILE...3 13
+READING FILE...24 13
+CLOSING FILE...24
+
+CLOSING FILE...3
+
+dup2 test 2 passed
+############################################
+############################################
+dup2 test 3
+BUF1: ||
+OPENING FILE...dup2_alphabet.txt 0
+CAN READ ONLY
+fd returned: 3
+(kern) DUPLICATING FD...old:3 new:24
+(kern) OLD: 3, NEW: 24
+CLOSING FILE...3
+
+READING FILE...3 13
+READING FILE...24 13
+dup2 test 3 passed
+############################################
+############################################
+dup2 test 4
+OPENING FILE...dup2_alphabet.txt 0
+CAN READ ONLY
+fd returned: 3
+(kern) DUPLICATING FD...old:3 new:24
+(kern) OLD: 3, NEW: 24
+CLOSING FILE...24
+
+CLOSING FILE...3
+
+CLOSING FILE...24
+
+READING FILE...3 13
+READING FILE...24 13
+dup2 test 4 passed
+############################################
+############################################
+dup2 test 5
+OPENING FILE...dup2_alphabet.txt 0
+CAN READ ONLY
+fd returned: 3
+(kern) DUPLICATING FD...old:3 new:24
+(kern) OLD: 3, NEW: 24
+(kern) DUPLICATING FD...old:24 new:30
+(kern) OLD: 24, NEW: 30
+CLOSING FILE...3
+
+CLOSING FILE...24
+
+READING FILE...3 13
+READING FILE...24 13
+READING FILE...30 13
+CLOSING FILE...30
+
+dup2 test 5 passed
+############################################
 END CUSTOM TESTS
 
 **********
@@ -777,15 +736,9 @@ fd returned: 3
 * reading entire file into buffer 
 * attempting read of 500 bytes
 READING FILE...3 500
-(kernel) BUF CONTENTS:
-###################
-The quick brown fox jumped over the lazy dog.The quick brown fox jumped over the lazy dog.###################
 * read 90 bytes
 * attempting read of 410 bytes
 READING FILE...3 410
-(kernel) BUF CONTENTS:
-###################
-###################
 * read 0 bytes
 * reading complete
 * file content okay
@@ -795,9 +748,6 @@ SEEKING FILE...3 5 0
 * reading 10 bytes of file into buffer 
 * attempting read of 10 bytes
 READING FILE...3 10
-(kernel) BUF CONTENTS:
-###################
-uick brown###################
 * read 10 bytes
 * reading complete
 * file lseek okay
@@ -805,5 +755,5 @@ uick brown###################
 CLOSING FILE...3
 
 Unknown syscall 3
-Fatal user mode trap 4 sig 10 (Address error on load, epc 0x402cb4, vaddr 0xeeeee00f)
+Fatal user mode trap 4 sig 10 (Address error on load, epc 0x403734, vaddr 0xeeeee00f)
 panic: I don't know how to handle this

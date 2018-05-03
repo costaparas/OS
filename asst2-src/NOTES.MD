@@ -3,7 +3,6 @@ UPCOMING CONSIDERATIONS
 
 FD/OF design
 ------------
-* Need to maintain reference count - other FDs might point to open file table
 * Use spinlock in proc struct to handle concurrent access
 * need to handle concurrency issues using locks - open_file table &
 num_files since processes can be assumed to be single-threaded so ignore
@@ -36,3 +35,4 @@ DONE
 * write/read: (extra argument in syscall) handle returning byte sizes etc. - add extra int/whatev variable in syscall() to track and pass pointer to implementation
 * All syscalls: error handling - write up a flowchart with each of the different cases to handle
 * VERY DETAILED TESTING
+* Need to maintain reference count - other FDs might point to open file table
