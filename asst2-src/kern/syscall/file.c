@@ -149,10 +149,10 @@ int sys_close(uint32_t fd) {
 	struct FD **fds = curproc->fds;
 	if (!valid_fd(fd)) return EBADF;
 
-	// Decrement OF refcount - only close file if no more references to the file
+	/* decrement OF refcount - only close file if no more references to the file */
 	if (--fds[fd]->file->refcount == 0) {
 		/* hard i/o error is unlikely and rarely checked - see kern/vfs/vfspath.c */
-		vfs_close((fds[fd]->file)->v);
+		vfs_close(fds[fd]->file->v);
 		kfree(fds[fd]->file);
 	}
 
@@ -277,23 +277,23 @@ int sys_lseek(uint32_t fd, off_t pos, int whence, off_t *ret) {
 }
 
 /*
- * Clone file handles
+ * Clone file handles.
  */
 int sys_dup2(int32_t oldfd, int32_t newfd, int32_t *retfd) {
-	kprintf("(kern) DUPLICATING FD...old:%d new:%d\n", oldfd, newfd);
-	kprintf("(kern) OLD: %d, NEW: %d\n", oldfd, newfd);
+	kprintf("(kern) DUPLICATING FD...old:%d new:%d\n", oldfd, newfd); /* TODO: debug-only */
+	kprintf("(kern) OLD: %d, NEW: %d\n", oldfd, newfd); /* TODO: debug-only */
 	if (!valid_fd(oldfd) || newfd < 0 || newfd >= OPEN_MAX) return EBADF;
 
-	// Do nothing if both FDs are identical
+	/* do nothing if both FDs are identical */
 	if (oldfd != newfd) {
 		struct FD **fds = curproc->fds;
-		// newfd refers to an already open file descriptor - close it
-		// TODO requires concurrency control
+		/* newfd refers to an already open file descriptor - close it */
+		/* TODO concurrency control */
 		if (!fds[newfd]->free) {
 			sys_close(newfd);
 		}
 
-		// Clone properties of oldfd onto newfd and increment refcount
+		/* clone properties of oldfd onto newfd and increment refcount */
 		fds[oldfd]->file->refcount++;
 		fds[newfd]->file = fds[oldfd]->file;
 		fds[newfd]->free = false;

@@ -15,7 +15,7 @@ typedef struct OF {
 	struct vnode *v; /* ptr to the underlying vnode */
 	off_t offset; /* current index into the file, i.e. the file pointer */
 	bool can_seek; /* true if the related file object can be lseek'd */
-    	uint32_t refcount; /* reference count for the OF entry */
+	uint32_t refcount; /* reference count for the OF entry */
 } OF;
 
 /* state relating to a file descriptor in a process */

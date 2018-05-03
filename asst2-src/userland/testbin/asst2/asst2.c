@@ -906,7 +906,7 @@ void test_lseek(void) {
 		printf("'\n");
 
 		int r = close(fd);
-		if (r) printf("errintor (should not print!): %s\n\n", strerror(errno));
+		if (r) printf("error (should not print!): %s\n\n", strerror(errno));
 	} else {
 		printf("error (should not print!): %s\n\n", strerror(errno));
 	}
