@@ -5,7 +5,7 @@ OS/161 base system version 2.0.3
 Copyright (c) 2000, 2001-2005, 2008-2011, 2013, 2014
    President and Fellows of Harvard College.  All rights reserved.
 
-Put-your-group-name-here's system version 0 (ASST2 #216)
+Put-your-group-name-here's system version 0 (ASST2 #219)
 
 16224k physical memory available
 INIT FS...
@@ -440,10 +440,12 @@ b
 '
 start reading from end of file
 SEEKING FILE...3 20 0
+new position should be 20: 20
 READING FILE...3 4
 bytes read - should be 0: 0
 restart reading from start of file
 SEEKING FILE...3 0 0
+new position should be 0: 0
 READING FILE...3 4
 bytes read - should be 4: 4
 check if buffer is correct - a\nb\n': 'a
@@ -451,6 +453,7 @@ b
 '
 start reading from middle of file
 SEEKING FILE...3 8 0
+new position should be 8: 8
 READING FILE...3 4
 bytes read - should be 4: 4
 check if buffer is correct - e\nf\n': 'e
@@ -458,6 +461,7 @@ f
 '
 offset reading position using relative +ve offset
 SEEKING FILE...3 2 1
+new position should be 14: 14
 READING FILE...3 4
 bytes read - should be 4: 4
 check if buffer is correct - h\ni\n': 'h
@@ -465,6 +469,7 @@ i
 '
 offset reading position using relative -ve offset
 SEEKING FILE...3 -4 1
+new position should be 14: 14
 READING FILE...3 4
 bytes read - should be 4: 4
 check if buffer is correct - h\ni\n': 'h
@@ -472,20 +477,24 @@ i
 '
 offset reading position by 0 using relative offset
 SEEKING FILE...3 0 1
+new position should be 18: 18
 READING FILE...3 4
 bytes read - should be 2: 2
 check if buffer is correct - j\n': 'j
 '
 offset reading position to 0 bytes past end of file
 SEEKING FILE...3 0 2
+new position should be 20: 20
 READING FILE...3 11
 bytes read - should be 0: 0
 offset reading position to 7 bytes past end of file
 SEEKING FILE...3 7 2
+new position should be 27: 27
 READING FILE...3 3
 bytes read - should be 0: 0
 offset reading position by -8 from the end
 SEEKING FILE...3 -8 2
+new position should be 12: 12
 READING FILE...3 4
 bytes read - should be 4: 4
 check if buffer is correct - g\nh\n': 'g
@@ -493,6 +502,7 @@ h
 '
 offset reading position by -20 from the end
 SEEKING FILE...3 -20 2
+new position should be 0: 0
 READING FILE...3 4
 bytes read - should be 4: 4
 check if buffer is correct - a\nb\n': 'a
@@ -547,6 +557,7 @@ this is a test
 '
 move to start of file before second write
 SEEKING FILE...3 0 0
+new position should be 0: 0
 bytes written - should be 10: 10
 check buffer is still in tact - should be 'blablabla\n': 'blablabla
 '
@@ -573,6 +584,7 @@ this is a test
 '
 check that which was just written by moving to start
 SEEKING FILE...3 0 0
+new position should be 0: 0
 READING FILE...3 99
 bytes read - should be 27: 27
 check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
@@ -580,11 +592,13 @@ this is a test
 '
 start writing at some offset past end of file
 SEEKING FILE...3 50 2
+new position should be 77: 77
 bytes written - should be 10: 10
 check buffer is still in tact - should be 'blablabla\n': 'blablabla
 '
 check new file contents by moving to start
 SEEKING FILE...3 -87 2
+new position should be 0: 0
 READING FILE...3 99
 bytes read - should be 87: 87
 check if buffer is correct - should be 'hello world\nthis is a test\nblablabla\n': '
@@ -594,10 +608,12 @@ this is a test
 '
 overwrite middle of file 
 SEEKING FILE...3 17 0
+new position should be 17: 17
 bytes written - should be 3: 3
 check buffer is still in tact - should be 'not': 'not'
 check new file contents by moving to start
 SEEKING FILE...3 -20 1
+new position should be 0: 0
 READING FILE...3 99
 bytes read - should be 87: 87
 check if buffer is correct - should be 'hello world\nthis nota test\nblablabla\n': '
@@ -637,9 +653,7 @@ CLOSING FILE...3
 
 ##############################################
 All stdout before here should be in dup2.txt...
-##############################################
 dup2 test 1 passed
-############################################
 ############################################
 dup2 test 2
 OPENING FILE...dup2_alphabet.txt 0
@@ -655,9 +669,7 @@ CLOSING FILE...3
 
 dup2 test 2 passed
 ############################################
-############################################
 dup2 test 3
-BUF1: ||
 OPENING FILE...dup2_alphabet.txt 0
 CAN READ ONLY
 fd returned: 3
@@ -668,7 +680,6 @@ CLOSING FILE...3
 READING FILE...3 13
 READING FILE...24 13
 dup2 test 3 passed
-############################################
 ############################################
 dup2 test 4
 OPENING FILE...dup2_alphabet.txt 0
@@ -685,7 +696,6 @@ CLOSING FILE...24
 READING FILE...3 13
 READING FILE...24 13
 dup2 test 4 passed
-############################################
 ############################################
 dup2 test 5
 OPENING FILE...dup2_alphabet.txt 0
@@ -705,6 +715,36 @@ READING FILE...30 13
 CLOSING FILE...30
 
 dup2 test 5 passed
+############################################
+dup2 test 6
+OPENING FILE...dup2_write.txt 5
+CAN WRITE ONLY
+fd returned: 3
+(kern) DUPLICATING FD...old:3 new:24
+(kern) OLD: 3, NEW: 24
+CLOSING FILE...3
+
+CLOSING FILE...24
+
+OPENING FILE...dup2_write.txt 0
+CAN READ ONLY
+fd returned: 3
+(kern) DUPLICATING FD...old:3 new:24
+(kern) OLD: 3, NEW: 24
+READING FILE...24 29
+READING FILE...3 40
+READING FILE...3 36
+CLOSING FILE...3
+
+CLOSING FILE...24
+
+##############################################
+dup2_write.txt should contain (identical to dup2.txt - run `diff dup2_write.txt dup2.txt`):
+hello there mr duplicated fd
+stdout or stdsnout that is the question
+s u p e r  s t r e t c h y  l i n e
+##############################################
+dup2 test 6 passed
 ############################################
 END CUSTOM TESTS
 
@@ -755,5 +795,5 @@ READING FILE...3 10
 CLOSING FILE...3
 
 Unknown syscall 3
-Fatal user mode trap 4 sig 10 (Address error on load, epc 0x403734, vaddr 0xeeeee00f)
+Fatal user mode trap 4 sig 10 (Address error on load, epc 0x4039c4, vaddr 0xeeeee00f)
 panic: I don't know how to handle this
