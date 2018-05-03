@@ -9,94 +9,115 @@ void test_lseek(void) {
 		char buf[101];
 		int bytes = read(fd, buf, 4);
 		buf[bytes] = '\0';
+		assert(bytes == 4);
 		printf("bytes read - should be 4: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "a\\nb\\n': '%s'\n", buf);
 
 		printf("start reading from end of file\n");
 		int seek = lseek(fd, 20, SEEK_SET);
+		assert(seek == 20);
 		printf("new position should be 20: %d\n", seek);
 		bytes = read(fd, buf, 4);
+		assert(bytes == 0);
 		printf("bytes read - should be 0: %d\n", bytes);
 
 		printf("restart reading from start of file\n");
 		seek = lseek(fd, 0, SEEK_SET);
+		assert(seek == 0);
 		printf("new position should be 0: %d\n", seek);
 		char buf2[101];
 		bytes = read(fd, buf2, 4);
 		buf2[bytes] = '\0';
+		assert(bytes == 4);
 		printf("bytes read - should be 4: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "a\\nb\\n': '%s'\n", buf2);
 
 		printf("start reading from middle of file\n");
 		seek = lseek(fd, 8, SEEK_SET);
+		assert(seek == 8);
 		printf("new position should be 8: %d\n", seek);
 		char buf3[101];
 		bytes = read(fd, buf3, 4);
 		buf3[bytes] = '\0';
+		assert(bytes == 4);
 		printf("bytes read - should be 4: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "e\\nf\\n': '%s'\n", buf3);
 
 		printf("offset reading position using relative +ve offset\n");
 		seek = lseek(fd, 2, SEEK_CUR);
+		assert(seek == 14);
 		printf("new position should be 14: %d\n", seek);
 		char buf4[101];
 		bytes = read(fd, buf4, 4);
 		buf4[bytes] = '\0';
+		assert(bytes == 4);
 		printf("bytes read - should be 4: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "h\\ni\\n': '%s'\n", buf4);
 
 		printf("offset reading position using relative -ve offset\n");
 		seek = lseek(fd, -4, SEEK_CUR);
+		assert(seek == 14);
 		printf("new position should be 14: %d\n", seek);
 		char buf5[101];
 		bytes = read(fd, buf5, 4);
 		buf5[bytes] = '\0';
+		assert(bytes == 4);
 		printf("bytes read - should be 4: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "h\\ni\\n': '%s'\n", buf5);
 
 		printf("offset reading position by 0 using relative offset\n");
 		seek = lseek(fd, 0, SEEK_CUR);
+		assert(seek == 18);
 		printf("new position should be 18: %d\n", seek);
 		char buf6[101];
 		bytes = read(fd, buf6, 4);
 		buf6[bytes] = '\0';
+		assert(bytes == 2);
 		printf("bytes read - should be 2: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "j\\n': '%s'\n", buf6);
 
 		printf("offset reading position to 0 bytes past end of file\n");
 		seek = lseek(fd, 0, SEEK_END);
+		assert(seek == 20);
 		printf("new position should be 20: %d\n", seek);
 		bytes = read(fd, buf6, 11);
+		assert(bytes == 0);
 		printf("bytes read - should be 0: %d\n", bytes);
 
 		printf("offset reading position to 7 bytes past end of file\n");
 		seek = lseek(fd, 7, SEEK_END);
+		assert(seek == 27);
 		printf("new position should be 27: %d\n", seek);
 		bytes = read(fd, buf6, 3);
+		assert(bytes == 0);
 		printf("bytes read - should be 0: %d\n", bytes);
 
 		printf("offset reading position by -8 from the end\n");
 		seek = lseek(fd, -8, SEEK_END);
+		assert(seek == 12);
 		printf("new position should be 12: %d\n", seek);
 		char buf7[101];
 		bytes = read(fd, buf7, 4);
 		buf7[bytes] = '\0';
+		assert(bytes == 4);
 		printf("bytes read - should be 4: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "g\\nh\\n': '%s'\n", buf7);
 
 		printf("offset reading position by -20 from the end\n");
 		seek = lseek(fd, -20, SEEK_END);
+		assert(seek == 0);
 		printf("new position should be 0: %d\n", seek);
 		char buf8[101];
 		bytes = read(fd, buf8, 4);
 		buf8[bytes] = '\0';
+		assert(bytes == 4);
 		printf("bytes read - should be 4: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "a\\nb\\n': '%s'\n", buf8);
@@ -146,15 +167,18 @@ void test_lseek(void) {
 	if (fd >= 0) {
 		char buf[] = "hello world\nthis is a test\n";
 		int bytes = write(fd, buf, 27);
+		assert(bytes == 27);
 		printf("bytes written - should be 27: %d\n", bytes);
 		printf("check buffer is still in tact - "
 		       "should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
 
 		printf("move to start of file before second write\n");
 		int seek = lseek(fd, 0, SEEK_SET);
+		assert(seek == 0);
 		printf("new position should be 0: %d\n", seek);
 		char buf2[] = "blablabla\n";
 		bytes = write(fd, buf2, 10);
+		assert(bytes == 10);
 		printf("bytes written - should be 10: %d\n", bytes);
 		printf("check buffer is still in tact - "
 		       "should be 'blablabla\\n': '%s'\n", buf2);
@@ -166,6 +190,7 @@ void test_lseek(void) {
 		char buf3[101];
 		bytes = read(fd, buf3, 99);
 		buf3[bytes] = '\0';
+		assert(bytes == 27);
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "should be 'blablabla\\nd\\nthis is a test\\n': '%s'\n", buf3);
@@ -181,35 +206,42 @@ void test_lseek(void) {
 	if (fd >= 0) {
 		char buf[] = "hello world\nthis is a test\n";
 		int bytes = write(fd, buf, 27);
+		assert(bytes == 27);
 		printf("bytes written - should be 27: %d\n", bytes);
 		printf("check buffer is still in tact - "
 		       "should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
 
 		printf("check that which was just written by moving to start\n");
 		int seek = lseek(fd, 0, SEEK_SET);
+		assert(seek == 0);
 		printf("new position should be 0: %d\n", seek);
 		char buf2[101];
 		bytes = read(fd, buf2, 99);
 		buf2[bytes] = '\0';
+		assert(bytes == 27);
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "should be 'hello world\\nthis is a test\\n': '%s'\n", buf2);
 
 		printf("start writing at some offset past end of file\n");
 		seek = lseek(fd, 50, SEEK_END);
+		assert(seek == 77);
 		printf("new position should be 77: %d\n", seek);
 		char buf3[] = "blablabla\n";
 		bytes = write(fd, buf3, 10);
+		assert(bytes == 10);
 		printf("bytes written - should be 10: %d\n", bytes);
 		printf("check buffer is still in tact - "
 		       "should be 'blablabla\\n': '%s'\n", buf3);
 
 		printf("check new file contents by moving to start\n");
 		seek = lseek(fd, -87, SEEK_END);
+		assert(seek == 0);
 		printf("new position should be 0: %d\n", seek);
 		char buf4[101];
 		bytes = read(fd, buf4, 99);
 		buf4[bytes] = '\0';
+		assert(bytes == 87);
 		printf("bytes read - should be 87: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "should be 'hello world\\nthis is a test\\nblablabla\\n': '\n");
@@ -218,19 +250,23 @@ void test_lseek(void) {
 
 		printf("overwrite middle of file \n");
 		seek = lseek(fd, 17, SEEK_SET);
+		assert(seek == 17);
 		printf("new position should be 17: %d\n", seek);
 		char buf5[] = "not";
 		bytes = write(fd, buf5, 3);
+		assert(bytes == 3);
 		printf("bytes written - should be 3: %d\n", bytes);
 		printf("check buffer is still in tact - "
 		       "should be 'not': '%s'\n", buf5);
 
 		printf("check new file contents by moving to start\n");
 		seek = lseek(fd, -20, SEEK_CUR);
+		assert(seek == 0);
 		printf("new position should be 0: %d\n", seek);
 		char buf6[101];
 		bytes = read(fd, buf6, 99);
 		buf6[bytes] = '\0';
+		assert(bytes == 87);
 		printf("bytes read - should be 87: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "should be 'hello world\\nthis nota test\\nblablabla\\n': '\n");
