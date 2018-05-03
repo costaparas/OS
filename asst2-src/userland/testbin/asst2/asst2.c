@@ -21,8 +21,6 @@
 char teststr[] = "The quick brown fox jumped over the lazy dog.";
 char buf[MAX_BUF];
 
-void test_dup2(void);
-
 int main(int argc, char *argv[]) {
 	int fd, r, i, j, k;
 	(void) argc;

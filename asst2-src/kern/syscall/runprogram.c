@@ -120,17 +120,30 @@ runprogram(char *progname)
 	if (file1 == NULL) return ENOMEM;
 	struct OF *file2 = kmalloc(sizeof(struct OF));
 	if (file2 == NULL) return ENOMEM;
-	file1->v = v1;
-	file2->v = v2;
 	file1->offset = 0;
 	file2->offset = 0;
 	file1->refcount = 1;
 	file2->refcount = 1;
+	file1->v = v1;
+	file2->v = v2;
+	file1->can_seek = VOP_ISSEEKABLE(v1);
+	file2->can_seek = VOP_ISSEEKABLE(v2);
+	file1->file_lock = lock_create("file lock");
+	if (file1->file_lock == NULL) return ENOMEM;
+	file2->file_lock = lock_create("file lock");
+	if (file2->file_lock == NULL) return ENOMEM;
+
+	/* add files to global open_files table accounting for multiple processes */
+	lock_acquire(of_lock);
 	open_files = (struct OF **) krealloc(open_files,
 		sizeof(OF *) * num_files, sizeof(OF *) * (num_files + 2));
-	if (open_files == NULL) return ENOMEM;
+	if (open_files == NULL) {
+		lock_release(of_lock);
+		return ENOMEM;
+	}
 	open_files[num_files++] = file1;
 	open_files[num_files++] = file2;
+	lock_release(of_lock);
 
 	curproc->fds[1]->free = false; /* skip stdin on fd 0 */
 	curproc->fds[2]->free = false;
