@@ -10,6 +10,7 @@ void test_lseek(void) {
 		int bytes = read(fd, buf, 4);
 		buf[bytes] = '\0';
 		assert(bytes == 4);
+		assert(strcmp(buf, "a\nb\n") == 0);
 		printf("bytes read - should be 4: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "a\\nb\\n': '%s'\n", buf);
@@ -30,6 +31,7 @@ void test_lseek(void) {
 		bytes = read(fd, buf2, 4);
 		buf2[bytes] = '\0';
 		assert(bytes == 4);
+		assert(strcmp(buf2, "a\nb\n") == 0);
 		printf("bytes read - should be 4: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "a\\nb\\n': '%s'\n", buf2);
@@ -42,6 +44,7 @@ void test_lseek(void) {
 		bytes = read(fd, buf3, 4);
 		buf3[bytes] = '\0';
 		assert(bytes == 4);
+		assert(strcmp(buf3, "e\nf\n") == 0);
 		printf("bytes read - should be 4: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "e\\nf\\n': '%s'\n", buf3);
@@ -54,6 +57,7 @@ void test_lseek(void) {
 		bytes = read(fd, buf4, 4);
 		buf4[bytes] = '\0';
 		assert(bytes == 4);
+		assert(strcmp(buf4, "h\ni\n") == 0);
 		printf("bytes read - should be 4: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "h\\ni\\n': '%s'\n", buf4);
@@ -66,6 +70,7 @@ void test_lseek(void) {
 		bytes = read(fd, buf5, 4);
 		buf5[bytes] = '\0';
 		assert(bytes == 4);
+		assert(strcmp(buf5, "h\ni\n") == 0);
 		printf("bytes read - should be 4: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "h\\ni\\n': '%s'\n", buf5);
@@ -78,6 +83,8 @@ void test_lseek(void) {
 		bytes = read(fd, buf6, 4);
 		buf6[bytes] = '\0';
 		assert(bytes == 2);
+		assert(strcmp(buf6, "j\n") == 0);
+		printf("bytes read - should be 4: %d\n", bytes);
 		printf("bytes read - should be 2: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "j\\n': '%s'\n", buf6);
@@ -106,6 +113,7 @@ void test_lseek(void) {
 		bytes = read(fd, buf7, 4);
 		buf7[bytes] = '\0';
 		assert(bytes == 4);
+		assert(strcmp(buf7, "g\nh\n") == 0);
 		printf("bytes read - should be 4: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "g\\nh\\n': '%s'\n", buf7);
@@ -118,6 +126,7 @@ void test_lseek(void) {
 		bytes = read(fd, buf8, 4);
 		buf8[bytes] = '\0';
 		assert(bytes == 4);
+		assert(strcmp(buf8, "a\nb\n") == 0);
 		printf("bytes read - should be 4: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "a\\nb\\n': '%s'\n", buf8);
@@ -168,6 +177,7 @@ void test_lseek(void) {
 		char buf[] = "hello world\nthis is a test\n";
 		int bytes = write(fd, buf, 27);
 		assert(bytes == 27);
+		assert(strcmp(buf, "hello world\nthis is a test\n") == 0);
 		printf("bytes written - should be 27: %d\n", bytes);
 		printf("check buffer is still in tact - "
 		       "should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
@@ -179,6 +189,7 @@ void test_lseek(void) {
 		char buf2[] = "blablabla\n";
 		bytes = write(fd, buf2, 10);
 		assert(bytes == 10);
+		assert(strcmp(buf2, "blablabla\n") == 0);
 		printf("bytes written - should be 10: %d\n", bytes);
 		printf("check buffer is still in tact - "
 		       "should be 'blablabla\\n': '%s'\n", buf2);
@@ -191,6 +202,7 @@ void test_lseek(void) {
 		bytes = read(fd, buf3, 99);
 		buf3[bytes] = '\0';
 		assert(bytes == 27);
+		assert(strcmp(buf3, "blablabla\nd\nthis is a test\n") == 0);
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "should be 'blablabla\\nd\\nthis is a test\\n': '%s'\n", buf3);
@@ -207,6 +219,7 @@ void test_lseek(void) {
 		char buf[] = "hello world\nthis is a test\n";
 		int bytes = write(fd, buf, 27);
 		assert(bytes == 27);
+		assert(strcmp(buf, "hello world\nthis is a test\n") == 0);
 		printf("bytes written - should be 27: %d\n", bytes);
 		printf("check buffer is still in tact - "
 		       "should be 'hello world\\nthis is a test\\n': '%s'\n", buf);
@@ -219,6 +232,7 @@ void test_lseek(void) {
 		bytes = read(fd, buf2, 99);
 		buf2[bytes] = '\0';
 		assert(bytes == 27);
+		assert(strcmp(buf2, "hello world\nthis is a test\n") == 0);
 		printf("bytes read - should be 27: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "should be 'hello world\\nthis is a test\\n': '%s'\n", buf2);
@@ -230,6 +244,7 @@ void test_lseek(void) {
 		char buf3[] = "blablabla\n";
 		bytes = write(fd, buf3, 10);
 		assert(bytes == 10);
+		assert(strcmp(buf3, "blablabla\n") == 0);
 		printf("bytes written - should be 10: %d\n", bytes);
 		printf("check buffer is still in tact - "
 		       "should be 'blablabla\\n': '%s'\n", buf3);
@@ -242,6 +257,9 @@ void test_lseek(void) {
 		bytes = read(fd, buf4, 99);
 		buf4[bytes] = '\0';
 		assert(bytes == 87);
+		/* We need two assertions since there is a gap in the middle of the file which strcmp doesn't know about */
+		assert(strcmp(buf4, "hello world\nthis is a test\n") == 0);
+		assert(strcmp(&buf4[77], "blablabla\n") == 0);
 		printf("bytes read - should be 87: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "should be 'hello world\\nthis is a test\\nblablabla\\n': '\n");
@@ -255,6 +273,7 @@ void test_lseek(void) {
 		char buf5[] = "not";
 		bytes = write(fd, buf5, 3);
 		assert(bytes == 3);
+		assert(strcmp(buf5, "not") == 0);
 		printf("bytes written - should be 3: %d\n", bytes);
 		printf("check buffer is still in tact - "
 		       "should be 'not': '%s'\n", buf5);
@@ -267,6 +286,10 @@ void test_lseek(void) {
 		bytes = read(fd, buf6, 99);
 		buf6[bytes] = '\0';
 		assert(bytes == 87);
+
+		/* We need two assertions since there is a gap in the middle of the file which strcmp doesn't know about */
+		assert(strcmp(buf6, "hello world\nthis nota test\n") == 0);
+		assert(strcmp(&buf4[77], "blablabla\n") == 0);
 		printf("bytes read - should be 87: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "should be 'hello world\\nthis nota test\\nblablabla\\n': '\n");
