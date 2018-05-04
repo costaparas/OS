@@ -70,30 +70,3 @@ install: $(OSTREE)
 # old BSD name, same as distclean
 cleandir: distclean
 .PHONY: cleandir
-
-k: # Build kernel
-	cd kern/compile/ASST2 && bmake && bmake install
-u: # Build userland
-	bmake && bmake install
-
-a:
-	bmake k && bmake u
-
-q:
-	bmake k > /dev/null && bmake u > /dev/null
-
-run: # Run kernel
-	cd ../root && rm -f t[123].txt && sys161 kernel "p /testbin/asst2"
-	# cd ../root && sys161 kernel "$(args)"
-
-conf: # Full reconfigure
-	./configure && \
-	bmake && bmake install && \
-	cd kern/conf && ./config ASST2 && \
-	cd ../compile/ASST2 && bmake depend && bmake && bmake install
-
-domconf: # CONF WITH DOM'S SILLY DIRECTORY SYSTEM
-	./configure --ostree='~/Documents/comp3231/assignments/root' && \
-	bmake && bmake install && \
-	cd kern/conf && ./config ASST2 && \
-	cd ../compile/ASST2 && bmake depend && bmake && bmake install
