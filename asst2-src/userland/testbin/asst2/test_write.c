@@ -24,7 +24,6 @@ void test_write(void) {
 		buf2[bytes] = '\0';
 		assert(bytes == 12);
 		assert(strcmp(buf2, "hello world\n") == 0);
-		printf("bytes written - should be 12: %d\n", bytes);
 		printf("bytes read - should be 12: %d\n", bytes);
 		printf("check if buffer is correct - "
 		       "should be 'hello world\\n': '%s'\n", buf2);
@@ -54,7 +53,6 @@ void test_write(void) {
 		int bytes = write(fd, buf, 15);
 		assert(bytes == 15);
 		assert(strcmp(buf, "this is a test\n") == 0);
-		printf("bytes written - should be 12: %d\n", bytes);
 		printf("bytes written - should be 15: %d\n", bytes);
 		printf("check buffer is still in tact - "
 		       "should be 'this is a test': '%s'\n", buf);
