@@ -1,0 +1,423 @@
+cd ../root && rm -f t[123].txt && sys161 kernel "p /testbin/asst2"
+
+OS/161 base system version 2.0.3
+(with locks&CVs solution)
+Copyright (c) 2000, 2001-2005, 2008-2011, 2013, 2014
+   President and Fellows of Harvard College.  All rights reserved.
+
+Put-your-group-name-here's system version 0 (ASST2 #254)
+
+16220k physical memory available
+Device probe...
+lamebus0 (system main bus)
+emu0 at lamebus0
+ltrace0 at lamebus0
+ltimer0 at lamebus0
+beep0 at ltimer0
+rtclock0 at ltimer0
+lrandom0 at lamebus0
+random0 at lrandom0
+lhd0 at lamebus0
+lhd1 at lamebus0
+lser0 at lamebus0
+con0 at lser0
+
+cpu0: MIPS/161 (System/161 2.x) features 0x0
+OS/161 kernel: p /testbin/asst2
+Operation took 0.000122200 seconds
+OS/161 kernel [? for menu]: BEGIN CUSTOM TESTS
+TESTING OPEN...
+
+open a file for reading that doesn't exist
+error: No such file or directory
+
+open a file for writing that doesn't exist
+error: No such file or directory
+
+open a file for reading and writing that doesn't exist
+error: No such file or directory
+
+open a file for writing with O_CREAT
+open a file for writing with O_EXCL but not O_CREAT
+open a file for writing with O_EXCL and O_CREAT
+error: File or object exists
+
+open an existing file for reading
+open an existing file for writing
+open an existing file for reading and writing
+open an existing file for writing with O_TRUNC
+open an existing file for writing with O_APPEND
+open a file with invalid flags
+error: Invalid argument
+
+open a NULL file
+error: Bad memory reference
+
+open a directory for reading
+open a directory for writing
+error: Is a directory
+
+open a file in a non-existent directory
+error: No such file or directory
+
+TESTING CLOSE...
+
+close an open file
+close an unopened file
+error: Bad file number
+
+close a file with fd >= OPEN_MAX
+error: Bad file number
+
+TESTING READ...
+
+read from a file opened for reading only
+bytes read - should be 27: 27
+check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+check that subsequent read returns nothing
+bytes read - should be 0: 0
+check buffer is still in tact - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+read from a file opened for writing only
+error: Bad file number
+
+read from a file opened for reading and writing
+bytes read - should be 27: 27
+check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+check that subsequent read returns nothing
+bytes read - should be 0: 0
+check buffer is still in tact - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+opening two instances of the same file for reading
+bytes read - should be 27: 27
+check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+bytes read - should be 27: 27
+check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+read into a null buffer from a file opened for reading
+error: Bad memory reference
+
+check that the file did not change
+bytes read - should be 27: 27
+check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+read 0 bytes into a buffer from a file opened for reading
+bytes read - should be 0: 0
+check that the file did not change
+bytes read - should be 27: 27
+check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+try to read from an unopened fd
+error: Bad file number
+
+TESTING WRITE...
+
+write to a file opened for writing only
+bytes written - should be 12: 12
+check buffer is still in tact - should be 'hello world\n': 'hello world
+'
+check that the file was actually written to
+bytes read - should be 12: 12
+check if buffer is correct - should be 'hello world\n': 'hello world
+'
+write to a file opened for reading only
+error: Bad file number
+
+write to a file opened for reading and writing
+bytes written - should be 15: 15
+check buffer is still in tact - should be 'this is a test': 'this is a test
+'
+check that the file was overwritten from earlier write
+bytes read - should be 15: 15
+check if buffer is correct - should be 'this is a test\n': 'this is a test
+'
+write to a file opened for writing with O_TRUNC
+bytes written - should be 10: 10
+check buffer is still in tact - should be 'blablabla\n': 'blablabla
+'
+check that the file was overwritten from earlier write
+bytes read - should be 10: 10
+check if buffer is correct - should be 'blablabla\n': 'blablabla
+'
+write to a file opened for writing with O_APPEND
+bytes written - should be 19: 19
+check buffer is still in tact - should be 'should be appended\n': 'should be appended
+'
+check that the file was appended to
+bytes read - should be 29: 29
+check if buffer is correct - should be 'blablabla\nshould be appended\n': 'blablabla
+should be appended
+'
+write a null buffer to a file opened for writing
+error: Bad memory reference
+
+check that the file did not change
+bytes read - should be 29: 29
+check if buffer is correct - should be 'blablabla\nshould be appended\n': 'blablabla
+should be appended
+'
+write 0 bytes from a buffer to a file opened for writing
+bytes written - should be 0: 0
+check that the file did not change
+bytes read - should be 29: 29
+check if buffer is correct - should be 'blablabla\nshould be appended\n': 'blablabla
+should be appended
+'
+write to a file and then read from it while in RDWR mode
+bytes written - should be 47: 47
+bytes read - should be 0: 0
+try to write to an unopened fd
+error: Bad file number
+
+TESTING STDOUT AND STDERR...
+
+print to stdout
+some text to be written to the std streams
+wrote 43 bytes to stdout
+print to stderr
+some text to be written to the std streams
+wrote 43 bytes to stderr
+close std streams
+stdout open on fd 1
+stderr open on fd 2
+check that printing to std streams works again
+some text to be written to the std streams
+wrote 43 bytes to stdout
+print to stderr
+some text to be written to the std streams
+wrote 43 bytes to stderr
+TESTING LSEEK...
+
+change seek position on a file opened for reading
+bytes read - should be 4: 4
+check if buffer is correct - a\nb\n': 'a
+b
+'
+start reading from end of file
+new position should be 20: 20
+bytes read - should be 0: 0
+restart reading from start of file
+new position should be 0: 0
+bytes read - should be 4: 4
+check if buffer is correct - a\nb\n': 'a
+b
+'
+start reading from middle of file
+new position should be 8: 8
+bytes read - should be 4: 4
+check if buffer is correct - e\nf\n': 'e
+f
+'
+offset reading position using relative +ve offset
+new position should be 14: 14
+bytes read - should be 4: 4
+check if buffer is correct - h\ni\n': 'h
+i
+'
+offset reading position using relative -ve offset
+new position should be 14: 14
+bytes read - should be 4: 4
+check if buffer is correct - h\ni\n': 'h
+i
+'
+offset reading position by 0 using relative offset
+new position should be 18: 18
+bytes read - should be 2: 2
+check if buffer is correct - j\n': 'j
+'
+offset reading position to 0 bytes past end of file
+new position should be 20: 20
+bytes read - should be 0: 0
+offset reading position to 7 bytes past end of file
+new position should be 27: 27
+bytes read - should be 0: 0
+offset reading position by -8 from the end
+new position should be 12: 12
+bytes read - should be 4: 4
+check if buffer is correct - g\nh\n': 'g
+h
+'
+offset reading position by -20 from the end
+new position should be 0: 0
+bytes read - should be 4: 4
+check if buffer is correct - a\nb\n': 'a
+b
+'
+offset reading position by -3 from the start
+error: Invalid argument
+
+offset reading position by -5 using relative offset
+error: Invalid argument
+
+offset reading position by -21 from the end
+error: Invalid argument
+
+try to lseek stdout
+error: Illegal seek
+
+try to lseek stderr
+error: Illegal seek
+
+try to lseek a directory
+error: Illegal seek
+
+try to seek with an invalid whence
+error: Invalid argument
+
+try to lseek an unopened fd
+error: Bad file number
+
+change seek position on a file opened for writing
+bytes written - should be 27: 27
+check buffer is still in tact - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+move to start of file before second write
+new position should be 0: 0
+bytes written - should be 10: 10
+check buffer is still in tact - should be 'blablabla\n': 'blablabla
+'
+bytes read - should be 27: 27
+check if buffer is correct - should be 'blablabla\nd\nthis is a test\n': 'blablabla
+d
+this is a test
+'
+change seek position on a file opened for reading and writing
+bytes written - should be 27: 27
+check buffer is still in tact - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+check that which was just written by moving to start
+new position should be 0: 0
+bytes read - should be 27: 27
+check if buffer is correct - should be 'hello world\nthis is a test\n': 'hello world
+this is a test
+'
+start writing at some offset past end of file
+new position should be 77: 77
+bytes written - should be 10: 10
+check buffer is still in tact - should be 'blablabla\n': 'blablabla
+'
+check new file contents by moving to start
+new position should be 0: 0
+bytes read - should be 87: 87
+check if buffer is correct - should be 'hello world\nthis is a test\nblablabla\n': '
+hello world
+this is a test
+                                                  blablabla
+'
+overwrite middle of file 
+new position should be 17: 17
+bytes written - should be 3: 3
+check buffer is still in tact - should be 'not': 'not'
+check new file contents by moving to start
+new position should be 0: 0
+bytes read - should be 87: 87
+check if buffer is correct - should be 'hello world\nthis nota test\nblablabla\n': '
+hello world
+this nota test
+                                                  blablabla
+'
+TESTING DUP2...
+
+############################################
+dup2 test 1
+##############################################
+All stdout after this block should be in dup2.txt...
+dup2.txt should contain:
+hello there mr duplicated fd
+stdout or stdsnout that is the question
+s u p e r  s t r e t c h y  l i n e
+##############################################
+##############################################
+All stdout before here should be in dup2.txt...
+dup2 test 1 passed
+############################################
+dup2 test 2
+dup2 test 2 passed
+############################################
+dup2 test 3
+dup2 test 3 passed
+############################################
+dup2 test 4
+dup2 test 4 passed
+############################################
+dup2 test 5
+dup2 test 5 passed
+############################################
+dup2 test 6
+##############################################
+dup2_write.txt should contain (identical to dup2.txt - run `diff dup2_write.txt dup2.txt`):
+hello there mr duplicated fd
+stdout or stdsnout that is the question
+s u p e r  s t r e t c h y  l i n e
+##############################################
+dup2 test 6 passed
+############################################
+dup2 test 7
+##############################################
+dup2_lseek.txt should contain:
+AAAAAAAAAAAAANOPQRSTUVWXYZ
+##############################################
+dup2 test 7 passed
+############################################
+dup2 test 8
+dup2 test 8 passed
+############################################
+dup2 test 9
+dup2 test 9 passed
+############################################
+dup2 test 10
+dup2 test 10 passed
+############################################
+dup2 test 11
+dup2 test 11 passed
+############################################
+END CUSTOM TESTS
+
+**********
+* File Tester
+**********
+* write() works for stdout
+**********
+* write() works for stderr
+**********
+* opening new file "test.file"
+* open() got fd 4
+* writing test string
+* wrote 45 bytes
+* writing test string again
+* wrote 45 bytes
+* closing file
+**********
+* opening old file "test.file"
+* open() got fd 4
+* reading entire file into buffer 
+* attempting read of 500 bytes
+* read 90 bytes
+* attempting read of 410 bytes
+* read 0 bytes
+* reading complete
+* file content okay
+**********
+* testing lseek
+* reading 10 bytes of file into buffer 
+* attempting read of 10 bytes
+* read 10 bytes
+* reading complete
+* file lseek okay
+* closing file
+Unknown syscall 3
+Fatal user mode trap 4 sig 10 (Address error on load, epc 0x405234, vaddr 0xeeeee00f)
+panic: I don't know how to handle this
