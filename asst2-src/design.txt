@@ -1,44 +1,141 @@
-state specific to a process (e.g. cwd)?
-state specific to a process + particular fd (e.g. offset)?
+COMP3231 Assignment 2 Design Doc
 
-struct file {
-	int offset;
-	char *name;
-	int flags;
-	int fd;
-	struct vnode;
-};
+##############################
+Basic Issues in the Assignment
+##############################
 
-#define NUM_FILES 32
-struct file fds[NUM_FILES];
+P. For each file that is opened, we need to maintain the current index
+into the file and where it corresponds to on the filesystem. In doing so,
+we need to preserve the semantics of fork() and dup2(), where open file
+descriptors (FDs) are replicated.
 
-###############
-RELEVANT FILES:
-###############
+S. To track the state of open files, we maintain a global open file
+(OF) table shared across processes. In each entry, we store a pointer
+to the underlying `vnode` and the current index into the file (file
+pointer/offset).
 
-modify this so that fd 1 & 2 are attached to the console device ("con:"):
-kern/syscall/runprogram.c
+P. We need to support an arbitrary number of open files on the system
+at any given time, the maximum of which is OPEN_MAX * PID_MAX.
 
-function prototypes for the syscalls:
-kern/include/syscall.h:
+S. We cannot simply allocate an array of size OPEN_MAX * PID_MAX in
+kernel memory. We chose to store the OF table as a dynamically allocated
+array. For each new entry, we expand the OF table size by 1.
 
-primitive vfs operations:
-kern/include/vfs.h
-kern/include/vnode.h
+P. Since we cannot simply restrict access to stdin, stdout and stderr
+to a single process, we need to maintain FDs to each stream that are
+unique to each process, but not to the entire system.
 
-kern/syscall/file.c: implement syscalls in this file
-kern/include/file.h: put declarations and data types in this file
+S. So, for each process, we maintain an individual file descriptor (FD)
+table, inside which we store a pointer to the appropriate OF table entry.
 
-system call dispatcher:
-kern/arc/mips/syscall/syscall.c
+P. In addition, we need to handle opening files for different modes of
+use, particularly reading and writing.
 
-examples of syscalls:
-kern/main/main.c: sys_reboot()
-kern/syscall/time_syscalls.c: sys___time()
+S. To do this, we store two flags in the FD table entry for the file,
+namely `can_read` and `can_write`. The per-process FD table is stored
+in the `struct proc` data structure.
 
-sample user-level program making syscalls (add more for testing):
-userland/testbin/asst2/asst2.c
+P. We also need to allocate file descriptors in a logical manner for
+each process. Since 0, 1 and 2 are reserved for standard streams, it
+makes sense to skip these file descriptors and begin allocation of files
+opened by the process at FD 3.
 
-list of error numbers to set errno to on error:
-kern/include/kern/errno.h:
-(can add more & add err msg string to userland/lib/libc/string/strerror.c)
+S. The logical allocation of FDs is achieved by using the lowest available
+unallocated FD in the process. Since we use a fixed-size FD table, we use
+a flag to indicate which entries in the FD table are unallocated. Note
+that if stdout and/or stderr are closed at any point, 1 and 2 may be
+returned as file descriptors for other files in subsequent calls to open()
+or re-attached to the console if desired.
+
+P. Since pointers supplied from applications (user space) cannot
+inherently be trusted (e.g. they could reference kernel space), we need
+a method of differentiating between user-supplied and kernel-supplied
+pointers.
+
+S. To do this, we used the kernel methods copyin() and copyout() to move
+data between user and kernel space. If a user-specified pointer attempts
+to dereference to a restricted region of memory, these functions will
+trigger an error, which we pass to the user.
+
+P. We need to ensure that user programs that invoke our syscalls do not
+crash the system.
+
+S. Most of our error handling is implemented by the primitive VFS layer
+and vnode operations. Thus, any error codes returned by these functions
+are used directly, including I/O errors, opening non-existent files,
+writing to directories etc. The rest of the error checking is handled by
+our syscall implementation, including checking that the user-provided
+FDs are valid and warning the user of running out of memory or running
+out of space in the processes’ FD table.
+
+P. We need to support the ability to change the current seek position
+of an open file with respect to a signed 64-bit offset.
+
+S. We realised that the seekability of the underlying file object
+associated to a particular file descriptor will not change. Hence, it
+made sense to cache whether the file is seekable as soon as it is opened,
+saving repeated function calls to VOP_ISSEEKABLE(). We therefore added a
+`can_seek` flag to our OF table entries. We handled passing the 64-bit
+offset to and from the user with the kernel-provided join32to64() and
+split64to32() helpers.
+
+P. When we duplicate file descriptors with dup2(), we need to ensure
+that if the FD we are copying onto refers to an open file, it is closed
+before the duplication occurs.
+
+S. We check the free property of our FD struct to verify whether it was
+previously used to refer to another open file - if it was not free then
+we close the old file.
+
+P. We need to ensure that duplicated file descriptors refer to the same
+file and share the same seek pointer.
+
+S. Since file seek pointers and vnodes to open files are maintained in
+the OF table entries, when we duplicate an FD, we simply copy over the
+pointer to the OF table entry that corresponds to the file opened. This
+ensures both the original and duplicated FDs maintain the same seek
+pointer and point to the same file.
+
+P. Our syscalls must function correctly when multiple processes are
+running concurrently. That is, we must implement the appropriate
+synchronization within the syscall implementation.
+
+S. Since we assume that our processes are single-threaded, we only need
+to consider concurrency issues at the process level. The only shared
+state between processes is the `open_file` table and the associated
+size `num_files`, for which we introduced the lock `of_lock`, acquired
+and released before accessing the `open_files` array or updating the
+`num_files` variable. In addition, each OF entry contains an `offset`
+and `refcount`, both of which require mutual exclusion since a process
+may duplicate an FD. So, we introduced a `file_lock` for each OF entry
+and acquired and released this lock whenever reading or updating the
+`offset` or `refcount`. Finally, we need to ensure that all reads,
+writes and lseeks on a file are atomic (e.g. another process may write
+to the file while another reads from it). To achieve this, we acquire
+the `of_lock` before performing the corresponding vnode operation
+(i.e. VOP_READ/VOP_WRITE/VOP_STAT).
+
+#######################
+Summary of File Changes
+#######################
+
+kern/include/syscall.h: contains prototypes for our syscalls
+
+file.h: contains definitions of the data structures used and prototypes
+for helper functions
+
+file.c: contains implementation of syscalls and helper functions
+
+kern/syscall/runprogram.c: per-process FD table is initialised here,
+along with attaching stdout and stderr to the console
+
+kern/proc/proc.c: per-process FD table is freed in proc_destroy()
+
+kern/arch/mips/syscall/syscall.c: our syscall implementation functions are
+called from here and their return values are placed in the right registers
+
+kern/main/main.c: boot() and shutdown() functions initialize and cleanup
+the OF table
+
+kern/vm/kmalloc.c: implementation of the helper function krealloc()
+is provided here
