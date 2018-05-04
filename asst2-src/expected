@@ -7,7 +7,7 @@ Copyright (c) 2000, 2001-2005, 2008-2011, 2013, 2014
 
 Put-your-group-name-here's system version 0 (ASST2 #252)
 
-16224k physical memory available
+16220k physical memory available
 INIT FS...
 Device probe...
 lamebus0 (system main bus)
@@ -26,7 +26,8 @@ con0 at lser0
 cpu0: MIPS/161 (System/161 2.x) features 0x0
 OS/161 kernel: p /testbin/asst2
 Operation took 0.000122200 seconds
-OS/161 kernel [? for menu]: BEGIN CUSTOM TESTS
+OS/161 kernel [? for menu]: INIT FD TABLE...
+BEGIN CUSTOM TESTS
 TESTING OPEN...
 
 open a file for reading that doesn't exist
