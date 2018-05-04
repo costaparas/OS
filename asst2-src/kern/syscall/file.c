@@ -211,7 +211,9 @@ int sys_read(uint32_t fd, const_userptr_t buf, size_t buflen, size_t *read) {
 	lock_release(fds[fd]->file->file_lock);
 
 	size_t resid = u.uio_resid;
+	lock_acquire(of_lock); /* ensure reads are atomic */
 	int ret = VOP_READ(v, &u); /* read vnode contents into buf_kern */
+	lock_release(of_lock);
 	if (ret) return ret; /* rest of error-checking handled here */
 
 	/* copy data from kernel buffer into user buffer */
@@ -262,8 +264,11 @@ int sys_write(uint32_t fd, const_userptr_t buf, size_t nbytes, size_t *written) 
 	lock_acquire(fds[fd]->file->file_lock);
 	uio_kinit(&iov, &u, buf_kern, nbytes, fds[fd]->file->offset, UIO_WRITE);
 	lock_release(fds[fd]->file->file_lock);
+
 	size_t resid = u.uio_resid;
+	lock_acquire(of_lock); /* ensure writes are atomic */
 	int ret = VOP_WRITE(v, &u);
+	lock_release(of_lock);
 	if (ret) return ret; /* rest of error-checking handled here */
 
 	/* advance the file offset */
@@ -296,7 +301,9 @@ int sys_lseek(uint32_t fd, off_t pos, int whence, off_t *ret) {
 		fds[fd]->file->offset += pos;
 	} else if (whence == SEEK_END) {
 		struct stat stats;
+		lock_acquire(of_lock); /* another process may change file size */
 		VOP_STAT(fds[fd]->file->v, &stats);
+		lock_release(of_lock);
 		fds[fd]->file->offset = stats.st_size + pos;
 	} else {
 		lock_release(fds[fd]->file->file_lock);
