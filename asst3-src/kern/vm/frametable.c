@@ -43,7 +43,9 @@ vaddr_t alloc_kpages(unsigned int npages) {
 }
 
 void free_kpages(vaddr_t addr) {
+	spinlock_acquire(&stealmem_lock);
 	vaddr_t old_head = fhead;
 	fhead = KVADDR_TO_PADDR(addr);
 	((struct frame_table_entry *) fhead)->next = old_head;
+	spinlock_release(&stealmem_lock);
 }
