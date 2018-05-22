@@ -36,6 +36,12 @@
  * You'll probably want to add stuff here.
  */
 
+struct frame_table_entry {
+    unsigned int addr : 20;
+    unsigned int next : 8;
+    unsigned int padding : 4; // Just for safety!
+};
+
 struct frame_table_entry *ftable; // Assign using bump pointer
 
 

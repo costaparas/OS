@@ -16,7 +16,15 @@ void vm_bootstrap(void)
 	*/
 
 	ftable = (struct frame_table_entry *) PADDR_TO_KVADDR(ram_getfirstfree());
-
+	paddr_t size = ram_getsize();
+	for (uint32_t i = 0; i < size; ++i) {
+		(ftable + i)->addr = i;
+		if (i == size + 1) {
+			(ftable + i)->next = i + 1;
+		} else {
+			(ftable + i)->next = 0;
+		}
+	}
 }
 
 int
