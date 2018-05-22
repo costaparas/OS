@@ -36,7 +36,7 @@
  * You'll probably want to add stuff here.
  */
 
-paddr_t ftable; // Assign using bump pointer
+struct frame_table_entry *ftable; // Assign using bump pointer
 
 
 #include <machine/vm.h>

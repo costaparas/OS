@@ -15,7 +15,7 @@ void vm_bootstrap(void)
            frame table here as well.
         */
 
-        ftable = PADDR_TO_KVADDR(ram_getfirstfree());
+        ftable = (struct frame_table_entry *) PADDR_TO_KVADDR(ram_getfirstfree());
 }
 
 int
