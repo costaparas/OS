@@ -30,6 +30,12 @@ void vm_bootstrap(void) {
 	// TODO
 }
 
+uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr) {
+	uint32_t index;
+	index = (((uint32_t )as) ^ (faultaddr >> PAGE_BITS)) % hpt_size;
+	return index;
+}
+
 int vm_fault(int faulttype, vaddr_t faultaddress) {
 	(void) faulttype;
 	(void) faultaddress;
