@@ -23,9 +23,7 @@ static struct spinlock stealmem_lock = SPINLOCK_INITIALIZER;
  * frame table has been initialised and call ram_stealmem() otherwise.
  */
 
-vaddr_t alloc_kpages(unsigned int npages)
-{
-
+vaddr_t alloc_kpages(unsigned int npages) {
 	if (npages != 1) return 0;
 
 	paddr_t addr;
@@ -39,14 +37,13 @@ vaddr_t alloc_kpages(unsigned int npages)
 	}
 	spinlock_release(&stealmem_lock);
 
-	if(addr == 0)
-		return 0;
+	if (addr == 0) return 0;
 
 	return PADDR_TO_KVADDR(addr);
 }
 
-void free_kpages(vaddr_t addr)
-{
-	(void) addr;
+void free_kpages(vaddr_t addr) {
+	vaddr_t old_head = fhead;
+	fhead = KVADDR_TO_PADDR(addr);
+	((struct frame_table_entry *) fhead)->next = old_head;
 }
-
