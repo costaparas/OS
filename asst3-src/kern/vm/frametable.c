@@ -29,25 +29,25 @@ static struct spinlock stealmem_lock = SPINLOCK_INITIALIZER;
 
 vaddr_t alloc_kpages(unsigned int npages)
 {
-        /*
-         * IMPLEMENT ME.  You should replace this code with a proper
-         *                implementation.
-         */
+	/*
+	 * IMPLEMENT ME.  You should replace this code with a proper
+	 *		implementation.
+	 */
 
-        paddr_t addr;
+	paddr_t addr;
 
-        spinlock_acquire(&stealmem_lock);
-        addr = ram_stealmem(npages);
-        spinlock_release(&stealmem_lock);
+	spinlock_acquire(&stealmem_lock);
+	addr = ram_stealmem(npages);
+	spinlock_release(&stealmem_lock);
 
-        if(addr == 0)
-                return 0;
+	if(addr == 0)
+		return 0;
 
-        return PADDR_TO_KVADDR(addr);
+	return PADDR_TO_KVADDR(addr);
 }
 
 void free_kpages(vaddr_t addr)
 {
-        (void) addr;
+	(void) addr;
 }
 
