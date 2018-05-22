@@ -6,10 +6,14 @@
 #include <vm.h>
 #include <machine/tlb.h>
 
+uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr);
+
 /* Place your page table functions here */
 vaddr_t fhead = 0;
 struct frame_table_entry *ftable = 0;
 struct page_table_entry *ptable = 0;
+
+uint32_t hpt_size = 10; /* TODO */
 
 void vm_bootstrap(void) {
 
@@ -18,9 +22,9 @@ void vm_bootstrap(void) {
 	ftable = (struct frame_table_entry *) fhead;
 	paddr_t size = ram_getsize();
 	for (uint32_t i = 0; i < size; ++i) {
-		(ftable + i)->addr = i >> 12;
+		(ftable + i)->addr = i >> PAGE_BITS;
 		if (i == size + 1) {
-			(ftable + i)->next = (i + 1) >> 12;
+			(ftable + i)->next = (i + 1) >> PAGE_BITS;
 		} else {
 			(ftable + i)->next = 0;
 		}
@@ -32,7 +36,7 @@ void vm_bootstrap(void) {
 
 uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr) {
 	uint32_t index;
-	index = (((uint32_t )as) ^ (faultaddr >> PAGE_BITS)) % hpt_size;
+	index = (((uint32_t) as) ^ (faultaddr >> PAGE_BITS)) % hpt_size;
 	return index;
 }
 

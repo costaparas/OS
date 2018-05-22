@@ -27,6 +27,8 @@
  * SUCH DAMAGE.
  */
 
+#include <machine/vm.h>
+
 #ifndef _VM_H_
 #define _VM_H_
 
@@ -34,6 +36,9 @@
  * VM system-related definitions.
  */
 
+#define PAGE_BITS 12 /* this was not defined anywhere */
+
+/* contains the physical frame number & a pointer to the next free frame */
 struct frame_table_entry {
 	unsigned int addr : 20;
 	unsigned int next : 8;
@@ -41,8 +46,9 @@ struct frame_table_entry {
 };
 
 extern struct frame_table_entry *ftable;
-extern vaddr_t fhead;
+extern vaddr_t fhead; /* pointer to first free frame */
 
+/* hashed page table entry */
 struct page_table_entry {
 	pid_t pid;
 	uint32_t entryhi;
@@ -51,8 +57,6 @@ struct page_table_entry {
 };
 
 extern struct page_table_entry *ptable;
-
-#include <machine/vm.h>
 
 /* Fault-type arguments to vm_fault() */
 #define VM_FAULT_READ     0 /* A read was attempted */
