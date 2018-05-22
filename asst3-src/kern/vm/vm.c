@@ -7,7 +7,8 @@
 #include <machine/tlb.h>
 
 /* Place your page table functions here */
-
+vaddr_t fhead = 0;
+struct frame_table_entry *ftable = 0;
 
 void vm_bootstrap(void)
 {
@@ -15,8 +16,8 @@ void vm_bootstrap(void)
 	   frame table here as well.
 	*/
 
-	vaddr_t head = PADDR_TO_KVADDR(ram_getfirstfree());
-	ftable = (struct frame_table_entry *) head;
+	fhead = PADDR_TO_KVADDR(ram_getfirstfree());
+	ftable = (struct frame_table_entry *) fhead;
 	paddr_t size = ram_getsize();
 	for (uint32_t i = 0; i < size; ++i) {
 		(ftable + i)->addr = i >> 12;

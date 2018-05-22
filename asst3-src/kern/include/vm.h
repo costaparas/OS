@@ -42,8 +42,8 @@ struct frame_table_entry {
     unsigned int padding : 4; // Just for safety!
 };
 
-struct frame_table_entry *ftable; // Assign using bump pointer
-
+extern struct frame_table_entry *ftable; // Assign using bump pointer
+extern vaddr_t fhead;
 
 #include <machine/vm.h>
 
