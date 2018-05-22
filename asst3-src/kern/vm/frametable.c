@@ -10,6 +10,13 @@
  * function and call it from vm_bootstrap
  */
 
+struct frame_table_entry {
+    unsigned int addr : 20;
+    unsigned int next : 8;
+    unsigned int padding : 4; // Just for safety!
+};
+
+
 static struct spinlock stealmem_lock = SPINLOCK_INITIALIZER;
 
 /* Note that this function returns a VIRTUAL address, not a physical 

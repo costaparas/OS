@@ -14,6 +14,8 @@ void vm_bootstrap(void)
         /* Initialise VM sub-system.  You probably want to initialise your 
            frame table here as well.
         */
+
+        ftable = PADDR_TO_KVADDR(ram_getfirstfree());
 }
 
 int
