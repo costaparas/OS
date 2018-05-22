@@ -30,7 +30,7 @@ vaddr_t alloc_kpages(unsigned int npages) {
 	if (ftable == 0) {
 		addr = ram_stealmem(npages);
 	} else {
-		addr = fhead;
+		addr = (paddr_t)(((struct frame_table_entry *) fhead)->addr);
 		fhead = (vaddr_t)(((struct frame_table_entry *) fhead)->next);
 	}
 	spinlock_release(&stealmem_lock);
