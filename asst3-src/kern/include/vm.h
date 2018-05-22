@@ -32,26 +32,32 @@
 
 /*
  * VM system-related definitions.
- *
- * You'll probably want to add stuff here.
  */
 
 struct frame_table_entry {
-    unsigned int addr : 20;
-    unsigned int next : 8;
-    unsigned int padding : 4; // Just for safety!
+	unsigned int addr : 20;
+	unsigned int next : 8;
+	unsigned int padding : 4; /* for safety */
 };
 
-extern struct frame_table_entry *ftable; // Assign using bump pointer
+extern struct frame_table_entry *ftable;
 extern vaddr_t fhead;
+
+struct page_table_entry {
+	pid_t pid;
+	uint32_t entryhi;
+	uint32_t entrylo;
+	uint32_t next; /* internal chaining for collisions */
+};
+
+extern struct page_table_entry *ptable;
 
 #include <machine/vm.h>
 
 /* Fault-type arguments to vm_fault() */
-#define VM_FAULT_READ        0    /* A read was attempted */
-#define VM_FAULT_WRITE       1    /* A write was attempted */
-#define VM_FAULT_READONLY    2    /* A write to a readonly page was attempted*/
-
+#define VM_FAULT_READ     0 /* A read was attempted */
+#define VM_FAULT_WRITE    1 /* A write was attempted */
+#define VM_FAULT_READONLY 2 /* A write to a readonly page was attempted */
 
 /* Initialization function */
 void vm_bootstrap(void);
@@ -65,6 +71,5 @@ void free_kpages(vaddr_t addr);
 
 /* TLB shootdown handling called from interprocessor_interrupt */
 void vm_tlbshootdown(const struct tlbshootdown *);
-
 
 #endif /* _VM_H_ */
