@@ -15,16 +15,18 @@ void vm_bootstrap(void)
 	   frame table here as well.
 	*/
 
-	ftable = (struct frame_table_entry *) PADDR_TO_KVADDR(ram_getfirstfree());
+	vaddr_t head = PADDR_TO_KVADDR(ram_getfirstfree());
+	ftable = (struct frame_table_entry *) head;
 	paddr_t size = ram_getsize();
 	for (uint32_t i = 0; i < size; ++i) {
-		(ftable + i)->addr = i;
+		(ftable + i)->addr = i >> 12;
 		if (i == size + 1) {
-			(ftable + i)->next = i + 1;
+			(ftable + i)->next = (i + 1) >> 12;
 		} else {
 			(ftable + i)->next = 0;
 		}
 	}
+
 }
 
 int
