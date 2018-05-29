@@ -86,6 +86,9 @@ run: # Run kernel
 	cd ../root && sys161 kernel #"p /bin/true"
 	# cd ../root && sys161 kernel "$(args)"
 
+debug: # run kernel with tlb trace debugging info
+	cd ../root && trace161 -tt kernel
+
 conf: # Full reconfigure
 	./configure && \
 	bmake && bmake install && \

@@ -10,7 +10,7 @@
 #include <machine/tlb.h>
 
 /* Place your page table functions here */
-vaddr_t fhead = 0;
+ftable_entry fhead = 0;
 uint32_t hpt_size = 0;
 struct frame_table_entry *ftable = 0;
 struct page_table_entry *ptable = 0;
@@ -20,31 +20,35 @@ uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr);
 void vm_bootstrap(void) {
 
 	/* init frame table */
-	fhead = PADDR_TO_KVADDR(ram_getfirstfree()); /* top of kernel */
-	ftable = (struct frame_table_entry *) fhead;
-	paddr_t size = ram_getsize();
-	for (uint32_t i = 0; i < size; ++i) {
-		(ftable + i)->addr = i >> PAGE_BITS;
-		if (i == size - 1) {
-			(ftable + i)->next = 0; /* circular linked list */
+	paddr_t size = ram_getsize(); /* must be called first, since ram_getfirstfree invalidates it */
+	fhead = (struct frame_table_entry *) PADDR_TO_KVADDR(ram_getfirstfree()); /* top of kernel */
+	ftable = fhead;
+	for (uint32_t i = 0; i < size / PAGE_SIZE; ++i) {
+		ftable[i].addr = i;
+		if (i == size / PAGE_SIZE - 1) {
+			ftable[i].next = NULL; /* TODO: out of memory?, circular linked list */
 		} else {
-			(ftable + i)->next = (i + 1) >> PAGE_BITS;
+			ftable[i].next = &ftable[i + 1];
 		}
 	}
 
 	/* set first free frame to be the frame immediately after ftable */
-	fhead += size;
+	kprintf("%u\n", ((size / PAGE_SIZE) * sizeof(struct frame_table_entry)) / PAGE_SIZE);
+	fhead = &ftable[((size / PAGE_SIZE) * sizeof(struct frame_table_entry)) / PAGE_SIZE];
 
 	/* init page table */
-	hpt_size = size * 2;
+	hpt_size = (size / PAGE_SIZE) * 2;
 	ptable = (struct page_table_entry *) fhead;
-	fhead += hpt_size;
+
+	fhead += ((hpt_size * sizeof(struct page_table_entry)) / PAGE_SIZE);
+
 	for (uint32_t i = 0; i < hpt_size; ++i) {
 		/* TODO: check this actually makes sense */
-		(ptable + i)->pid = 0;
-		(ptable + i)->entryhi = 0;
-		(ptable + i)->entrylo = 0;
-		(ptable + i)->next = NULL;
+/* TODO: this overwrites the frame table i think */
+//		ptable[i].pid = 0;
+//		ptable[i].entryhi = 0;
+//		ptable[i].entrylo = 0;
+//		ptable[i].next = NULL;
 	}
 }
 
