@@ -55,7 +55,7 @@ struct page_table_entry {
 	pid_t pid;
 	uint32_t entryhi;
 	uint32_t entrylo;
-	ptable_entry *next; /* internal chaining for collisions */
+	ptable_entry next; /* internal chaining for collisions */
 };
 
 extern struct page_table_entry *ptable;

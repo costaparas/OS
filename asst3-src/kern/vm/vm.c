@@ -3,6 +3,9 @@
 #include <lib.h>
 #include <thread.h>
 #include <addrspace.h>
+#include <proc.h>
+#include <current.h>
+#include <spl.h>
 #include <vm.h>
 #include <machine/tlb.h>
 
@@ -49,10 +52,44 @@ uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr) {
 }
 
 int vm_fault(int faulttype, vaddr_t faultaddress) {
-	(void) faulttype;
-	(void) faultaddress;
+	switch (faulttype) {
+	case VM_FAULT_READONLY:
+		/* TODO: handle later */
+		panic("dumbvm: got VM_FAULT_READONLY\n");
+	case VM_FAULT_READ:
+	case VM_FAULT_WRITE:
+		break;
+	default:
+		return EINVAL;
+	}
 
-	panic("vm_fault hasn't been written yet\n");
+	struct addrspace *as = proc_getas();
+	if (curproc == NULL) return EFAULT;
+	if (as == NULL) return EFAULT;
+
+	pid_t pid = (uint32_t) as;
+	faultaddress &= PAGE_FRAME;
+	uint32_t index = hpt_hash(as, faultaddress);
+	if (((ptable + index)->entryhi & TLBHI_VPAGE) >> PAGE_BITS == faultaddress && pid == (ptable + index)->pid) { /* TODO: may not check pid here */
+		int spl = splhigh();
+		tlb_random((ptable + index)->entryhi, (ptable + index)->entrylo);
+		splx(spl);
+		return 0;
+	} else {
+		ptable_entry curr = &ptable[index];
+		while (curr->next != NULL) {
+			if ((curr->entryhi & TLBHI_VPAGE) >> PAGE_BITS == faultaddress && pid == curr->pid) break; /* TODO: see above */
+			curr = curr->next;
+		}
+		if (curr == NULL) {
+			return EFAULT;
+		} else {
+			int spl = splhigh();
+			tlb_random(curr->entryhi, curr->entrylo);
+			splx(spl);
+		}
+		return 0;
+	}
 
 	return EFAULT;
 }
