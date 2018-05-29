@@ -22,16 +22,22 @@ static struct spinlock stealmem_lock = SPINLOCK_INITIALIZER;
  * frame table has been initialised and call ram_stealmem() otherwise.
  */
 vaddr_t alloc_kpages(unsigned int npages) {
-	if (npages != 1) return 0;
+	if (npages != 1) {
+		kprintf("%s: called with npages != 1!\n", __func__);
+		return 0;
+	}
 
 	paddr_t addr;
 
 	spinlock_acquire(&stealmem_lock);
 	if (ftable == 0) {
+		kprintf("%s: using ram_stealmem instead\n", __func__);
 		addr = ram_stealmem(npages);
 	} else {
+		kprintf("%s: using the frame table allocator\n", __func__);
 		addr = (paddr_t)(((struct frame_table_entry *) fhead)->addr);
 		fhead = (vaddr_t)(((struct frame_table_entry *) fhead)->next);
+		kprintf("%s: address is %u (kernel virtual: %u)\n", __func__, addr, PADDR_TO_KVADDR(addr));
 	}
 	spinlock_release(&stealmem_lock);
 

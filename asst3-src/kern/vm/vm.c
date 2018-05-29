@@ -40,10 +40,10 @@ void vm_bootstrap(void) {
 	ptable = (struct page_table_entry *) fhead;
 	fhead += hpt_size;
 	for (uint32_t i = 0; i < hpt_size; ++i) {
-		/* only need to ensure all next ptrs are null */
+		/* TODO: check this actually makes sense */
 		(ptable + i)->pid = 0;
 		(ptable + i)->entryhi = 0;
-		(ptable + i)->entrylo = 0; /* TODO; check this actually works */
+		(ptable + i)->entrylo = 0;
 		(ptable + i)->next = NULL;
 	}
 }
@@ -55,12 +55,15 @@ uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr) {
 }
 
 int vm_fault(int faulttype, vaddr_t faultaddress) {
+	/* TODO: handle these case later on */
 	switch (faulttype) {
 	case VM_FAULT_READONLY:
-		/* TODO: handle later */
 		panic("dumbvm: got VM_FAULT_READONLY\n");
+		/* TODO: this should probably just return EFAULT! */
 	case VM_FAULT_READ:
+		/* TODO: need to check that vaddr is in region that is readable */
 	case VM_FAULT_WRITE:
+		/* TODO: need to check that vaddr is in region that is writeable */
 		break;
 	default:
 		return EINVAL;
@@ -70,7 +73,9 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	if (curproc == NULL) return EFAULT;
 	if (as == NULL) return EFAULT;
 
-	/* TODO: addressspace error checking */
+	/* TODO: addressspace error checking - i.e. check if vaddr is in a defined region */
+
+	/* TODO: concurrency - HPT is global */
 
 	pid_t pid = (uint32_t) as;
 	faultaddress &= PAGE_FRAME;
