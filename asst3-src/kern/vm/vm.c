@@ -41,6 +41,9 @@ void vm_bootstrap(void) {
 	fhead += hpt_size;
 	for (uint32_t i = 0; i < hpt_size; ++i) {
 		/* only need to ensure all next ptrs are null */
+		(ptable + i)->pid = 0;
+		(ptable + i)->entryhi = 0;
+		(ptable + i)->entrylo = 0; /* TODO; check this actually works */
 		(ptable + i)->next = NULL;
 	}
 }
@@ -67,10 +70,13 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	if (curproc == NULL) return EFAULT;
 	if (as == NULL) return EFAULT;
 
+	/* TODO: addressspace error checking */
+
 	pid_t pid = (uint32_t) as;
 	faultaddress &= PAGE_FRAME;
 	uint32_t index = hpt_hash(as, faultaddress);
 	if (((ptable + index)->entryhi & TLBHI_VPAGE) >> PAGE_BITS == faultaddress && pid == (ptable + index)->pid) { /* TODO: may not check pid here */
+		/* TODO: check if entry is valid ? */
 		int spl = splhigh();
 		tlb_random((ptable + index)->entryhi, (ptable + index)->entrylo);
 		splx(spl);
@@ -78,12 +84,13 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	} else {
 		ptable_entry curr = &ptable[index];
 		while (curr->next != NULL) {
-			if ((curr->entryhi & TLBHI_VPAGE) >> PAGE_BITS == faultaddress && pid == curr->pid) break; /* TODO: see above */
 			curr = curr->next;
+			if ((curr->entryhi & TLBHI_VPAGE) >> PAGE_BITS == faultaddress && pid == curr->pid) break; /* TODO: see above */
 		}
 		if (curr == NULL) {
 			return EFAULT;
 		} else {
+			/* TODO: check if entry is valid ? */
 			int spl = splhigh();
 			tlb_random(curr->entryhi, curr->entrylo);
 			splx(spl);
