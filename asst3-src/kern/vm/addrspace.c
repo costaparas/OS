@@ -49,9 +49,8 @@
  */
 
 struct addrspace *as_create(void) {
-	struct addrspace *as;
+	struct addrspace *as = kmalloc(sizeof(struct addrspace));
 
-	as = kmalloc(sizeof(struct addrspace));
 	if (as == NULL) {
 		return NULL;
 	}
@@ -59,6 +58,9 @@ struct addrspace *as_create(void) {
 	/*
 	 * Initialize as needed.
 	 */
+	as->stackp = 0;
+	as->nregions = 0;
+	as->region_list = NULL;
 
 	return as;
 }
