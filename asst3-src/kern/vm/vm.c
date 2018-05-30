@@ -18,37 +18,43 @@ struct page_table_entry *ptable = 0;
 uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr);
 
 void vm_bootstrap(void) {
+	paddr_t size = ram_getsize(); /* must be called first, since ram_getfirstfree() invalidates it */
+	vaddr_t start = PADDR_TO_KVADDR(ram_getfirstfree()); /* top of kernel */
+
+	/* place frame table right after kernel */
+	ftable = (ftable_entry) start;
 
 	/* init frame table */
-	paddr_t size = ram_getsize(); /* must be called first, since ram_getfirstfree invalidates it */
-	fhead = (struct frame_table_entry *) PADDR_TO_KVADDR(ram_getfirstfree()); /* top of kernel */
-	ftable = fhead;
 	for (uint32_t i = 0; i < size / PAGE_SIZE; ++i) {
 		ftable[i].addr = i;
 		if (i == size / PAGE_SIZE - 1) {
-			ftable[i].next = NULL; /* TODO: out of memory?, circular linked list */
+			ftable[i].next = NULL; /* TODO: out of memory, not a circular linked list */
 		} else {
 			ftable[i].next = &ftable[i + 1];
 		}
 	}
 
 	/* set first free frame to be the frame immediately after ftable */
-	kprintf("%u\n", ((size / PAGE_SIZE) * sizeof(struct frame_table_entry)) / PAGE_SIZE);
-	fhead = &ftable[((size / PAGE_SIZE) * sizeof(struct frame_table_entry)) / PAGE_SIZE];
+	uint32_t num_frames = KVADDR_TO_PADDR(start) / PAGE_SIZE; /* frames used by kernel */
+	fhead = &ftable[num_frames];
 
-	/* init page table */
-	hpt_size = (size / PAGE_SIZE) * 2;
-	ptable = (struct page_table_entry *) fhead;
+	/* update fhead to point to first free entry */
+	fhead += ((size / PAGE_SIZE) * sizeof(struct frame_table_entry)) / PAGE_SIZE;
 
+	/* place page table right after frame table */
+	ptable = (ptable_entry) (start + ((size / PAGE_SIZE) * sizeof(struct frame_table_entry)));
+
+	/* update fhead to point to first free entry */
+	hpt_size = (size / PAGE_SIZE) * 2; /* size hpt to twice as many physical frames */
 	fhead += ((hpt_size * sizeof(struct page_table_entry)) / PAGE_SIZE);
 
+	/* init page table */
 	for (uint32_t i = 0; i < hpt_size; ++i) {
-		/* TODO: check this actually makes sense */
-/* TODO: this overwrites the frame table i think */
-//		ptable[i].pid = 0;
-//		ptable[i].entryhi = 0;
-//		ptable[i].entrylo = 0;
-//		ptable[i].next = NULL;
+		/* TODO: check this actually works for initialisation */
+		ptable[i].pid = 0;
+		ptable[i].entryhi = 0;
+		ptable[i].entrylo = 0;
+		ptable[i].next = NULL;
 	}
 }
 
