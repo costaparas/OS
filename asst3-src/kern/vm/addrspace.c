@@ -90,6 +90,16 @@ void as_destroy(struct addrspace *as) {
 	 * Clean up as needed.
 	 */
 
+	/* Iterate through as->region_list and free each region */
+	struct region *curr = as->region_list;
+	while (curr != NULL) {
+		/* TODO free all associated frames and other cleanup */
+
+		struct region *to_free = curr;
+		curr = curr->next;
+		kfree(to_free);
+	}
+
 	kfree(as);
 }
 
