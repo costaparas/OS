@@ -22,7 +22,7 @@ static struct spinlock stealmem_lock = SPINLOCK_INITIALIZER;
  * frame table has been initialised and call ram_stealmem() otherwise.
  */
 vaddr_t alloc_kpages(unsigned int npages) {
-	KASSERT(npages == 1) /* TODO: for debugging only */
+	KASSERT(npages == 1); /* TODO: for debugging only */
 	if (npages != 1) return 0;
 	paddr_t addr;
 	spinlock_acquire(&stealmem_lock);
