@@ -10,7 +10,7 @@
 #include <machine/tlb.h>
 
 /* Place your page table functions here */
-vaddr_t fhead = 0;
+ftable_entry fhead = 0;
 uint32_t hpt_size = 0;
 struct frame_table_entry *ftable = 0;
 struct page_table_entry *ptable = 0;
@@ -18,33 +18,43 @@ struct page_table_entry *ptable = 0;
 uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr);
 
 void vm_bootstrap(void) {
+	paddr_t size = ram_getsize(); /* must be called first, since ram_getfirstfree() invalidates it */
+	vaddr_t start = PADDR_TO_KVADDR(ram_getfirstfree()); /* top of kernel */
+
+	/* place frame table right after kernel */
+	ftable = (ftable_entry) start;
 
 	/* init frame table */
-	fhead = PADDR_TO_KVADDR(ram_getfirstfree()); /* top of kernel */
-	ftable = (struct frame_table_entry *) fhead;
-	paddr_t size = ram_getsize();
-	for (uint32_t i = 0; i < size; ++i) {
-		(ftable + i)->addr = i >> PAGE_BITS;
-		if (i == size - 1) {
-			(ftable + i)->next = 0; /* circular linked list */
+	for (uint32_t i = 0; i < size / PAGE_SIZE; ++i) {
+		ftable[i].addr = i;
+		if (i == size / PAGE_SIZE - 1) {
+			ftable[i].next = NULL; /* TODO: out of memory, not a circular linked list */
 		} else {
-			(ftable + i)->next = (i + 1) >> PAGE_BITS;
+			ftable[i].next = &ftable[i + 1];
 		}
 	}
 
 	/* set first free frame to be the frame immediately after ftable */
-	fhead += size;
+	uint32_t num_frames = KVADDR_TO_PADDR(start) / PAGE_SIZE; /* frames used by kernel */
+	fhead = &ftable[num_frames];
+
+	/* update fhead to point to first free entry */
+	fhead += ((size / PAGE_SIZE) * sizeof(struct frame_table_entry)) / PAGE_SIZE;
+
+	/* place page table right after frame table */
+	ptable = (ptable_entry) (start + ((size / PAGE_SIZE) * sizeof(struct frame_table_entry)));
+
+	/* update fhead to point to first free entry */
+	hpt_size = (size / PAGE_SIZE) * 2; /* size hpt to twice as many physical frames */
+	fhead += ((hpt_size * sizeof(struct page_table_entry)) / PAGE_SIZE);
 
 	/* init page table */
-	hpt_size = size * 2;
-	ptable = (struct page_table_entry *) fhead;
-	fhead += hpt_size;
 	for (uint32_t i = 0; i < hpt_size; ++i) {
-		/* TODO: check this actually makes sense */
-		(ptable + i)->pid = 0;
-		(ptable + i)->entryhi = 0;
-		(ptable + i)->entrylo = 0;
-		(ptable + i)->next = NULL;
+		/* TODO: check this actually works for initialisation */
+		ptable[i].pid = 0;
+		ptable[i].entryhi = 0;
+		ptable[i].entrylo = 0;
+		ptable[i].next = NULL;
 	}
 }
 

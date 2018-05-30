@@ -42,12 +42,12 @@
 typedef struct frame_table_entry *ftable_entry;
 struct frame_table_entry {
 	uint32_t addr : 20;
-	uint32_t next : 8;
-	uint32_t padding : 4; /* for safety */
+	uint32_t padding : 12; /* for safety */
+	ftable_entry next;
 };
 
 extern struct frame_table_entry *ftable;
-extern vaddr_t fhead; /* pointer to first free frame */
+extern ftable_entry fhead; /* pointer to first free frame */
 
 /* hashed page table entry */
 typedef struct page_table_entry *ptable_entry;
