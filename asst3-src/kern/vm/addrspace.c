@@ -77,7 +77,9 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 	 * Write this.
 	 */
 
-	(void) old;
+	newas->stackp = old->stackp;
+	newas->nregions = old->nregions;
+	newas->region_list = old->region_list; /* TODO: does this suffice? */
 
 	*ret = newas;
 	return 0;
