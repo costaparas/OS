@@ -44,6 +44,7 @@ struct region {
     	size_t npages;
     	bool readable;
     	bool writeable;
+    	struct region *next;
 };
 
 
