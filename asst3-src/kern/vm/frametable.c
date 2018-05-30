@@ -22,36 +22,24 @@ static struct spinlock stealmem_lock = SPINLOCK_INITIALIZER;
  * frame table has been initialised and call ram_stealmem() otherwise.
  */
 vaddr_t alloc_kpages(unsigned int npages) {
-	if (npages != 1) {
-		kprintf("%s: called with npages != 1!\n", __func__);
-		return 0;
-	}
-
+	KASSERT(npages == 1) /* TODO: for debugging only */
+	if (npages != 1) return 0;
 	paddr_t addr;
-
 	spinlock_acquire(&stealmem_lock);
 	if (ftable == 0) {
-		//kprintf("%s: using ram_stealmem instead\n", __func__);
 		addr = ram_stealmem(npages);
 	} else {
-		//kprintf("%s: using the frame table allocator\n", __func__);
-		//kprintf("%s: fhead: %p, fhead->addr: %u\n", __func__, fhead, fhead->addr);
 		addr = (paddr_t)(fhead->addr << PAGE_BITS);
 		fhead = fhead->next;
-		//kprintf("%s: fhead is now: %p, fhead->next is %p\n", __func__, fhead, fhead->next);
-		//kprintf("%s: address returned - physical: %u, kernel virtual: %u\n", __func__, addr, PADDR_TO_KVADDR(addr));
 	}
 	spinlock_release(&stealmem_lock);
-
 	if (addr == 0) return 0;
-
 	return PADDR_TO_KVADDR(addr);
 }
 
 void free_kpages(vaddr_t addr) {
 	spinlock_acquire(&stealmem_lock);
 	ftable_entry old_head = fhead;
-	//kprintf("%s: new fhead: %p\n", __func__, KVADDR_TO_PADDR(addr) / PAGE_SIZE + ftable);
 	fhead = (ftable_entry) (KVADDR_TO_PADDR(addr) / PAGE_SIZE + ftable);
 	fhead->next = old_head;
 	spinlock_release(&stealmem_lock);

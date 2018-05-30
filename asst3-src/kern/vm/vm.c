@@ -86,30 +86,31 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 
 	/* TODO: addressspace error checking - i.e. check if vaddr is in a defined region */
 
-	/* TODO: concurrency - HPT is global */
-
 	pid_t pid = (uint32_t) as;
 	faultaddress &= PAGE_FRAME;
 	uint32_t index = hpt_hash(as, faultaddress);
 	ptable_entry curr = &ptable[index];
 
 	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
+	/* TODO: acquire "ptable_lock" here */
 	do {
+		/* TODO: double-check which is correct */
 		if ((curr->entryhi & TLBHI_VPAGE) >> PAGE_BITS == faultaddress && pid == curr->pid) break; /* TODO: may not need to check pid? */
+		if ((curr->entryhi & TLBHI_VPAGE) == faultaddress && pid == curr->pid) break; /* TODO: may not need to check pid? */
 		curr = curr->next;
 	} while (curr->next != NULL);
 
 	if (curr == NULL) {
+		/* TODO: release "ptable_lock" here */
 		return EFAULT;
 	} else {
 		/* TODO: check if entry is valid ? */
 		int spl = splhigh();
 		tlb_random(curr->entryhi, curr->entrylo);
 		splx(spl);
+		/* TODO: release "ptable_lock" here */
 		return 0;
 	}
-
-	return EFAULT;
 }
 
 /*
