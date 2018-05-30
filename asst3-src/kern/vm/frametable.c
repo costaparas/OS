@@ -26,10 +26,10 @@ vaddr_t alloc_kpages(unsigned int npages) {
 	if (npages != 1) return 0;
 	paddr_t addr;
 	spinlock_acquire(&stealmem_lock);
-	if (ftable == 0) {
+	if (ftable == 0) { /* use ram_stealmem if our frame table isn't initialised */
 		addr = ram_stealmem(npages);
 	} else {
-		addr = (paddr_t)(fhead->addr << PAGE_BITS);
+		addr = (paddr_t)(fhead->addr << PAGE_BITS); /* fhead->addr is stored as 20 bits so we need to shift it to form a paddr_t */
 		fhead = fhead->next;
 	}
 	spinlock_release(&stealmem_lock);

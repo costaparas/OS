@@ -12,27 +12,29 @@
 /* Place your page table functions here */
 
 ftable_entry fhead = 0;
-uint32_t hpt_size = 0;
+uint32_t total_pages = 0; /* total pages in the hpt */
 struct frame_table_entry *ftable = 0;
 struct page_table_entry *ptable = 0;
 
 uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr);
 
 void vm_bootstrap(void) {
-	paddr_t size = ram_getsize(); /* must be called first, since ram_getfirstfree() invalidates it */
-	vaddr_t start = PADDR_TO_KVADDR(ram_getfirstfree()); /* top of kernel */
+	paddr_t phys_size = ram_getsize(); /* must be called first, since ram_getfirstfree() invalidates it */
+	paddr_t first_free = ram_getfirstfree();
+	vaddr_t kernel_top = PADDR_TO_KVADDR(first_free); /* top of kernel */
 
 	/* place frame table right after kernel */
-	ftable = (ftable_entry) start;
+	ftable = (ftable_entry) kernel_top;
 
 	/* set first free frame to be the frame immediately after kernel */
-	uint32_t num_frames = KVADDR_TO_PADDR(start) / PAGE_SIZE; /* frames used by kernel */
-	fhead = &ftable[num_frames];
+	uint32_t kern_frames = first_free / PAGE_SIZE; /* frames used by kernel */
+	fhead = &ftable[kern_frames];
 
-	/* init frame table */
-	for (uint32_t i = 0; i < size / PAGE_SIZE; ++i) {
+	/* initialise frame table - set physical frame number (addr) and next pointer */
+	uint32_t total_frames = phys_size / PAGE_SIZE;
+	for (uint32_t i = 0; i < total_frames; ++i) {
 		ftable[i].addr = i;
-		if (i == size / PAGE_SIZE - 1) {
+		if (i == total_frames - 1) { /* last frame */
 			ftable[i].next = NULL; /* TODO: out of memory, not a circular linked list */
 		} else {
 			ftable[i].next = &ftable[i + 1];
@@ -40,17 +42,19 @@ void vm_bootstrap(void) {
 	}
 
 	/* update fhead to point to first free entry - i.e. after the ftable */
-	fhead += ((size / PAGE_SIZE) * sizeof(struct frame_table_entry)) / PAGE_SIZE;
+	uint32_t frame_table_size = total_frames * sizeof(struct frame_table_entry);
+	fhead += frame_table_size / PAGE_SIZE;
 
 	/* place page table right after frame table */
-	ptable = (ptable_entry) (start + ((size / PAGE_SIZE) * sizeof(struct frame_table_entry)));
+	ptable = (ptable_entry) (kernel_top + frame_table_size);
 
 	/* update fhead to point to first free entry - i.e. after tge ptable */
-	hpt_size = (size / PAGE_SIZE) * 2; /* size hpt to twice as many physical frames */
-	fhead += ((hpt_size * sizeof(struct page_table_entry)) / PAGE_SIZE);
+	total_pages = total_frames * 2; /* size hpt to twice as many physical frames */
+	uint32_t hpt_size = total_pages * sizeof(struct page_table_entry);
+	fhead += hpt_size / PAGE_SIZE;
 
 	/* init page table */
-	for (uint32_t i = 0; i < hpt_size; ++i) {
+	for (uint32_t i = 0; i < total_pages; ++i) {
 		/* TODO: check this actually works for initialisation */
 		ptable[i].pid = 0;
 		ptable[i].entryhi = 0;
@@ -61,7 +65,7 @@ void vm_bootstrap(void) {
 
 uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr) {
 	uint32_t index;
-	index = (((uint32_t) as) ^ (faultaddr >> PAGE_BITS)) % hpt_size;
+	index = (((uint32_t) as) ^ (faultaddr >> PAGE_BITS)) % total_pages;
 	return index;
 }
 
