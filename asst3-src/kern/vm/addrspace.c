@@ -144,12 +144,31 @@ int readable, int writeable, int executable) {
 	 * Write this.
 	 */
 
-	(void) as;
-	(void) vaddr;
-	(void) memsize;
-	(void) readable;
-	(void) writeable;
 	(void) executable;
+
+	/* allocate space for new region and set up its fields */
+	struct region *new_region = kmalloc(sizeof(struct region));
+	/* TODO: should probably check if kmalloc fails */
+
+	new_region->vbase     = vaddr;
+	new_region->npages    = memsize / PAGE_SIZE; /* TODO: check this (should be OK, memsize is in bytes) */
+	new_region->readable  = readable;
+	new_region->writeable = writeable;
+	/* TODO: add + set new_region->executeable? */
+
+	as->nregions++;
+
+	/* append new_region to as->region_list */
+	struct region *curr = as->region_list;
+	if (curr == NULL) {
+		as->region_list = new_region;
+	} else { /* Find last region and point its next to the newly created region */
+		while (curr->next != NULL) curr = curr->next;
+		curr->next = new_region;
+	}
+
+	/* TODO: potentially allocate pages (or do it in vm_fault) */
+
 	return ENOSYS; /* Unimplemented */
 }
 
