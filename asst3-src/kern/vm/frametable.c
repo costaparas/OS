@@ -37,6 +37,9 @@ vaddr_t alloc_kpages(unsigned int npages) {
 	return PADDR_TO_KVADDR(addr);
 }
 
+/*
+ * Frees the page at addr and sets it to be the new head, pointing next to the old head.
+ */
 void free_kpages(vaddr_t addr) {
 	spinlock_acquire(&stealmem_lock);
 	ftable_entry old_head = fhead;

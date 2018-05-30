@@ -39,6 +39,14 @@
 
 struct vnode;
 
+struct region {
+    	vaddr_t vbase;
+    	size_t npages;
+    	bool readable;
+    	bool writeable;
+};
+
+
 /*
  * Address space - data structure associated with the virtual memory
  * space of a process.
@@ -56,6 +64,9 @@ struct addrspace {
 	paddr_t as_stackpbase;
 #else
 	/* Put stuff here for your VM system */
+    	paddr_t stackp; /* stack pointer */
+    	uint32_t nregions;
+    	struct region *region_list;
 #endif
 };
 
