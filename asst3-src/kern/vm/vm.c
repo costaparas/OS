@@ -10,6 +10,7 @@
 #include <machine/tlb.h>
 
 /* Place your page table functions here */
+
 ftable_entry fhead = 0;
 uint32_t hpt_size = 0;
 struct frame_table_entry *ftable = 0;
@@ -24,6 +25,10 @@ void vm_bootstrap(void) {
 	/* place frame table right after kernel */
 	ftable = (ftable_entry) start;
 
+	/* set first free frame to be the frame immediately after kernel */
+	uint32_t num_frames = KVADDR_TO_PADDR(start) / PAGE_SIZE; /* frames used by kernel */
+	fhead = &ftable[num_frames];
+
 	/* init frame table */
 	for (uint32_t i = 0; i < size / PAGE_SIZE; ++i) {
 		ftable[i].addr = i;
@@ -34,17 +39,13 @@ void vm_bootstrap(void) {
 		}
 	}
 
-	/* set first free frame to be the frame immediately after ftable */
-	uint32_t num_frames = KVADDR_TO_PADDR(start) / PAGE_SIZE; /* frames used by kernel */
-	fhead = &ftable[num_frames];
-
-	/* update fhead to point to first free entry */
+	/* update fhead to point to first free entry - i.e. after the ftable */
 	fhead += ((size / PAGE_SIZE) * sizeof(struct frame_table_entry)) / PAGE_SIZE;
 
 	/* place page table right after frame table */
 	ptable = (ptable_entry) (start + ((size / PAGE_SIZE) * sizeof(struct frame_table_entry)));
 
-	/* update fhead to point to first free entry */
+	/* update fhead to point to first free entry - i.e. after tge ptable */
 	hpt_size = (size / PAGE_SIZE) * 2; /* size hpt to twice as many physical frames */
 	fhead += ((hpt_size * sizeof(struct page_table_entry)) / PAGE_SIZE);
 
@@ -90,26 +91,21 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	pid_t pid = (uint32_t) as;
 	faultaddress &= PAGE_FRAME;
 	uint32_t index = hpt_hash(as, faultaddress);
-	if (((ptable + index)->entryhi & TLBHI_VPAGE) >> PAGE_BITS == faultaddress && pid == (ptable + index)->pid) { /* TODO: may not check pid here */
+	ptable_entry curr = &ptable[index];
+
+	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
+	do {
+		if ((curr->entryhi & TLBHI_VPAGE) >> PAGE_BITS == faultaddress && pid == curr->pid) break; /* TODO: may not need to check pid? */
+		curr = curr->next;
+	} while (curr->next != NULL);
+
+	if (curr == NULL) {
+		return EFAULT;
+	} else {
 		/* TODO: check if entry is valid ? */
 		int spl = splhigh();
-		tlb_random((ptable + index)->entryhi, (ptable + index)->entrylo);
+		tlb_random(curr->entryhi, curr->entrylo);
 		splx(spl);
-		return 0;
-	} else {
-		ptable_entry curr = &ptable[index];
-		while (curr->next != NULL) {
-			curr = curr->next;
-			if ((curr->entryhi & TLBHI_VPAGE) >> PAGE_BITS == faultaddress && pid == curr->pid) break; /* TODO: see above */
-		}
-		if (curr == NULL) {
-			return EFAULT;
-		} else {
-			/* TODO: check if entry is valid ? */
-			int spl = splhigh();
-			tlb_random(curr->entryhi, curr->entrylo);
-			splx(spl);
-		}
 		return 0;
 	}
 
