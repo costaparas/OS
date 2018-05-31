@@ -8,6 +8,7 @@
 #include <spl.h>
 #include <vm.h>
 #include <machine/tlb.h>
+#include <synch.h>
 
 /* Place your page table functions here */
 
@@ -16,9 +17,13 @@ uint32_t total_pages = 0; /* total pages in the hpt */
 struct frame_table_entry *ftable = 0;
 struct page_table_entry *ptable = 0;
 
-static struct spinlock hpt_lock = SPINLOCK_INITIALIZER;
+struct lock *hpt_lock;
 
 void vm_bootstrap(void) {
+	/* create hpt lock */
+	hpt_lock = lock_create("hpt_lock");
+	KASSERT(hpt_lock != NULL);
+
 	paddr_t phys_size = ram_getsize(); /* must be called first, since ram_getfirstfree() invalidates it */
 	paddr_t first_free = ram_getfirstfree();
 	vaddr_t kernel_top = PADDR_TO_KVADDR(first_free); /* top of kernel */
@@ -70,14 +75,14 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	vaddr_t paddr = alloc_kpages(1);
 	if (paddr == 0) return ENOMEM;
 
-	spinlock_acquire(&hpt_lock);
+	lock_acquire(hpt_lock);
 	ptable_entry entry = &ptable[index];
 
 	uint32_t i = index;
 	while (entry->entrylo & TLBLO_VALID) {
 		i = (i + 1) % total_pages;
 		if (i == index) {
-			spinlock_release(&hpt_lock);
+			lock_release(hpt_lock);
 			return ENOMEM; /* out of pages */
 		}
 		entry = &ptable[i];
@@ -96,7 +101,7 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	} else {
 		entry->entrylo = paddr | TLBLO_VALID;
 	}
-	spinlock_release(&hpt_lock);
+	lock_release(hpt_lock);
 
 	/* wrtie new ptable entry to tlb */
 	int spl = splhigh();
@@ -153,7 +158,7 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	ptable_entry curr = &ptable[index];
 
 	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
-	spinlock_acquire(&hpt_lock);
+	lock_acquire(hpt_lock);
 	do {
 		/* TODO: double-check which is correct */
 		if ((curr->entryhi & TLBHI_VPAGE) >> PAGE_BITS == faultaddress && pid == curr->pid) break; /* TODO: may not need to check pid? */
@@ -162,14 +167,14 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	} while (curr->next != NULL);
 
 	if (curr == NULL) {
-		spinlock_release(&hpt_lock);
+		lock_release(hpt_lock);
 		return EFAULT;
 	} else {
 		/* TODO: check if entry is valid ? */
 		int spl = splhigh();
 		tlb_random(curr->entryhi, curr->entrylo);
 		splx(spl);
-		spinlock_release(&hpt_lock);
+		lock_release(hpt_lock);
 		return 0;
 	}
 }
