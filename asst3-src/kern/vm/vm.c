@@ -116,7 +116,15 @@ uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr) {
 }
 
 int vm_fault(int faulttype, vaddr_t faultaddress) {
-	if (faulttype == VM_FAULT_READONLY) return EFAULT;
+	switch (faulttype) {
+	case VM_FAULT_READONLY:
+		return EFAULT; /* attempt to write to read-only page */
+	case VM_FAULT_READ:
+	case VM_FAULT_WRITE:
+		break; /* these cases are handled below */
+	default:
+		return EINVAL; /* unknown faulttype */
+	}
 	struct addrspace *as = proc_getas();
 	if (curproc == NULL) return EFAULT;
 	if (as == NULL) return EFAULT;
