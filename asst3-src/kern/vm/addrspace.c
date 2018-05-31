@@ -178,5 +178,14 @@ int as_define_stack(struct addrspace *as, vaddr_t *stackptr) {
 	/* initial user-level stack pointer */
 	*stackptr = USERSTACK;
 	as->stackp = USERSTACK;
+
+	/* insert into page table (TODO: move to vm_fault later) */
+	vaddr_t curr = stackptr;
+	while (curr != stackptr + NUM_STACK_PAGES * PAGE_SIZE) {
+		int res = insert_ptable_entry(as, curr, true, true);
+		curr += PAGE_SIZE;
+		if (res) return res;
+	}
+
 	return 0;
 }
