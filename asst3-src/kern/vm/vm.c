@@ -103,13 +103,14 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	entry->pid = (uint32_t) as;
 	entry->entryhi = vaddr;
 	if (writeable) {
-		entry->entrylo = paddr | TLBLO_DIRTY | TLBLO_VALID | TLBLO_GLOBAL; /* TODO: remove global flag */
+		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_DIRTY | TLBLO_VALID;
 	} else {
-		entry->entrylo = paddr | TLBLO_VALID | TLBLO_GLOBAL; /* TODO: remove global flag */
+		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_DIRTY | TLBLO_VALID; /* TODO: fix this! */
+		//entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_VALID; /* TODO: this frame should not be writeable! */
 	}
 	lock_release(hpt_lock);
 
-	/* wrtie new ptable entry to tlb */
+	/* write new ptable entry to tlb */
 	int spl = splhigh();
 	tlb_random(entry->entryhi, entry->entrylo);
 	splx(spl);
@@ -125,6 +126,7 @@ uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr) {
 int vm_fault(int faulttype, vaddr_t faultaddress) {
 	switch (faulttype) {
 	case VM_FAULT_READONLY:
+		panic("writing to read-only page\n"); /* TODO: debug-only */
 		return EFAULT; /* attempt to write to read-only page */
 	case VM_FAULT_READ:
 	case VM_FAULT_WRITE:
@@ -166,22 +168,26 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 		curr_region = curr_region->next;
 		nregions++;
 	}
-	if (is_in_region == false) return EFAULT;
+	if (is_in_region == false) {
+		panic("not in a region\n"); /* TODO: debug-only */
+		return EFAULT;
+	}
 	KASSERT(as->nregions == nregions);
 
-	//pid_t pid = (uint32_t) as; /* TODO uncomment later when checking pid */
+	//pid_t pid = (uint32_t) as; /* TODO: may not need to check pid? */
 	uint32_t index = hpt_hash(as, faultaddress);
 	ptable_entry curr = &ptable[index];
 
 	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
 	lock_acquire(hpt_lock);
 	do {
-		if ((curr->entryhi & TLBHI_VPAGE) == faultaddress) break; // && pid == curr->pid) break; /* TODO: may not need to check pid? */
+		if ((curr->entryhi & TLBHI_VPAGE) == faultaddress) break; //&& pid == curr->pid) break; /* TODO: may not need to check pid? */
 		curr = curr->next;
 	} while (curr->next != NULL);
 
 	if (curr == NULL) {
 		lock_release(hpt_lock);
+		panic("address not found\n"); /* TODO: debug-only */
 		return EFAULT;
 	} else {
 		/* TODO: check if entry is valid ? */
