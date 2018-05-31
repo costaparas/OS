@@ -38,8 +38,6 @@
 #include <vm.h>
 #include <proc.h>
 
-#define NUM_STACK_PAGES 16
-
 struct addrspace *as_create(void) {
 	struct addrspace *as = kmalloc(sizeof(struct addrspace));
 	if (as == NULL) return NULL;
@@ -138,8 +136,8 @@ int readable, int writeable, int executable) {
 	as->nregions++;
 
 	/* append new_region to as->region_list */
-	struct region *curr = as->region_list;
-	if (curr == NULL) {
+	struct region *curr_region = as->region_list;
+	if (curr_region == NULL) {
 		as->region_list = new_region;
 	} else {
 		struct region *old_head = as->region_list;

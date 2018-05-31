@@ -37,6 +37,8 @@
 #include <vm.h>
 #include "opt-dumbvm.h"
 
+#define NUM_STACK_PAGES 16
+
 struct vnode;
 
 struct region {

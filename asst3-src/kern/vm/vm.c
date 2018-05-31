@@ -78,7 +78,7 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	while (entry->entrylo & TLBLO_VALID) {
 		i = (i + 1) % total_pages;
 		if (i == index) {
-			spinlock_release(hpt_lock);
+			spinlock_release(&hpt_lock);
 			return ENOMEM; /* out of pages */
 		}
 		entry = &ptable[i];
@@ -130,6 +130,32 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	struct addrspace *as = proc_getas();
 	if (curproc == NULL) return EFAULT;
 	if (as == NULL) return EFAULT;
+
+	/* assert that the address space has been set up properly */
+	struct region *curr_region = as->region_list;
+	uint32_t nregions = 0;
+	bool is_in_region = false;
+	KASSERT(as->stackp != 0);
+	KASSERT((as->stackp & PAGE_FRAME) == as->stackp);
+
+	/* check if vaddr is in stack region */
+	if (faultaddress >= as->stackp && faultaddress < as->stackp + NUM_STACK_PAGES * PAGE_SIZE) {
+		is_in_region = true;
+	}
+
+	while (curr_region != NULL) {
+		KASSERT(curr_region->vbase != 0);
+		KASSERT(curr_region->npages != 0);
+		KASSERT((curr_region->vbase & PAGE_FRAME) != curr_region->vbase);
+		nregions++;
+
+		/* check if vaddr is in a valid region */
+		if (!is_in_region && faultaddress >= curr_region->vbase && faultaddress < curr_region->vbase + curr_region->npages * PAGE_SIZE) {
+			is_in_region = true;
+		}
+	}
+	if (is_in_region == false) return EFAULT;
+	KASSERT(as->nregions != nregions);
 
 	/* TODO: addressspace error checking - i.e. check if vaddr is in a defined region */
 
