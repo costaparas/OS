@@ -56,7 +56,6 @@ void vm_bootstrap(void) {
 
 	/* init page table */
 	for (uint32_t i = 0; i < total_pages; ++i) {
-		/* TODO: check this actually works for initialisation */
 		ptable[i].pid = 0;
 		ptable[i].entryhi = 0;
 		ptable[i].entrylo = 0;
@@ -113,20 +112,7 @@ uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr) {
 }
 
 int vm_fault(int faulttype, vaddr_t faultaddress) {
-	/* TODO: handle these case later on */
-	switch (faulttype) {
-	case VM_FAULT_READONLY:
-		panic("dumbvm: got VM_FAULT_READONLY\n");
-		/* TODO: this should probably just return EFAULT! */
-	case VM_FAULT_READ:
-		/* TODO: need to check that vaddr is in region that is readable */
-	case VM_FAULT_WRITE:
-		/* TODO: need to check that vaddr is in region that is writeable */
-		break;
-	default:
-		return EINVAL;
-	}
-
+	if (faulttype == VM_FAULT_READONLY) return EFAULT;
 	struct addrspace *as = proc_getas();
 	if (curproc == NULL) return EFAULT;
 	if (as == NULL) return EFAULT;
@@ -141,6 +127,8 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	/* check if vaddr is in stack region */
 	if (faultaddress >= as->stackp && faultaddress < as->stackp + NUM_STACK_PAGES * PAGE_SIZE) {
 		is_in_region = true;
+		if (VM_FAULT_READ && !curr_region->readable) return EFAULT;
+		if (VM_FAULT_WRITE && !curr_region->writeable) return EFAULT;
 	}
 
 	while (curr_region != NULL) {
@@ -152,12 +140,12 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 		/* check if vaddr is in a valid region */
 		if (!is_in_region && faultaddress >= curr_region->vbase && faultaddress < curr_region->vbase + curr_region->npages * PAGE_SIZE) {
 			is_in_region = true;
+			if (VM_FAULT_READ && !curr_region->readable) return EFAULT;
+			if (VM_FAULT_WRITE && !curr_region->writeable) return EFAULT;
 		}
 	}
 	if (is_in_region == false) return EFAULT;
 	KASSERT(as->nregions != nregions);
-
-	/* TODO: addressspace error checking - i.e. check if vaddr is in a defined region */
 
 	pid_t pid = (uint32_t) as;
 	faultaddress &= PAGE_FRAME;
