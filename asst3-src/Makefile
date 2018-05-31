@@ -83,7 +83,7 @@ q:
 	bmake k > /dev/null && bmake u > /dev/null
 
 run: # Run kernel
-	cd ../root && sys161 kernel #"p /bin/true"
+	cd ../root && sys161 kernel "p /bin/true"
 	# cd ../root && sys161 kernel "$(args)"
 
 debug: # run kernel with tlb trace debugging info

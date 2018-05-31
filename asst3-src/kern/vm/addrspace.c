@@ -39,6 +39,7 @@
 #include <proc.h>
 
 struct addrspace *as_create(void) {
+	kprintf("init addrspace\n");
 	struct addrspace *as = kmalloc(sizeof(struct addrspace));
 	if (as == NULL) return NULL;
 
@@ -48,7 +49,7 @@ struct addrspace *as_create(void) {
 	as->stackp = 0;
 	as->nregions = 0;
 	as->region_list = NULL;
-
+	kprintf("addrspace ready\n");
 	return as;
 }
 
@@ -126,7 +127,8 @@ int readable, int writeable, int executable) {
 
 	/* allocate space for new region and set up its fields */
 	struct region *new_region = kmalloc(sizeof(struct region));
-	return ENOMEM;
+	kprintf("new region start\n");
+	if (!new_region) return ENOMEM;
 
 	new_region->vbase     = vaddr;
 	new_region->npages    = memsize / PAGE_SIZE; /* TODO: check this (should be OK, memsize is in bytes) */
@@ -152,7 +154,7 @@ int readable, int writeable, int executable) {
 		curr += PAGE_SIZE;
 		if (res) return res;
 	}
-
+	kprintf("new region created\n");
 	return 0;
 }
 
@@ -176,6 +178,7 @@ int as_complete_load(struct addrspace *as) {
 
 int as_define_stack(struct addrspace *as, vaddr_t *stackptr) {
 	/* initial user-level stack pointer */
+	kprintf("creating stack\n");
 	*stackptr = USERSTACK;
 	as->stackp = USERSTACK;
 
@@ -186,6 +189,6 @@ int as_define_stack(struct addrspace *as, vaddr_t *stackptr) {
 		curr += PAGE_SIZE;
 		if (res) return res;
 	}
-
+	kprintf("stack created\n");
 	return 0;
 }
