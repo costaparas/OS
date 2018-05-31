@@ -68,6 +68,11 @@ void vm_bootstrap(void) {
 	}
 }
 
+/* zero-fill a region of memory */
+static void zero_region(paddr_t paddr, unsigned npages) {
+	bzero((void *)paddr, npages * PAGE_SIZE);
+}
+
 int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int writeable) {
 	(void) readable; /* TODO: is this needed? */
 	vaddr &= PAGE_FRAME;
@@ -87,6 +92,9 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 		}
 		entry = &ptable[i];
 	}
+
+	/* zero-fill the frame */
+	zero_region(paddr, 1);
 
 	ptable_entry curr = &ptable[index];
 	while (curr->next != NULL) curr = curr->next;

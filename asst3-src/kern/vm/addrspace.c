@@ -108,12 +108,6 @@ void as_deactivate(void) {
 	as_activate(); /* TODO: check if this breaks anything */
 }
 
-/* zero-fill a region of memory */
-static void as_zero_region(vaddr_t vaddr, unsigned npages) {
-	(void)vaddr; (void)npages;
-	//bzero((void *)(vaddr), npages * PAGE_SIZE); /* TODO: zero-fill memory */
-}
-
 /*
  * Set up a segment at virtual address VADDR of size MEMSIZE. The
  * segment in memory extends from VADDR up to (but not including)
@@ -171,7 +165,6 @@ int readable, int writeable, int executable) {
 		if (res) return res;
 		curr += PAGE_SIZE;
 	}
-	as_zero_region(vaddr, npages);
 	kprintf("new region created\n");
 	return 0;
 }
@@ -194,7 +187,6 @@ int as_prepare_load(struct addrspace *as) {
 		if (res) return res;
 		curr += PAGE_SIZE;
 	}
-	as_zero_region(as->stackp, NUM_STACK_PAGES);
 	kprintf("as_prepare_load, stack created\n");
 	return 0;
 }
