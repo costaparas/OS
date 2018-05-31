@@ -68,6 +68,11 @@ void vm_bootstrap(void) {
 	}
 }
 
+/* zero-fill a region of memory */
+static void zero_region(paddr_t paddr, unsigned npages) {
+	bzero((void *)paddr, npages * PAGE_SIZE);
+}
+
 int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int writeable) {
 	(void) readable; /* TODO: is this needed? */
 	vaddr &= PAGE_FRAME;
@@ -88,22 +93,24 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 		entry = &ptable[i];
 	}
 
+	/* zero-fill the frame */
+	zero_region(paddr, 1);
+
 	ptable_entry curr = &ptable[index];
-	while (curr->next != NULL) {
-		curr = curr->next;
-	}
+	while (curr->next != NULL) curr = curr->next;
 	curr->next = entry;
 
 	entry->pid = (uint32_t) as;
 	entry->entryhi = vaddr;
 	if (writeable) {
-		entry->entrylo = paddr | TLBLO_DIRTY | TLBLO_VALID;
+		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_DIRTY | TLBLO_VALID;
 	} else {
-		entry->entrylo = paddr | TLBLO_VALID;
+		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_DIRTY | TLBLO_VALID; /* TODO: fix this! */
+		//entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_VALID; /* TODO: this frame should not be writeable! */
 	}
 	lock_release(hpt_lock);
 
-	/* wrtie new ptable entry to tlb */
+	/* write new ptable entry to tlb */
 	int spl = splhigh();
 	tlb_random(entry->entryhi, entry->entrylo);
 	splx(spl);
@@ -117,57 +124,70 @@ uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr) {
 }
 
 int vm_fault(int faulttype, vaddr_t faultaddress) {
-	if (faulttype == VM_FAULT_READONLY) return EFAULT;
-	struct addrspace *as = proc_getas();
+	switch (faulttype) {
+	case VM_FAULT_READONLY:
+		panic("writing to read-only page\n"); /* TODO: debug-only */
+		return EFAULT; /* attempt to write to read-only page */
+	case VM_FAULT_READ:
+	case VM_FAULT_WRITE:
+		break; /* these cases are handled below */
+	default:
+		return EINVAL; /* unknown faulttype */
+	}
 	if (curproc == NULL) return EFAULT;
+	struct addrspace *as = proc_getas();
 	if (as == NULL) return EFAULT;
 
 	/* assert that the address space has been set up properly */
+	KASSERT(as->region_list != NULL);
 	struct region *curr_region = as->region_list;
 	uint32_t nregions = 0;
 	bool is_in_region = false;
 	KASSERT(as->stackp != 0);
 	KASSERT((as->stackp & PAGE_FRAME) == as->stackp);
+	faultaddress &= PAGE_FRAME;
 
 	/* check if vaddr is in stack region */
 	if (faultaddress >= as->stackp && faultaddress < as->stackp + NUM_STACK_PAGES * PAGE_SIZE) {
 		is_in_region = true;
-		if (VM_FAULT_READ && !curr_region->readable) return EFAULT;
-		if (VM_FAULT_WRITE && !curr_region->writeable) return EFAULT;
+		/* stack will always be readable and writable, so no check required */
 	}
 
 	while (curr_region != NULL) {
+		/* assert that region is set up correctly */
 		KASSERT(curr_region->vbase != 0);
 		KASSERT(curr_region->npages != 0);
-		KASSERT((curr_region->vbase & PAGE_FRAME) != curr_region->vbase);
-		nregions++;
+		KASSERT((curr_region->vbase & PAGE_FRAME) == curr_region->vbase);
 
 		/* check if vaddr is in a valid region */
 		if (!is_in_region && faultaddress >= curr_region->vbase && faultaddress < curr_region->vbase + curr_region->npages * PAGE_SIZE) {
 			is_in_region = true;
-			if (VM_FAULT_READ && !curr_region->readable) return EFAULT;
-			if (VM_FAULT_WRITE && !curr_region->writeable) return EFAULT;
+			//if (VM_FAULT_READ && !curr_region->readable) return EFAULT; /* TODO: uncomment check later */
+			//if (VM_FAULT_WRITE && !curr_region->writeable) return EFAULT; /* TODO: uncomment check later */
 		}
+		curr_region = curr_region->next;
+		nregions++;
 	}
-	if (is_in_region == false) return EFAULT;
-	KASSERT(as->nregions != nregions);
+	if (is_in_region == false) {
+		panic("not in a region\n"); /* TODO: debug-only */
+		return EFAULT;
+	}
+	KASSERT(as->nregions == nregions);
 
-	pid_t pid = (uint32_t) as;
-	faultaddress &= PAGE_FRAME;
+	pid_t pid = (uint32_t) as; /* TODO: may not need to check pid? */
 	uint32_t index = hpt_hash(as, faultaddress);
 	ptable_entry curr = &ptable[index];
 
 	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
 	lock_acquire(hpt_lock);
 	do {
-		/* TODO: double-check which is correct */
-		if ((curr->entryhi & TLBHI_VPAGE) >> PAGE_BITS == faultaddress && pid == curr->pid) break; /* TODO: may not need to check pid? */
 		if ((curr->entryhi & TLBHI_VPAGE) == faultaddress && pid == curr->pid) break; /* TODO: may not need to check pid? */
 		curr = curr->next;
 	} while (curr->next != NULL);
 
 	if (curr == NULL) {
 		lock_release(hpt_lock);
+		panic("address not found\n"); /* TODO: debug-only */
 		return EFAULT;
 	} else {
 		/* TODO: check if entry is valid ? */

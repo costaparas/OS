@@ -93,17 +93,14 @@ void as_destroy(struct addrspace *as) {
 
 void as_activate(void) {
 	struct addrspace *as = proc_getas();
-	if (as == NULL) {
-		return;
-	}
+	if (as == NULL) return;
 
-	/* Disable interrupts on this CPU while frobbing the TLB. */
+	/* disable interrupts on this cpu while frobbing the tlb */
 	int spl = splhigh();
 
 	for (int i = 0; i < NUM_TLB; i++) {
 		tlb_write(TLBHI_INVALID(i), TLBLO_INVALID(), i);
 	}
-
 	splx(spl);
 }
 
@@ -127,11 +124,23 @@ int readable, int writeable, int executable) {
 
 	/* allocate space for new region and set up its fields */
 	struct region *new_region = kmalloc(sizeof(struct region));
-	kprintf("new region start\n");
+	kprintf("about to create a new region\n");
 	if (!new_region) return ENOMEM;
 
+	size_t npages;
+
+	/* Align the region. First, the base... */
+	memsize += vaddr & ~(vaddr_t)PAGE_FRAME;
+	vaddr &= PAGE_FRAME;
+
+	/* ...and now the length. */
+	memsize = (memsize + PAGE_SIZE - 1) & PAGE_FRAME;
+
+	npages = memsize / PAGE_SIZE;
+	KASSERT(npages != 0);
+
 	new_region->vbase     = vaddr;
-	new_region->npages    = memsize / PAGE_SIZE; /* TODO: check this (should be OK, memsize is in bytes) */
+	new_region->npages    = npages;
 	new_region->readable  = readable;
 	new_region->writeable = writeable;
 
@@ -149,10 +158,12 @@ int readable, int writeable, int executable) {
 
 	/* insert into page table (TODO: move to vm_fault later) */
 	vaddr_t curr = vaddr;
+	kprintf("allocating frames for the region\n");
+	kprintf("npages in region: %u\n", new_region->npages);
 	while (curr != vaddr + memsize) {
 		int res = insert_ptable_entry(as, curr, readable, writeable);
-		curr += PAGE_SIZE;
 		if (res) return res;
+		curr += PAGE_SIZE;
 	}
 	kprintf("new region created\n");
 	return 0;
@@ -163,7 +174,20 @@ int as_prepare_load(struct addrspace *as) {
 	 * Write this.
 	 */
 
-	(void) as;
+	kprintf("as_prepare_load, creating stack\n");
+
+	/* initial stack pointer will be USERSTACK, see as_define_stack() */
+	/* base of user stack will be NUM_STACK_PAGES (16 pages) below this */
+	as->stackp = USERSTACK - PAGE_SIZE * NUM_STACK_PAGES;
+
+	/* insert into page table (TODO: move to vm_fault later) */
+	vaddr_t curr = as->stackp;
+	while (curr != USERSTACK) {
+		int res = insert_ptable_entry(as, curr, true, true);
+		if (res) return res;
+		curr += PAGE_SIZE;
+	}
+	kprintf("as_prepare_load, stack created\n");
 	return 0;
 }
 
@@ -173,22 +197,14 @@ int as_complete_load(struct addrspace *as) {
 	 */
 
 	(void) as;
+	kprintf("as_complete_load\n");
 	return 0;
 }
 
 int as_define_stack(struct addrspace *as, vaddr_t *stackptr) {
 	/* initial user-level stack pointer */
-	kprintf("creating stack\n");
+	kprintf("called as_define_stack\n");
+	KASSERT(as->stackp != 0);
 	*stackptr = USERSTACK;
-	as->stackp = USERSTACK;
-
-	/* insert into page table (TODO: move to vm_fault later) */
-	vaddr_t curr = USERSTACK;
-	while (curr != USERSTACK + NUM_STACK_PAGES * PAGE_SIZE) {
-		int res = insert_ptable_entry(as, curr, true, true);
-		curr += PAGE_SIZE;
-		if (res) return res;
-	}
-	kprintf("stack created\n");
 	return 0;
 }
