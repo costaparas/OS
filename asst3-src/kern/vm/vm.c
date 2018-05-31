@@ -94,18 +94,17 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 
 	entry->pid = (uint32_t) as;
 	entry->entryhi = vaddr;
-	if (vaddr == 0x80000000) kprintf("writing addr 8 mill to page table\n");
 	if (writeable) {
-		entry->entrylo = paddr | TLBLO_DIRTY | TLBLO_VALID | TLBLO_GLOBAL;
+		entry->entrylo = paddr | TLBLO_DIRTY | TLBLO_VALID | TLBLO_GLOBAL; /* TODO: remove global flag */
 	} else {
-		entry->entrylo = paddr | TLBLO_VALID | TLBLO_GLOBAL;
+		entry->entrylo = paddr | TLBLO_VALID | TLBLO_GLOBAL; /* TODO: remove global flag */
 	}
 	lock_release(hpt_lock);
 
 	/* wrtie new ptable entry to tlb */
-//	int spl = splhigh();
-//	tlb_random(entry->entryhi, entry->entrylo);
-//	splx(spl);
+	int spl = splhigh();
+	tlb_random(entry->entryhi, entry->entrylo);
+	splx(spl);
 	return 0;
 }
 
@@ -125,56 +124,51 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	default:
 		return EINVAL; /* unknown faulttype */
 	}
-	struct addrspace *as = proc_getas();
 	if (curproc == NULL) return EFAULT;
+	struct addrspace *as = proc_getas();
 	if (as == NULL) return EFAULT;
 
 	/* assert that the address space has been set up properly */
+	KASSERT(as->region_list != NULL);
 	struct region *curr_region = as->region_list;
 	uint32_t nregions = 0;
 	bool is_in_region = false;
 	KASSERT(as->stackp != 0);
 	KASSERT((as->stackp & PAGE_FRAME) == as->stackp);
+	faultaddress &= PAGE_FRAME;
 
 	/* check if vaddr is in stack region */
 	if (faultaddress >= as->stackp && faultaddress < as->stackp + NUM_STACK_PAGES * PAGE_SIZE) {
 		is_in_region = true;
-//		if (VM_FAULT_READ && !curr_region->readable) return EFAULT;
-//		if (VM_FAULT_WRITE && !curr_region->writeable) return EFAULT;
+		/* stack will always be readable and writable, so no check required */
 	}
 
 	while (curr_region != NULL) {
+		/* assert that region is set up correctly */
 		KASSERT(curr_region->vbase != 0);
 		KASSERT(curr_region->npages != 0);
 		KASSERT((curr_region->vbase & PAGE_FRAME) == curr_region->vbase);
-		nregions++;
 
 		/* check if vaddr is in a valid region */
 		if (!is_in_region && faultaddress >= curr_region->vbase && faultaddress < curr_region->vbase + curr_region->npages * PAGE_SIZE) {
 			is_in_region = true;
-//			if (VM_FAULT_READ && !curr_region->readable) return EFAULT;
-//			if (VM_FAULT_WRITE && !curr_region->writeable) return EFAULT;
+			//if (VM_FAULT_READ && !curr_region->readable) return EFAULT; /* TODO: uncomment check later */
+			//if (VM_FAULT_WRITE && !curr_region->writeable) return EFAULT; /* TODO: uncomment check later */
 		}
 		curr_region = curr_region->next;
+		nregions++;
 	}
-	if (is_in_region == false) {
-//		kprintf("not in a region\n");
-		return EFAULT;
-	}
-//	if (as->nregions != nregions) kprintf("NREGION: %d, CHECK: %d\n", as->nregions, nregions);
-	KASSERT(as->nregions != nregions);
+	if (is_in_region == false) return EFAULT;
+	KASSERT(as->nregions == nregions);
 
-//	pid_t pid = (uint32_t) as;
-	faultaddress &= PAGE_FRAME;
+	//pid_t pid = (uint32_t) as; /* TODO uncomment later when checking pid */
 	uint32_t index = hpt_hash(as, faultaddress);
 	ptable_entry curr = &ptable[index];
 
 	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
 	lock_acquire(hpt_lock);
 	do {
-		/* TODO: double-check which is correct */
-//		if ((curr->entryhi & TLBHI_VPAGE) >> PAGE_BITS == faultaddress && pid == curr->pid) break; /* TODO: may not need to check pid? */
-		if ((curr->entryhi & TLBHI_VPAGE) == faultaddress) break;// && pid == curr->pid) break; /* TODO: may not need to check pid? */
+		if ((curr->entryhi & TLBHI_VPAGE) == faultaddress) break; // && pid == curr->pid) break; /* TODO: may not need to check pid? */
 		curr = curr->next;
 	} while (curr->next != NULL);
 
