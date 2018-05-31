@@ -174,14 +174,14 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	}
 	KASSERT(as->nregions == nregions);
 
-	//pid_t pid = (uint32_t) as; /* TODO: may not need to check pid? */
+	pid_t pid = (uint32_t) as; /* TODO: may not need to check pid? */
 	uint32_t index = hpt_hash(as, faultaddress);
 	ptable_entry curr = &ptable[index];
 
 	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
 	lock_acquire(hpt_lock);
 	do {
-		if ((curr->entryhi & TLBHI_VPAGE) == faultaddress) break; //&& pid == curr->pid) break; /* TODO: may not need to check pid? */
+		if ((curr->entryhi & TLBHI_VPAGE) == faultaddress && pid == curr->pid) break; /* TODO: may not need to check pid? */
 		curr = curr->next;
 	} while (curr->next != NULL);
 
