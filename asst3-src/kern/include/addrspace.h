@@ -40,13 +40,11 @@
 struct vnode;
 
 struct region {
-    	vaddr_t vbase;
-    	size_t npages;
-    	bool readable;
-    	bool writeable;
-    	struct region *next;
+	vaddr_t vbase; /* start of region */
+	size_t npages; /* npages in region */
+	bool readable, writeable; /* whether the region is readable/writeable */
+	struct region *next; /* pntr to next region */
 };
-
 
 /*
  * Address space - data structure associated with the virtual memory
@@ -56,6 +54,7 @@ struct region {
  */
 struct addrspace {
 #if OPT_DUMBVM
+	/* dumbvm.c members */
 	vaddr_t as_vbase1;
 	paddr_t as_pbase1;
 	size_t as_npages1;
@@ -64,10 +63,10 @@ struct addrspace {
 	size_t as_npages2;
 	paddr_t as_stackpbase;
 #else
-	/* Put stuff here for your VM system */
-    	paddr_t stackp; /* stack pointer */
-    	uint32_t nregions;
-    	struct region *region_list;
+	/* addrspace.c members */
+	paddr_t stackp; /* stack pointer */ /* TODO: change this to be a region */
+	uint32_t nregions;
+	struct region *region_list;
 #endif
 };
 

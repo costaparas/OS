@@ -38,28 +38,26 @@
 
 #define PAGE_BITS 12 /* this was not defined anywhere */
 
-/* contains the physical frame number & a pointer to the next free frame */
+/* frame table entry */
 typedef struct frame_table_entry *ftable_entry;
 struct frame_table_entry {
-	uint32_t addr : 20;
-	uint32_t padding : 12; /* for safety */
-	ftable_entry next;
+	uint32_t addr : 20; /* physical frame number */
+	uint32_t padding : 12; /* unused */
+	ftable_entry next; /* next free frame */
 };
 
 extern struct frame_table_entry *ftable;
-extern ftable_entry fhead; /* pointer to first free frame */
 
 /* hashed page table entry */
 typedef struct page_table_entry *ptable_entry;
 struct page_table_entry {
-	pid_t pid;
+	pid_t pid; /* current process id */
 	uint32_t entryhi;
 	uint32_t entrylo;
 	ptable_entry next; /* internal chaining for collisions */
 };
 
 extern struct page_table_entry *ptable;
-extern uint32_t htp_size;
 
 /* Fault-type arguments to vm_fault() */
 #define VM_FAULT_READ     0 /* A read was attempted */

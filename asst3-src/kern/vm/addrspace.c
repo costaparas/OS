@@ -38,16 +38,6 @@
 #include <vm.h>
 #include <proc.h>
 
-/*
- * Note! If OPT_DUMBVM is set, as is the case until you start the VM
- * assignment, this file is not compiled or linked or in any way
- * used. The cheesy hack versions in dumbvm.c are used instead.
- *
- * UNSW: If you use ASST3 config as required, then this file forms
- * part of the VM subsystem.
- *
- */
-
 struct addrspace *as_create(void) {
 	struct addrspace *as = kmalloc(sizeof(struct addrspace));
 
@@ -144,7 +134,7 @@ int readable, int writeable, int executable) {
 	 * Write this.
 	 */
 
-	(void) executable;
+	(void) executable; /* TODO: possibly unneeded */
 
 	/* allocate space for new region and set up its fields */
 	struct region *new_region = kmalloc(sizeof(struct region));
@@ -169,7 +159,7 @@ int readable, int writeable, int executable) {
 
 	/* TODO: potentially allocate pages (or do it in vm_fault) */
 
-	return ENOSYS; /* Unimplemented */
+	return ENOSYS; /* TODO: what should really be returned on error? */
 }
 
 int as_prepare_load(struct addrspace *as) {

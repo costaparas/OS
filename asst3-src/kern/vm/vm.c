@@ -34,7 +34,8 @@ void vm_bootstrap(void) {
 	uint32_t total_frames = phys_size / PAGE_SIZE;
 	for (uint32_t i = 0; i < total_frames; ++i) {
 		ftable[i].addr = i;
-		if (i == total_frames - 1) { /* last frame */
+		if (i == total_frames - 1) {
+			/* laste frame */
 			ftable[i].next = NULL; /* TODO: out of memory, not a circular linked list */
 		} else {
 			ftable[i].next = &ftable[i + 1];
