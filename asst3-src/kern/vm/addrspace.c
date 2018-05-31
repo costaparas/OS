@@ -38,6 +38,8 @@
 #include <vm.h>
 #include <proc.h>
 
+#define NUM_STACK_PAGES 16
+
 struct addrspace *as_create(void) {
 	struct addrspace *as = kmalloc(sizeof(struct addrspace));
 	if (as == NULL) return NULL;
@@ -145,9 +147,13 @@ int readable, int writeable, int executable) {
 		as->region_list = new_region;
 	}
 
-	/* TODO: insert into page table (move to vm_fault later) */
-	int res = insert_ptable_entry(as, vaddr, readable, writeable);
-	if (res) return res;
+	/* insert into page table (TODO: move to vm_fault later) */
+	vaddr_t curr = vaddr;
+	while (curr != vaddr + memsize) {
+		int res = insert_ptable_entry(as, curr, readable, writeable);
+		curr += PAGE_SIZE;
+		if (res) return res;
+	}
 
 	return 0;
 }
