@@ -162,8 +162,14 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 		/* check if vaddr is in a valid region */
 		if (!is_in_region && faultaddress >= curr_region->vbase && faultaddress < curr_region->vbase + curr_region->npages * PAGE_SIZE) {
 			is_in_region = true;
-			//if (VM_FAULT_READ && !curr_region->readable) return EFAULT; /* TODO: uncomment check later */
-			//if (VM_FAULT_WRITE && !curr_region->writeable) return EFAULT; /* TODO: uncomment check later */
+			//if (VM_FAULT_READ && !curr_region->readable) {
+			//	panic("reading from a non-readable region\n"); /* TODO: debug-only */
+			//	return EFAULT;
+			//}
+			//if (VM_FAULT_WRITE && !curr_region->writeable) {
+			//	panic("writing to a non-writable region\n"); /* TODO: debug-only */
+			//	return EFAULT;
+			//}
 		}
 		curr_region = curr_region->next;
 		nregions++;
