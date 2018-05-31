@@ -54,29 +54,25 @@ struct addrspace *as_create(void) {
 }
 
 int as_copy(struct addrspace *old, struct addrspace **ret) {
-	struct addrspace *newas;
+	struct addrspace *newas = as_create();
+	if (newas == NULL) return ENOMEM;
 
-	newas = as_create();
-	if (newas == NULL) {
-		return ENOMEM;
-	}
-
-	/*
-	 * Write this.
-	 */
+	/*********************************/
+	/* TODO: implement as_copy fully */
+	/*********************************/
 
 	newas->stackp = old->stackp;
 	newas->nregions = old->nregions;
-	newas->region_list = old->region_list; /* TODO: does this suffice? */
+	newas->region_list = old->region_list;
 
 	*ret = newas;
 	return 0;
 }
 
 void as_destroy(struct addrspace *as) {
-	/*
-	 * Clean up as needed.
-	 */
+	/************************************/
+	/* TODO: implement as_destroy fully */
+	/************************************/
 
 	/* Iterate through as->region_list and free each region */
 	struct region *curr = as->region_list;
@@ -170,15 +166,15 @@ int readable, int writeable, int executable) {
 }
 
 int as_prepare_load(struct addrspace *as) {
-	/*
-	 * Write this.
-	 */
-
 	kprintf("as_prepare_load, creating stack\n");
 
 	/* initial stack pointer will be USERSTACK, see as_define_stack() */
 	/* base of user stack will be NUM_STACK_PAGES (16 pages) below this */
 	as->stackp = USERSTACK - PAGE_SIZE * NUM_STACK_PAGES;
+
+	/*****************************************/
+	/* TODO: implement as_prepare_load fully */
+	/*****************************************/
 
 	/* insert into page table (TODO: move to vm_fault later) */
 	vaddr_t curr = as->stackp;
@@ -192,9 +188,10 @@ int as_prepare_load(struct addrspace *as) {
 }
 
 int as_complete_load(struct addrspace *as) {
-	/*
-	 * Write this.
-	 */
+
+	/******************************************/
+	/* TODO: implement as_complete_load fully */
+	/******************************************/
 
 	(void) as;
 	kprintf("as_complete_load\n");

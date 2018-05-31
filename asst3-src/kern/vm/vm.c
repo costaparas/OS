@@ -105,8 +105,9 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	if (writeable) {
 		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_DIRTY | TLBLO_VALID;
 	} else {
-		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_DIRTY | TLBLO_VALID; /* TODO: fix this! */
-		//entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_VALID; /* TODO: this frame should not be writeable! */
+		/* TODO: once as_(prepare|complete)_load are implemented, delete this line and uncomment line below */
+		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_DIRTY | TLBLO_VALID;
+		//entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_VALID;
 	}
 	lock_release(hpt_lock);
 
@@ -162,6 +163,7 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 		/* check if vaddr is in a valid region */
 		if (!is_in_region && faultaddress >= curr_region->vbase && faultaddress < curr_region->vbase + curr_region->npages * PAGE_SIZE) {
 			is_in_region = true;
+			/* TODO: uncomment these lines as as_(prepare|complete)_load are implemented */
 			//if (VM_FAULT_READ && !curr_region->readable) {
 			//	panic("reading from a non-readable region\n"); /* TODO: debug-only */
 			//	return EFAULT;
@@ -196,7 +198,7 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 		panic("address not found\n"); /* TODO: debug-only */
 		return EFAULT;
 	} else {
-		/* TODO: check if entry is valid ? */
+		/* TODO: check if entry is valid? */
 		int spl = splhigh();
 		tlb_random(curr->entryhi, curr->entrylo);
 		splx(spl);
