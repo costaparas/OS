@@ -130,8 +130,20 @@ int readable, int writeable, int executable) {
 	kprintf("new region start\n");
 	if (!new_region) return ENOMEM;
 
+//	new_region->npages    = memsize / PAGE_SIZE; /* TODO: check this (should be OK, memsize is in bytes) */
+	size_t npages;
+
+	/* Align the region. First, the base... */
+	memsize += vaddr & ~(vaddr_t)PAGE_FRAME;
+	vaddr &= PAGE_FRAME;
+
+	/* ...and now the length. */
+	memsize = (memsize + PAGE_SIZE - 1) & PAGE_FRAME;
+
+	npages = memsize / PAGE_SIZE;
+
 	new_region->vbase     = vaddr;
-	new_region->npages    = memsize / PAGE_SIZE; /* TODO: check this (should be OK, memsize is in bytes) */
+	new_region->npages    = npages;
 	new_region->readable  = readable;
 	new_region->writeable = writeable;
 
@@ -149,6 +161,8 @@ int readable, int writeable, int executable) {
 
 	/* insert into page table (TODO: move to vm_fault later) */
 	vaddr_t curr = vaddr;
+	kprintf("allocating frames for the region\n");
+	kprintf("nregions: %u\n", new_region->npages);
 	while (curr != vaddr + memsize) {
 		int res = insert_ptable_entry(as, curr, readable, writeable);
 		curr += PAGE_SIZE;
@@ -163,7 +177,17 @@ int as_prepare_load(struct addrspace *as) {
 	 * Write this.
 	 */
 
-	(void) as;
+	kprintf("creating stack\n");
+	as->stackp = USERSTACK+PAGE_SIZE;
+
+	/* insert into page table (TODO: move to vm_fault later) */
+	vaddr_t curr = USERSTACK+PAGE_SIZE;
+	while (curr != USERSTACK+PAGE_SIZE + NUM_STACK_PAGES * PAGE_SIZE) {
+		int res = insert_ptable_entry(as, curr, true, true);
+		curr += PAGE_SIZE;
+		if (res) return res;
+	}
+	kprintf("stack created\n");
 	return 0;
 }
 
@@ -178,17 +202,7 @@ int as_complete_load(struct addrspace *as) {
 
 int as_define_stack(struct addrspace *as, vaddr_t *stackptr) {
 	/* initial user-level stack pointer */
-	kprintf("creating stack\n");
-	*stackptr = USERSTACK;
-	as->stackp = USERSTACK;
-
-	/* insert into page table (TODO: move to vm_fault later) */
-	vaddr_t curr = USERSTACK;
-	while (curr != USERSTACK + NUM_STACK_PAGES * PAGE_SIZE) {
-		int res = insert_ptable_entry(as, curr, true, true);
-		curr += PAGE_SIZE;
-		if (res) return res;
-	}
-	kprintf("stack created\n");
+	KASSERT(as->stackp != 0);
+	*stackptr = USERSTACK+PAGE_SIZE;
 	return 0;
 }
