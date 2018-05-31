@@ -64,11 +64,14 @@ struct addrspace {
 	paddr_t as_stackpbase;
 #else
 	/* addrspace.c members */
-	paddr_t stackp; /* stack pointer */ /* TODO: change this to be a region */
+	vaddr_t stackp; /* user stack base */
 	uint32_t nregions;
 	struct region *region_list;
 #endif
 };
+
+uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr);
+int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int writeable);
 
 /*
  * Functions in addrspace.c:

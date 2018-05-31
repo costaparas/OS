@@ -31,6 +31,7 @@ vaddr_t alloc_kpages(unsigned int npages) {
 		addr = ram_stealmem(npages);
 	} else {
 		/* fhead->addr is stored as 20 bits so we need to shift it to form a paddr_t */
+		if (fhead == NULL) return 0; /* out of frames */
 		addr = (paddr_t)(fhead->addr << PAGE_BITS);
 		fhead = fhead->next;
 	}

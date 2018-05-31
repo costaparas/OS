@@ -40,10 +40,7 @@
 
 struct addrspace *as_create(void) {
 	struct addrspace *as = kmalloc(sizeof(struct addrspace));
-
-	if (as == NULL) {
-		return NULL;
-	}
+	if (as == NULL) return NULL;
 
 	/*
 	 * Initialize as needed.
@@ -94,28 +91,23 @@ void as_destroy(struct addrspace *as) {
 }
 
 void as_activate(void) {
-	struct addrspace *as;
-
-	as = proc_getas();
+	struct addrspace *as = proc_getas();
 	if (as == NULL) {
-		/*
-		 * Kernel thread without an address space; leave the
-		 * prior address space in place.
-		 */
 		return;
 	}
 
-	/*
-	 * Write this.
-	 */
+	/* Disable interrupts on this CPU while frobbing the TLB. */
+	int spl = splhigh();
+
+	for (int i = 0; i < NUM_TLB; i++) {
+		tlb_write(TLBHI_INVALID(i), TLBLO_INVALID(), i);
+	}
+
+	splx(spl);
 }
 
 void as_deactivate(void) {
-	/*
-	 * Write this. For many designs it won't need to actually do
-	 * anything. See proc.c for an explanation of why it (might)
-	 * be needed.
-	 */
+	as_activate(); /* TODO: check if this breaks anything */
 }
 
 /*
@@ -130,21 +122,16 @@ void as_deactivate(void) {
  */
 int as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 int readable, int writeable, int executable) {
-	/*
-	 * Write this.
-	 */
-
-	(void) executable; /* TODO: possibly unneeded */
+	(void) executable; /* unused */
 
 	/* allocate space for new region and set up its fields */
 	struct region *new_region = kmalloc(sizeof(struct region));
-	/* TODO: should probably check if kmalloc fails */
+	return ENOMEM;
 
 	new_region->vbase     = vaddr;
 	new_region->npages    = memsize / PAGE_SIZE; /* TODO: check this (should be OK, memsize is in bytes) */
 	new_region->readable  = readable;
 	new_region->writeable = writeable;
-	/* TODO: add + set new_region->executeable? */
 
 	as->nregions++;
 
@@ -152,14 +139,17 @@ int readable, int writeable, int executable) {
 	struct region *curr = as->region_list;
 	if (curr == NULL) {
 		as->region_list = new_region;
-	} else { /* Find last region and point its next to the newly created region */
-		while (curr->next != NULL) curr = curr->next;
-		curr->next = new_region;
+	} else {
+		struct region *old_head = as->region_list;
+		new_region->next = old_head;
+		as->region_list = new_region;
 	}
 
-	/* TODO: potentially allocate pages (or do it in vm_fault) */
+	/* TODO: insert into page table (move to vm_fault later) */
+	int res = insert_ptable_entry(as, vaddr, readable, writeable);
+	if (res) return res;
 
-	return ENOSYS; /* TODO: what should really be returned on error? */
+	return 0;
 }
 
 int as_prepare_load(struct addrspace *as) {
@@ -181,14 +171,8 @@ int as_complete_load(struct addrspace *as) {
 }
 
 int as_define_stack(struct addrspace *as, vaddr_t *stackptr) {
-	/*
-	 * Write this.
-	 */
-
-	(void) as;
-
-	/* Initial user-level stack pointer */
+	/* initial user-level stack pointer */
 	*stackptr = USERSTACK;
-
+	as->stackp = USERSTACK;
 	return 0;
 }

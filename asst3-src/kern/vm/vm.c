@@ -16,8 +16,6 @@ uint32_t total_pages = 0; /* total pages in the hpt */
 struct frame_table_entry *ftable = 0;
 struct page_table_entry *ptable = 0;
 
-uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr);
-
 void vm_bootstrap(void) {
 	paddr_t phys_size = ram_getsize(); /* must be called first, since ram_getfirstfree() invalidates it */
 	paddr_t first_free = ram_getfirstfree();
@@ -36,7 +34,7 @@ void vm_bootstrap(void) {
 		ftable[i].addr = i;
 		if (i == total_frames - 1) {
 			/* laste frame */
-			ftable[i].next = NULL; /* TODO: out of memory, not a circular linked list */
+			ftable[i].next = NULL; /* out of frames */
 		} else {
 			ftable[i].next = &ftable[i + 1];
 		}
@@ -62,6 +60,48 @@ void vm_bootstrap(void) {
 		ptable[i].entrylo = 0;
 		ptable[i].next = NULL;
 	}
+}
+
+int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int writeable) {
+	(void) readable; /* TODO: is this needed? */
+	vaddr &= PAGE_FRAME;
+	uint32_t index = hpt_hash(as, vaddr);
+	vaddr_t paddr = alloc_kpages(1);
+	if (paddr == 0) return ENOMEM;
+
+	/* TODO: acquire lock */
+	ptable_entry entry = &ptable[index];
+
+	uint32_t i = index;
+	while (entry->entrylo & TLBLO_VALID) {
+		i = (i + 1) % total_pages;
+		if (i == index) {
+			/* TODO: release ptable_lock */
+			return ENOMEM; /* out of pages */
+		}
+		entry = &ptable[i];
+	}
+
+	ptable_entry curr = &ptable[index];
+	while (curr->next != NULL) {
+		curr = curr->next;
+	}
+	curr->next = entry;
+
+	entry->pid = (uint32_t) as;
+	entry->entryhi = vaddr;
+	if (writeable) {
+		entry->entrylo = paddr | TLBLO_DIRTY | TLBLO_VALID;
+	} else {
+		entry->entrylo = paddr | TLBLO_VALID;
+	}
+	/* TODO: unlock hpt */
+
+	/* wrtie new ptable entry to tlb */
+	int spl = splhigh();
+	tlb_random(entry->entryhi, entry->entrylo);
+	splx(spl);
+	return 0;
 }
 
 uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr) {
