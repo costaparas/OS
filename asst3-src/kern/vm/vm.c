@@ -173,7 +173,7 @@ int free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 		if (pt == NULL) continue;
 		KASSERT((pt->entryhi & TLBHI_VPAGE) == page);
 
-		kprintf("FREEING PAGE   : %d\n", PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE));
+//		kprintf("FREEING PAGE   : %d\n", PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE));
 		free_kpages(PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE));
 
 		/* reset ptabl entry, retain pointer to next (which may be valid) */
@@ -184,6 +184,22 @@ int free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 
 	lock_release(hpt_lock);
 	return 0;
+}
+
+/*
+ * Wrapper function for search_ptable - searches for the pt entry corresponding to a vaddr
+ * without requiring an existing ptable entry as an argument
+ * NOTE THIS USES HPT_LOCK
+ */
+ptable_entry search_ptable_nopre (struct addrspace *as, vaddr_t vaddr) {
+	lock_acquire(hpt_lock);
+	uint32_t index = hpt_hash(as, vaddr);
+	ptable_entry curr = &ptable[index];
+
+	ptable_entry res = search_ptable(curr, vaddr, (uint32_t) as);
+	lock_release(hpt_lock);
+
+	return res;
 }
 
 /*

@@ -60,8 +60,41 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 	/* TODO: implement as_copy fully */
 	/*********************************/
 
-	newas->nregions = old->nregions;
-	newas->region_list = old->region_list;
+	/* Copy each region from the old as */
+	struct region *old_region;
+	struct region *new_region = NULL;
+	for (old_region = old->region_list; old_region != NULL; old_region = old_region->next) {
+		as_define_region(newas, old_region->vbase, old_region->npages * PAGE_SIZE,
+				 old_region->readable, old_region->writeable, false);
+
+		/* advance new_region to point to newly defined region */
+		if (new_region == NULL) new_region = newas->region_list;
+		else new_region = new_region->next;
+
+		vaddr_t new_addr = new_region->vbase;
+		vaddr_t old_addr = old_region->vbase;
+		while (new_addr != new_region ->vbase + new_region->npages * PAGE_SIZE) {
+			/* insert page table entry for each page in the copied region */
+			insert_ptable_entry(newas, new_addr, new_region->readable, new_region->writeable);
+
+			/* get ptable entries for each old/new page */
+			ptable_entry old_pt = search_ptable_nopre(old, old_addr);
+			ptable_entry new_pt = search_ptable_nopre(newas, new_addr);
+
+			/* get frame number for old and new frames */
+			vaddr_t old_frame = PADDR_TO_KVADDR(old_pt->entrylo & TLBLO_PPAGE);
+			vaddr_t new_frame = PADDR_TO_KVADDR(new_pt->entrylo & TLBLO_PPAGE);
+
+			/* copy the memory from the old frame to the new frame */
+			memmove((void *) old_frame,
+				(const void *) new_frame,
+				PAGE_SIZE);
+
+			new_addr += PAGE_SIZE;
+			old_addr += PAGE_SIZE;
+		}
+
+	}
 
 	*ret = newas;
 	return 0;
