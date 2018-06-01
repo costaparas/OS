@@ -152,15 +152,6 @@ int readable, int writeable, int executable) {
 		as->region_list = new_region;
 	}
 
-	/* insert into page table (TODO: move to vm_fault later) */
-	vaddr_t curr = vaddr;
-	kprintf("allocating frames for the region\n");
-	kprintf("npages in region: %u\n", new_region->npages);
-	while (curr != vaddr + memsize) {
-		int res = insert_ptable_entry(as, curr, readable, writeable);
-		if (res) return res;
-		curr += PAGE_SIZE;
-	}
 	kprintf("new region created\n");
 	return 0;
 }
@@ -168,21 +159,19 @@ int readable, int writeable, int executable) {
 int as_prepare_load(struct addrspace *as) {
 	kprintf("as_prepare_load, creating stack\n");
 
-	/* initial stack pointer will be USERSTACK, see as_define_stack() */
-	/* base of user stack will be NUM_STACK_PAGES (16 pages) below this */
+	/*
+	 * initial stack pointer will be USERSTACK, see as_define_stack()
+	 * base of user stack will be NUM_STACK_PAGES (16 pages) below this
+	 * this needs to be set before the possiblity of vm_fault() being triggered
+	 * vm_fault() maybe triggered before as_define_stack() is called
+	 * but not before as_prepare_load() is called
+	 */
 	as->stackp = USERSTACK - PAGE_SIZE * NUM_STACK_PAGES;
 
 	/*****************************************/
 	/* TODO: implement as_prepare_load fully */
 	/*****************************************/
 
-	/* insert into page table (TODO: move to vm_fault later) */
-	vaddr_t curr = as->stackp;
-	while (curr != USERSTACK) {
-		int res = insert_ptable_entry(as, curr, true, true);
-		if (res) return res;
-		curr += PAGE_SIZE;
-	}
 	kprintf("as_prepare_load, stack created\n");
 	return 0;
 }

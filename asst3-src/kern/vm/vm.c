@@ -78,7 +78,7 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	vaddr &= PAGE_FRAME;
 	uint32_t index = hpt_hash(as, vaddr);
 	vaddr_t paddr = alloc_kpages(1);
-	if (paddr == 0) return ENOMEM;
+	if (paddr == 0) return ENOMEM; /* out of frames */
 
 	lock_acquire(hpt_lock);
 	ptable_entry entry = &ptable[index];
@@ -153,15 +153,20 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	KASSERT(as->region_list != NULL);
 	struct region *curr_region = as->region_list;
 	uint32_t nregions = 0;
-	bool is_in_region = false;
+	struct region *region_found = NULL;
 	KASSERT(as->stackp != 0);
 	KASSERT((as->stackp & PAGE_FRAME) == as->stackp);
 	faultaddress &= PAGE_FRAME;
 
 	/* check if vaddr is in stack region */
 	if (faultaddress >= as->stackp && faultaddress < as->stackp + NUM_STACK_PAGES * PAGE_SIZE) {
-		is_in_region = true;
 		/* stack will always be readable and writable, so no check required */
+		struct region stack;
+		stack.vbase = as->stackp;
+		stack.npages = NUM_STACK_PAGES;
+		stack.readable = stack.writeable = true;
+		stack.next = NULL;
+		region_found = &stack;
 	}
 
 	while (curr_region != NULL) {
@@ -171,8 +176,8 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 		KASSERT((curr_region->vbase & PAGE_FRAME) == curr_region->vbase);
 
 		/* check if vaddr is in a valid region */
-		if (!is_in_region && faultaddress >= curr_region->vbase && faultaddress < curr_region->vbase + curr_region->npages * PAGE_SIZE) {
-			is_in_region = true;
+		if (!region_found && faultaddress >= curr_region->vbase && faultaddress < curr_region->vbase + curr_region->npages * PAGE_SIZE) {
+			region_found = curr_region;
 			/* TODO: uncomment these lines as as_(prepare|complete)_load are implemented */
 			//if (VM_FAULT_READ && !curr_region->readable) {
 			//	panic("reading from a non-readable region\n"); /* TODO: debug-only */
@@ -186,7 +191,7 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 		curr_region = curr_region->next;
 		nregions++;
 	}
-	if (is_in_region == false) {
+	if (region_found == NULL) {
 		panic("not in a region\n"); /* TODO: debug-only */
 		return EFAULT;
 	}
@@ -205,16 +210,16 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 
 	if (curr == NULL) {
 		lock_release(hpt_lock);
-		panic("address not found\n"); /* TODO: debug-only */
-		return EFAULT;
+		/* lazy page/frame allocation */
+		insert_ptable_entry(as, faultaddress, region_found->readable, region_found->writeable);
 	} else {
 		/* TODO: check if entry is valid? */
 		int spl = splhigh();
 		tlb_random(curr->entryhi, curr->entrylo);
 		splx(spl);
 		lock_release(hpt_lock);
-		return 0;
 	}
+	return 0;
 }
 
 /*
