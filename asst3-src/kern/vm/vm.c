@@ -163,7 +163,7 @@ void make_page_read_only(vaddr_t vaddr) {
 /*
  * Removes a page table entry and frees the frame associated with it
  */
-int remove_ptable_entry(struct addrspace *as, vaddr_t vaddr) {
+int remove_ptable_entry(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 	uint32_t index = hpt_hash(as, vaddr);
 
 	lock_acquire(hpt_lock);
@@ -178,9 +178,11 @@ int remove_ptable_entry(struct addrspace *as, vaddr_t vaddr) {
 	}
 	KASSERT((pt->entryhi & TLBHI_VPAGE) == vaddr);
 
-	vaddr_t frame = PADDR_TO_KVADDR(pt->entrylo & PAGE_FRAME);
-	kprintf("FREEING FRAME  : %d\n", frame);
-	free_kpages(frame);
+	vaddr_t page_start = PADDR_TO_KVADDR(pt->entrylo & PAGE_FRAME);
+	for (vaddr_t page = page_start; page != page_start + npages * PAGE_SIZE; page += PAGE_SIZE) {
+		kprintf("FREEING PAGE   : %d\n", page);
+		free_kpages(page);
+	}
 
 	/* Clear out pt's fields */
 	pt->pid = 0;
