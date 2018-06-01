@@ -80,7 +80,7 @@ void as_destroy(struct addrspace *as) {
 	while (curr != NULL) {
 		/* TODO: check freeing stack in remove_ptable_entry() */
 		kprintf("REMOVE REGION %d: %p, npages: %d, vbase: %d\n", i++, curr, curr->npages, curr->vbase & PAGE_FRAME);
-		int result = remove_ptable_entry_and_frames(as, curr->vbase & PAGE_FRAME, curr->npages);
+		int result = free_region(as, curr->vbase, curr->npages);
 		if (result) kprintf("Could not find page table entry to remove!\n");
 
 		struct region *to_free = curr;

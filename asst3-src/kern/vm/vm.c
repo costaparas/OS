@@ -161,27 +161,22 @@ void make_page_read_only(vaddr_t vaddr) {
 }
 
 /*
- * Removes a page table entry and frees the frames associated with it
+ * Remove page table entries and free frames associated with a region.
  */
-int remove_ptable_entry_and_frames(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
-	uint32_t index = hpt_hash(as, vaddr);
-
+int free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 	lock_acquire(hpt_lock);
-	ptable_entry pt = &ptable[index];
 
-	vaddr_t page_start = PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE);
-	for (vaddr_t page = page_start; page != page_start + npages * PAGE_SIZE; page += PAGE_SIZE) {
-		pt = search_ptable(pt, vaddr, (pid_t) as); /* find ptable entry associated with vaddr */
-		if (pt == NULL) { /* Stack "hack" aka don't free anything if we don't find the ptable entry */
-			lock_release(hpt_lock);
-			return -1;
-		}
-		KASSERT((pt->entryhi & TLBHI_VPAGE) == vaddr);
+	for (vaddr_t page = vaddr; page != vaddr + npages * PAGE_SIZE; page += PAGE_SIZE) {
+		uint32_t index = hpt_hash(as, page);
+		ptable_entry pt = &ptable[index];
+		pt = search_ptable(pt, page, (pid_t) as); /* find ptable entry associated with page */
+		if (pt == NULL) continue;
+		KASSERT((pt->entryhi & TLBHI_VPAGE) == page);
 
 		kprintf("FREEING PAGE   : %d\n", page);
-		free_kpages(pt->entrylo & TLBLO_PPAGE);
+		free_kpages(PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE));
 
-		/* Clear out pt's fields */
+		/* reset ptabl entry, retain pointer to next (which may be valid) */
 		pt->pid = 0;
 		pt->entryhi = 0;
 		pt->entrylo = 0;
