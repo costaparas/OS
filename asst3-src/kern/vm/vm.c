@@ -126,7 +126,7 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	} else {
 		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_VALID;
 	}
-	kprintf("PADDRT: %d\n", paddr);
+	kprintf("ALLOCATED FRAME: %d\n", paddr);
 	lock_release(hpt_lock);
 
 	/* write new ptable entry to tlb */
@@ -163,18 +163,23 @@ void make_page_read_only(vaddr_t vaddr) {
 /*
  * Removes a page table entry and frees the frame associated with it
  */
-uint32_t remove_ptable_entry(struct addrspace *as, vaddr_t vaddr) {
+int remove_ptable_entry(struct addrspace *as, vaddr_t vaddr) {
 	uint32_t index = hpt_hash(as, vaddr);
 
 	lock_acquire(hpt_lock);
 	ptable_entry pt = &ptable[index];
 
 	pt = search_ptable(pt, vaddr, (pid_t) as);
-	if (pt == NULL) panic("Error in as_destroy(): page table not found\n");
+	if (pt == NULL) { /* Stack "hack" aka don't free anything if we don't find the ptable entry */
+//		kprintf("NULL PT SEARCH RESULT!\n");
+//		panic("Error in as_destroy(): page table entry not found\n");
+		lock_release(hpt_lock);
+		return -1;
+	}
 	KASSERT((pt->entryhi & TLBHI_VPAGE) == vaddr);
 
 	vaddr_t frame = PADDR_TO_KVADDR(pt->entrylo & PAGE_FRAME);
-	kprintf("FREEING FRAME: %d\n", frame);
+	kprintf("FREEING FRAME  : %d\n", frame);
 	free_kpages(frame);
 
 	/* Clear out pt's fields */

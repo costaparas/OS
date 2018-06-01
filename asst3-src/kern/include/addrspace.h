@@ -76,7 +76,7 @@ uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr);
 int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int writeable);
 void make_page_read_only(vaddr_t vaddr);
 ptable_entry search_ptable(ptable_entry curr, vaddr_t vaddr, pid_t pid);
-uint32_t remove_ptable_entry(struct addrspace *as, vaddr_t vaddr);
+int remove_ptable_entry(struct addrspace *as, vaddr_t vaddr);
 
 /*
  * Functions in addrspace.c:

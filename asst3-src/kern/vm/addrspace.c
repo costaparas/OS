@@ -72,13 +72,16 @@ void as_destroy(struct addrspace *as) {
 	/* TODO: implement as_destroy fully */
 	/************************************/
 
-	kprintf("Running as_destroy\n");
+	kprintf("Running as_destroy, %d regions\n", as->nregions);
 	/* Iterate through as->region_list and free each region */
 	struct region *curr = as->region_list;
 
+	int i = 0;
 	while (curr != NULL) {
-		/* TODO free all associated frames and other cleanup */
-		remove_ptable_entry(as, curr->vbase);
+		/* TODO: check freeing stack in remove_ptable_entry() */
+		kprintf("REMOVE REGION %d: %p, vbase: %d\n", i++, curr, curr->vbase & PAGE_FRAME);
+		int result = remove_ptable_entry(as, curr->vbase & PAGE_FRAME);
+		if (result) kprintf("Could not find page table entry to remove!\n");
 
 		struct region *to_free = curr;
 		curr = curr->next;
@@ -88,7 +91,6 @@ void as_destroy(struct addrspace *as) {
 	/* as_activate(); */
 
 	/* TODO free frames for the as stack */
-	remove_ptable_entry(as, as->stackp);
 
 	kfree(as);
 }
