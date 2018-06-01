@@ -189,9 +189,11 @@ int free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 /*
  * Find the ptable entry with the given vaddr and pid.
  * Begin the search from curr and follow the collision pointers until found.
+ * Requires the page table lock to have been acquired already.
  */
 ptable_entry search_ptable(ptable_entry curr, vaddr_t vaddr, pid_t pid) {
 	KASSERT(curr != NULL && vaddr != 0);
+	KASSERT(lock_do_i_hold(hpt_lock));
 	do {
 		if ((curr->entryhi & TLBHI_VPAGE) == vaddr && pid == curr->pid) break; /* TODO: may not need to check pid? */
 		curr = curr->next;
