@@ -74,15 +74,23 @@ void as_destroy(struct addrspace *as) {
 	/* TODO: implement as_destroy fully */
 	/************************************/
 
+	kprintf("Running as_destroy\n");
 	/* Iterate through as->region_list and free each region */
 	struct region *curr = as->region_list;
+
 	while (curr != NULL) {
 		/* TODO free all associated frames and other cleanup */
+		remove_ptable_entry(as, curr->vbase);
 
 		struct region *to_free = curr;
 		curr = curr->next;
 		kfree(to_free);
 	}
+
+	/* as_activate(); */
+
+	/* TODO free frames for the as stack */
+	remove_ptable_entry(as, as->stackp);
 
 	kfree(as);
 }
@@ -145,6 +153,7 @@ int readable, int writeable, int executable) {
 
 	/* append new_region to as->region_list */
 	struct region *curr_region = as->region_list;
+	kprintf("NEW_REGION: %p\n", new_region);
 	if (curr_region == NULL) {
 		as->region_list = new_region;
 	} else {
