@@ -82,9 +82,12 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 
 	lock_acquire(hpt_lock);
 	ptable_entry entry = &ptable[index];
-
 	uint32_t i = index;
+	bool overflow = false;
+
+	/* do a linear scan until the 1st free slot is found */
 	while (entry->entrylo & TLBLO_VALID) {
+		overflow = true;
 		i = (i + 1) % total_pages;
 		if (i == index) {
 			lock_release(hpt_lock);
@@ -97,11 +100,18 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	zero_region(paddr, 1);
 
 	ptable_entry curr = &ptable[index];
-	while (curr->next != NULL) curr = curr->next;
-	curr->next = entry;
 
+	/* if there was an overflow, find the end of the overflow chain */
+	if (overflow) {
+		while (overflow == true && curr->next != NULL) curr = curr->next;
+		curr->next = entry; /* set the last entry in the chain to point to this new entry */
+	}
+
+	/* set pid and entryhi in the ptable entry */
 	entry->pid = (uint32_t) as;
 	entry->entryhi = vaddr;
+
+	/* set entrylo in the ptable entry */
 	if (writeable) {
 		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_DIRTY | TLBLO_VALID;
 	} else {
@@ -191,7 +201,7 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	do {
 		if ((curr->entryhi & TLBHI_VPAGE) == faultaddress && pid == curr->pid) break; /* TODO: may not need to check pid? */
 		curr = curr->next;
-	} while (curr->next != NULL);
+	} while (curr != NULL);
 
 	if (curr == NULL) {
 		lock_release(hpt_lock);
