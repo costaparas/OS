@@ -46,7 +46,6 @@ struct addrspace *as_create(void) {
 	/*
 	 * Initialize as needed.
 	 */
-	as->stackp = 0;
 	as->nregions = 0;
 	as->region_list = NULL;
 	kprintf("addrspace ready\n");
@@ -61,7 +60,6 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 	/* TODO: implement as_copy fully */
 	/*********************************/
 
-	newas->stackp = old->stackp;
 	newas->nregions = old->nregions;
 	newas->region_list = old->region_list;
 
@@ -167,7 +165,7 @@ int as_prepare_load(struct addrspace *as) {
 	 * vm_fault() maybe triggered before as_define_stack() is called
 	 * but not before as_prepare_load() is called
 	 */
-	as->stackp = USERSTACK - PAGE_SIZE * NUM_STACK_PAGES;
+	as_define_region(as, USERSTACK - PAGE_SIZE * NUM_STACK_PAGES, PAGE_SIZE * NUM_STACK_PAGES, true, true, false);
 
 	/* set writable flag to true for all regions temporarily */
 	for (struct region *curr = as->region_list; curr != NULL; curr = curr->next) {
@@ -200,7 +198,7 @@ int as_complete_load(struct addrspace *as) {
 int as_define_stack(struct addrspace *as, vaddr_t *stackptr) {
 	/* initial user-level stack pointer */
 	kprintf("called as_define_stack\n");
-	KASSERT(as->stackp != 0);
+	(void) as;
 	*stackptr = USERSTACK;
 	return 0;
 }
