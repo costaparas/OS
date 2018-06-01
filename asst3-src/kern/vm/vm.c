@@ -232,20 +232,7 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	struct region *curr_region = as->region_list;
 	uint32_t nregions = 0;
 	struct region *region_found = NULL;
-	KASSERT(as->stackp != 0);
-	KASSERT((as->stackp & PAGE_FRAME) == as->stackp);
 	faultaddress &= PAGE_FRAME;
-
-	/* check if vaddr is in stack region */
-	if (faultaddress >= as->stackp && faultaddress < as->stackp + NUM_STACK_PAGES * PAGE_SIZE) {
-		/* stack will always be readable and writable, so no check required */
-		struct region stack;
-		stack.vbase = as->stackp;
-		stack.npages = NUM_STACK_PAGES;
-		stack.readable = stack.writeable = true;
-		stack.next = NULL;
-		region_found = &stack;
-	}
 
 	while (curr_region != NULL) {
 		/* assert that region is set up correctly */
@@ -288,7 +275,8 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	if (curr == NULL) {
 		lock_release(hpt_lock);
 		/* lazy page/frame allocation */
-		insert_ptable_entry(as, faultaddress, region_found->readable, region_found->writeable);
+		int ret = insert_ptable_entry(as, faultaddress, region_found->readable, region_found->writeable);
+		if (ret) return ret;
 	} else {
 		/* TODO: check if entry is valid? */
 		int spl = splhigh();

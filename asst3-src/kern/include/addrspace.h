@@ -67,7 +67,6 @@ struct addrspace {
 	paddr_t as_stackpbase;
 #else
 	/* addrspace.c members */
-	vaddr_t stackp; /* user stack base */
 	uint32_t nregions;
 	struct region *region_list;
 #endif
