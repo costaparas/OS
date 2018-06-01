@@ -45,6 +45,7 @@ struct region {
 	vaddr_t vbase; /* start of region */
 	size_t npages; /* npages in region */
 	bool readable, writeable; /* whether the region is readable/writeable */
+	bool can_write; /* real write permissions - unlike writeable, this should not change */
 	struct region *next; /* pntr to next region */
 };
 
@@ -74,6 +75,7 @@ struct addrspace {
 
 uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr);
 int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int writeable);
+void make_page_read_only(vaddr_t vaddr);
 
 /*
  * Functions in addrspace.c:

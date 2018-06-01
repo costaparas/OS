@@ -115,9 +115,7 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	if (writeable) {
 		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_DIRTY | TLBLO_VALID;
 	} else {
-		/* TODO: once as_(prepare|complete)_load are implemented, delete this line and uncomment line below */
-		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_DIRTY | TLBLO_VALID;
-		//entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_VALID;
+		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_VALID;
 	}
 	lock_release(hpt_lock);
 
@@ -126,6 +124,29 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	tlb_random(entry->entryhi, entry->entrylo);
 	splx(spl);
 	return 0;
+}
+
+void make_page_read_only(vaddr_t vaddr) {
+	vaddr &= PAGE_FRAME;
+	struct addrspace *as = proc_getas();
+	pid_t pid = (uint32_t) as;
+	uint32_t index = hpt_hash(as, vaddr);
+	ptable_entry curr = &ptable[index];
+
+	lock_acquire(hpt_lock);
+	do {
+		if ((curr->entryhi & TLBHI_VPAGE) == vaddr && pid == curr->pid) break; /* TODO: may not need to check pid? */
+		curr = curr->next;
+	} while (curr != NULL);
+
+	/* unset dirty bit in entrylo */
+	if (curr != NULL) {
+		paddr_t paddr = curr->entrylo & TLBLO_PPAGE;
+		curr->entrylo = paddr | TLBLO_VALID;
+	}
+	kprintf("making this readonly: %u\n", vaddr);
+
+	lock_release(hpt_lock);
 }
 
 uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr) {
@@ -178,13 +199,14 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 		/* check if vaddr is in a valid region */
 		if (!region_found && faultaddress >= curr_region->vbase && faultaddress < curr_region->vbase + curr_region->npages * PAGE_SIZE) {
 			region_found = curr_region;
-			/* TODO: uncomment these lines as as_(prepare|complete)_load are implemented */
+			/* TODO: i don't think these are needed at all - these are not meant to be enforced */
+			/* TODO: only the VM_FAULT_READONLY case needs to be handled */
 			//if (VM_FAULT_READ && !curr_region->readable) {
-			//	panic("reading from a non-readable region\n"); /* TODO: debug-only */
+			//	panic("reading from a non-readable region %u\n", faultaddress); /* TODO: debug-only */
 			//	return EFAULT;
 			//}
 			//if (VM_FAULT_WRITE && !curr_region->writeable) {
-			//	panic("writing to a non-writable region\n"); /* TODO: debug-only */
+			//	panic("writing to a non-writable region %u\n", faultaddress); /* TODO: debug-only */
 			//	return EFAULT;
 			//}
 		}
@@ -197,7 +219,7 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	}
 	KASSERT(as->nregions == nregions);
 
-	pid_t pid = (uint32_t) as; /* TODO: may not need to check pid? */
+	pid_t pid = (uint32_t) as;
 	uint32_t index = hpt_hash(as, faultaddress);
 	ptable_entry curr = &ptable[index];
 

@@ -139,6 +139,7 @@ int readable, int writeable, int executable) {
 	new_region->npages    = npages;
 	new_region->readable  = readable;
 	new_region->writeable = writeable;
+	new_region->can_write = writeable;
 
 	as->nregions++;
 
@@ -168,21 +169,30 @@ int as_prepare_load(struct addrspace *as) {
 	 */
 	as->stackp = USERSTACK - PAGE_SIZE * NUM_STACK_PAGES;
 
-	/*****************************************/
-	/* TODO: implement as_prepare_load fully */
-	/*****************************************/
+	/* set writable flag to true for all regions temporarily */
+	for (struct region *curr = as->region_list; curr != NULL; curr = curr->next) {
+		curr->writeable = true;
+	}
 
 	kprintf("as_prepare_load, stack created\n");
 	return 0;
 }
 
 int as_complete_load(struct addrspace *as) {
+	kprintf("starting as_complete_load\n");
+	for (struct region *curr = as->region_list; curr != NULL; curr = curr->next) {
+		/* reset write flag to real write flag */
+		curr->writeable = curr->can_write;
 
-	/******************************************/
-	/* TODO: implement as_complete_load fully */
-	/******************************************/
+		/* flip the dirty bit in the ptable entry for all entires for in this region */
+		if (!curr->can_write) {
+			for (vaddr_t addr = curr->vbase; addr != curr->vbase + curr->npages * PAGE_SIZE; addr += PAGE_SIZE) {
+				make_page_read_only(addr);
+			}
+		}
+	}
 
-	(void) as;
+	as_activate(); /* flush the tlb since some entries are not read-only */
 	kprintf("as_complete_load\n");
 	return 0;
 }
