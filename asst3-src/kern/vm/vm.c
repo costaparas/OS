@@ -81,7 +81,7 @@ static void zero_region(paddr_t paddr, unsigned npages) {
  * Call alloc_kpages() to acquire a frame for the page.
  * Set the dirty bit as needed for write permissions.
  */
-int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int writeable) {
+int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int writeable, bool write_tlb) {
 	KASSERT(as != NULL && vaddr != 0);
 	(void) readable; /* TODO: is this needed? */
 	vaddr &= PAGE_FRAME;
@@ -130,6 +130,7 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	lock_release(hpt_lock);
 
 	/* write new ptable entry to tlb */
+	if (!write_tlb) return 0;
 	int spl = splhigh();
 	tlb_random(entry->entryhi, entry->entrylo);
 	splx(spl);
@@ -293,7 +294,7 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	if (curr == NULL) {
 		lock_release(hpt_lock);
 		/* lazy page/frame allocation */
-		int ret = insert_ptable_entry(as, faultaddress, region_found->readable, region_found->writeable);
+		int ret = insert_ptable_entry(as, faultaddress, region_found->readable, region_found->writeable, true);
 		if (ret) return ret;
 	} else {
 		/* TODO: check if entry is valid? */

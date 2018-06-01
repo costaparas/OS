@@ -39,7 +39,7 @@
 #include <proc.h>
 
 struct addrspace *as_create(void) {
-	kprintf("init addrspace\n");
+//	kprintf("init addrspace\n");
 	struct addrspace *as = kmalloc(sizeof(struct addrspace));
 	if (as == NULL) return NULL;
 
@@ -48,7 +48,7 @@ struct addrspace *as_create(void) {
 	 */
 	as->nregions = 0;
 	as->region_list = NULL;
-	kprintf("addrspace ready\n");
+//	kprintf("addrspace ready\n");
 	return as;
 }
 
@@ -56,45 +56,39 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 	struct addrspace *newas = as_create();
 	if (newas == NULL) return ENOMEM;
 
-	/*********************************/
-	/* TODO: implement as_copy fully */
-	/*********************************/
+	/* copy over the region list */
+	struct region *curr;
+	for (curr = old->region_list; curr != NULL; curr = curr->next) {
+		int ret = as_define_region(newas, curr->vbase, curr->npages * PAGE_SIZE, curr->readable, curr->writeable, true);
+		if (ret) return ret;
+	}
+	KASSERT(newas->nregions == old->nregions);
 
-	/* Copy each region from the old as */
-	struct region *old_region;
-	struct region *new_region = NULL;
-	for (old_region = old->region_list; old_region != NULL; old_region = old_region->next) {
-		as_define_region(newas, old_region->vbase, old_region->npages * PAGE_SIZE,
-				 old_region->readable, old_region->writeable, false);
+	/* copy region data from the old as */
+	for (curr = old->region_list; curr != NULL; curr = curr->next) {
+		vaddr_t addr = curr->vbase;
+		while (addr != curr->vbase + curr->npages * PAGE_SIZE) {
 
-		/* advance new_region to point to newly defined region */
-		if (new_region == NULL) new_region = newas->region_list;
-		else new_region = new_region->next;
-
-		vaddr_t new_addr = new_region->vbase;
-		vaddr_t old_addr = old_region->vbase;
-		while (new_addr != new_region ->vbase + new_region->npages * PAGE_SIZE) {
 			/* check an old page table entry exists for the page */
-			ptable_entry old_pt = search_ptable_nopre(old, old_addr);
+			ptable_entry old_pt = search_ptable_nopre(old, addr);
 			if (old_pt != NULL) {
 				/* insert page table entry for each page in the copied region */
-				insert_ptable_entry(newas, new_addr, new_region->readable, new_region->writeable);
+				int ret = insert_ptable_entry(newas, addr, curr->readable, curr->writeable, false);
+				if (ret) return ret;
 
 				/* get ptable entries for new page */
-				ptable_entry new_pt = search_ptable_nopre(newas, new_addr);
+				ptable_entry new_pt = search_ptable_nopre(newas, addr);
+				if (new_pt == NULL) return ENOMEM;
 
 				/* get frame number for old and new frames */
 				vaddr_t old_frame = PADDR_TO_KVADDR(old_pt->entrylo & TLBLO_PPAGE);
 				vaddr_t new_frame = PADDR_TO_KVADDR(new_pt->entrylo & TLBLO_PPAGE);
 
 				/* copy the memory from the old frame to the new frame */
-				memmove((void *) old_frame,
-					(const void *) new_frame,
-					PAGE_SIZE);
+				memmove((void *) new_frame, (const void *) old_frame, PAGE_SIZE);
 			}
 
-			new_addr += PAGE_SIZE;
-			old_addr += PAGE_SIZE;
+			addr += PAGE_SIZE;
 		}
 
 	}
@@ -104,18 +98,15 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 }
 
 void as_destroy(struct addrspace *as) {
-	/************************************/
-	/* TODO: implement as_destroy fully */
-	/************************************/
 
-	kprintf("Running as_destroy, %d regions\n", as->nregions);
-	/* Iterate through as->region_list and free each region */
+//	kprintf("Running as_destroy, %d regions\n", as->nregions);
+	/* iterate through as->region_list and free each region */
 	struct region *curr = as->region_list;
 
-	int i = 0;
+//	int i = 0;
 	while (curr != NULL) {
 		/* TODO: check freeing stack in remove_ptable_entry() */
-		kprintf("REMOVE REGION %d: %p, npages: %d, vbase: %d\n", i++, curr, curr->npages, curr->vbase & PAGE_FRAME);
+//		kprintf("REMOVE REGION %d: %p, npages: %d, vbase: %d\n", i++, curr, curr->npages, curr->vbase & PAGE_FRAME);
 		int result = free_region(as, curr->vbase, curr->npages);
 		if (result) kprintf("Could not find page table entry to remove!\n");
 
@@ -164,7 +155,7 @@ int readable, int writeable, int executable) {
 
 	/* allocate space for new region and set up its fields */
 	struct region *new_region = kmalloc(sizeof(struct region));
-	kprintf("about to create a new region\n");
+//	kprintf("about to create a new region\n");
 	if (!new_region) return ENOMEM;
 
 	size_t npages;
@@ -198,12 +189,12 @@ int readable, int writeable, int executable) {
 		as->region_list = new_region;
 	}
 
-	kprintf("new region created\n");
+//	kprintf("new region created\n");
 	return 0;
 }
 
 int as_prepare_load(struct addrspace *as) {
-	kprintf("as_prepare_load, creating stack\n");
+//	kprintf("as_prepare_load, creating stack\n");
 
 	/*
 	 * initial stack pointer will be USERSTACK, see as_define_stack()
@@ -219,12 +210,12 @@ int as_prepare_load(struct addrspace *as) {
 		curr->writeable = true;
 	}
 
-	kprintf("as_prepare_load, stack created\n");
+//	kprintf("as_prepare_load, stack created\n");
 	return 0;
 }
 
 int as_complete_load(struct addrspace *as) {
-	kprintf("starting as_complete_load\n");
+//	kprintf("starting as_complete_load\n");
 	for (struct region *curr = as->region_list; curr != NULL; curr = curr->next) {
 		/* reset write flag to real write flag */
 		curr->writeable = curr->can_write;
@@ -238,13 +229,13 @@ int as_complete_load(struct addrspace *as) {
 	}
 
 	as_activate(); /* flush the tlb since some entries are not read-only */
-	kprintf("as_complete_load\n");
+//	kprintf("as_complete_load\n");
 	return 0;
 }
 
 int as_define_stack(struct addrspace *as, vaddr_t *stackptr) {
 	/* initial user-level stack pointer */
-	kprintf("called as_define_stack\n");
+//	kprintf("called as_define_stack\n");
 	(void) as;
 	*stackptr = USERSTACK;
 	return 0;
