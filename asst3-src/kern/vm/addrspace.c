@@ -186,7 +186,7 @@ int readable, int writeable, int executable) {
 
 	/* append new_region to as->region_list */
 	struct region *curr_region = as->region_list;
-	kprintf("NEW_REGION: %p\n", new_region);
+//	kprintf("NEW_REGION: %p\n", new_region);
 	if (curr_region == NULL) {
 		as->region_list = new_region;
 	} else {

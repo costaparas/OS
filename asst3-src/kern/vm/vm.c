@@ -126,7 +126,7 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	} else {
 		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_VALID;
 	}
-	kprintf("ALLOCATED FRAME: %d\n", paddr);
+//	kprintf("ALLOCATED FRAME: %d\n", paddr);
 	lock_release(hpt_lock);
 
 	/* write new ptable entry to tlb */
