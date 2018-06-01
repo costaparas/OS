@@ -68,12 +68,21 @@ void vm_bootstrap(void) {
 	}
 }
 
-/* zero-fill a region of memory */
+/*
+ * Zero-fill a region of memory. The paddr must be a kernel virtual address.
+ */
 static void zero_region(paddr_t paddr, unsigned npages) {
+	KASSERT(paddr != 0 && npages != 0);
 	bzero((void *)paddr, npages * PAGE_SIZE);
 }
 
+/*
+ * Insert an entry into the ptable for the given vaddr.
+ * Call alloc_kpages() to acquire a frame for the page.
+ * Set the dirty bit as needed for write permissions.
+ */
 int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int writeable) {
+	KASSERT(as != NULL && vaddr != 0);
 	(void) readable; /* TODO: is this needed? */
 	vaddr &= PAGE_FRAME;
 	uint32_t index = hpt_hash(as, vaddr);
@@ -126,7 +135,11 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	return 0;
 }
 
+/*
+ * Unset the dirty bit in the ptable entry for the given vaddr.
+ */
 void make_page_read_only(vaddr_t vaddr) {
+	KASSERT(vaddr != 0);
 	vaddr &= PAGE_FRAME;
 	struct addrspace *as = proc_getas();
 	pid_t pid = (uint32_t) as;
@@ -134,27 +147,44 @@ void make_page_read_only(vaddr_t vaddr) {
 	ptable_entry curr = &ptable[index];
 
 	lock_acquire(hpt_lock);
-	do {
-		if ((curr->entryhi & TLBHI_VPAGE) == vaddr && pid == curr->pid) break; /* TODO: may not need to check pid? */
-		curr = curr->next;
-	} while (curr != NULL);
+	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
+	curr = search_ptable(curr, vaddr, pid);
 
 	/* unset dirty bit in entrylo */
 	if (curr != NULL) {
 		paddr_t paddr = curr->entrylo & TLBLO_PPAGE;
 		curr->entrylo = paddr | TLBLO_VALID;
 	}
-	kprintf("making this readonly: %u\n", vaddr);
 
 	lock_release(hpt_lock);
 }
 
-uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr) {
+/*
+ * Find the ptable entry with the given vaddr and pid.
+ * Begin the search from curr and follow the collision pointers until found.
+ */
+ptable_entry search_ptable(ptable_entry curr, vaddr_t vaddr, pid_t pid) {
+	KASSERT(curr != NULL && vaddr != 0);
+	do {
+		if ((curr->entryhi & TLBHI_VPAGE) == vaddr && pid == curr->pid) break; /* TODO: may not need to check pid? */
+		curr = curr->next;
+	} while (curr != NULL);
+	return curr;
+}
+
+/*
+ * Return an index into the ptable for the given addrspace and addr.
+ */
+uint32_t hpt_hash(struct addrspace *as, vaddr_t addr) {
+	KASSERT(as != NULL && addr != 0);
 	uint32_t index;
-	index = (((uint32_t) as) ^ (faultaddr >> PAGE_BITS)) % total_pages;
+	index = (((uint32_t) as) ^ (addr >> PAGE_BITS)) % total_pages;
 	return index;
 }
 
+/*
+ * Find the ptable entry corresponding to the faultaddress and load into the tlb.
+ */
 int vm_fault(int faulttype, vaddr_t faultaddress) {
 	switch (faulttype) {
 	case VM_FAULT_READONLY:
@@ -223,12 +253,10 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	uint32_t index = hpt_hash(as, faultaddress);
 	ptable_entry curr = &ptable[index];
 
-	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
 	lock_acquire(hpt_lock);
-	do {
-		if ((curr->entryhi & TLBHI_VPAGE) == faultaddress && pid == curr->pid) break; /* TODO: may not need to check pid? */
-		curr = curr->next;
-	} while (curr != NULL);
+
+	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
+	curr = search_ptable(curr, faultaddress, pid);
 
 	if (curr == NULL) {
 		lock_release(hpt_lock);
