@@ -173,7 +173,7 @@ int free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 		if (pt == NULL) continue;
 		KASSERT((pt->entryhi & TLBHI_VPAGE) == page);
 
-		kprintf("FREEING PAGE   : %d\n", page);
+		kprintf("FREEING PAGE   : %d\n", PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE));
 		free_kpages(PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE));
 
 		/* reset ptabl entry, retain pointer to next (which may be valid) */
