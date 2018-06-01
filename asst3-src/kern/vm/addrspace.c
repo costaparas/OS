@@ -88,8 +88,8 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 				vaddr_t new_frame = PADDR_TO_KVADDR(new_pt->entrylo & TLBLO_PPAGE);
 
 				/* copy the memory from the old frame to the new frame */
-				memmove((void *) old_frame,
-					(const void *) new_frame,
+				memmove((void *) new_frame,
+					(const void *) old_frame,
 					PAGE_SIZE);
 			}
 
