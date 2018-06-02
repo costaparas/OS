@@ -72,7 +72,7 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 		while (addr != curr->vbase + curr->npages * PAGE_SIZE) {
 
 			/* check an old page table entry exists for the page */
-			ptable_entry old_pt = search_ptable_nopre(old, addr, NULL);
+			ptable_entry old_pt = search_ptable(old, addr, NULL);
 			if (old_pt != NULL) {
 				/* insert page table entry for each page in the copied region */
 				int ret = insert_ptable_entry(newas, addr, curr->readable, curr->writeable, false);
@@ -82,7 +82,7 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 				}
 
 				/* get ptable entries for new page */
-				ptable_entry new_pt = search_ptable_nopre(newas, addr, NULL);
+				ptable_entry new_pt = search_ptable(newas, addr, NULL);
 				if (new_pt == NULL) {
 					as_destroy(newas);
 					return ENOMEM;

@@ -75,8 +75,7 @@ struct addrspace {
 uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr);
 int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int writeable, bool write_tlb);
 void make_page_read_only(vaddr_t vaddr);
-ptable_entry search_ptable(ptable_entry curr, vaddr_t vaddr, pid_t pid, ptable_entry prev);
-ptable_entry search_ptable_nopre (struct addrspace *as, vaddr_t vaddr, ptable_entry prev);
+ptable_entry search_ptable(struct addrspace *as, vaddr_t vaddr, ptable_entry prev);
 void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages);
 
 /*
