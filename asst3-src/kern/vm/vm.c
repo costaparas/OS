@@ -71,7 +71,7 @@ void vm_bootstrap(void) {
 /*
  * Zero-fill a region of memory. The paddr must be a kernel virtual address.
  */
-static void zero_region(paddr_t paddr, unsigned npages) {
+static void zero_region(vaddr_t paddr, unsigned npages) {
 	KASSERT(paddr != 0 && npages != 0);
 	bzero((void *)paddr, npages * PAGE_SIZE);
 }
@@ -87,6 +87,7 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	vaddr &= PAGE_FRAME;
 	uint32_t index = hpt_hash(as, vaddr);
 	vaddr_t paddr = alloc_kpages(1);
+	KASSERT(paddr % PAGE_SIZE == 0);
 	if (paddr == 0) return ENOMEM; /* out of frames */
 
 	lock_acquire(hpt_lock);
@@ -98,7 +99,9 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	while (entry->entrylo & TLBLO_VALID) {
 		overflow = true;
 		i = (i + 1) % total_pages;
+kprintf("overflow\n\n\n");
 		if (i == index) {
+			free_kpages(paddr);
 			lock_release(hpt_lock);
 			return ENOMEM; /* out of pages */
 		}
@@ -112,7 +115,7 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 
 	/* if there was an overflow, find the end of the overflow chain */
 	if (overflow) {
-		while (overflow == true && curr->next != NULL) curr = curr->next;
+		while (curr->next != NULL) curr = curr->next;
 		curr->next = entry; /* set the last entry in the chain to point to this new entry */
 	}
 
@@ -126,7 +129,7 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	} else {
 		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_VALID;
 	}
-//	kprintf("ALLOCATED FRAME: %d\n", paddr);
+//	kprintf("ALLOCATED FRAME: %u\n", paddr);
 	lock_release(hpt_lock);
 
 	/* write new ptable entry to tlb */
@@ -173,11 +176,10 @@ int free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 		pt = search_ptable(pt, page, (pid_t) as); /* find ptable entry associated with page */
 		if (pt == NULL) continue;
 		KASSERT((pt->entryhi & TLBHI_VPAGE) == page);
-
-//		kprintf("FREEING PAGE   : %d\n", PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE));
+//		kprintf("FREEING PAGE   : %u\n", PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE));
 		free_kpages(PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE));
 
-		/* reset ptabl entry, retain pointer to next (which may be valid) */
+		/* reset ptable entry, retain pointer to next (which may be valid) */
 		pt->pid = 0;
 		pt->entryhi = 0;
 		pt->entrylo = 0;
@@ -210,6 +212,7 @@ ptable_entry search_ptable_nopre (struct addrspace *as, vaddr_t vaddr) {
  */
 ptable_entry search_ptable(ptable_entry curr, vaddr_t vaddr, pid_t pid) {
 	KASSERT(curr != NULL && vaddr != 0);
+	KASSERT((vaddr & PAGE_FRAME) == vaddr);
 	KASSERT(lock_do_i_hold(hpt_lock));
 	do {
 		if ((curr->entryhi & TLBHI_VPAGE) == vaddr && pid == curr->pid) break; /* TODO: may not need to check pid? */
@@ -223,6 +226,7 @@ ptable_entry search_ptable(ptable_entry curr, vaddr_t vaddr, pid_t pid) {
  */
 uint32_t hpt_hash(struct addrspace *as, vaddr_t addr) {
 	KASSERT(as != NULL && addr != 0);
+	KASSERT((addr & PAGE_FRAME) == addr);
 	uint32_t index;
 	index = (((uint32_t) as) ^ (addr >> PAGE_BITS)) % total_pages;
 	return index;
@@ -232,6 +236,7 @@ uint32_t hpt_hash(struct addrspace *as, vaddr_t addr) {
  * Find the ptable entry corresponding to the faultaddress and load into the tlb.
  */
 int vm_fault(int faulttype, vaddr_t faultaddress) {
+//kprintf("vm_fault: %u\n", faultaddress);
 	switch (faulttype) {
 	case VM_FAULT_READONLY:
 		panic("writing to read-only page\n"); /* TODO: debug-only */

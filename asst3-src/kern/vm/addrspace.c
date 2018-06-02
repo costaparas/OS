@@ -40,6 +40,7 @@
 
 struct addrspace *as_create(void) {
 //	kprintf("init addrspace\n");
+kprintf("allocing as\n");
 	struct addrspace *as = kmalloc(sizeof(struct addrspace));
 	if (as == NULL) return NULL;
 
@@ -94,11 +95,12 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 	}
 
 	*ret = newas;
+	as_activate();
 	return 0;
 }
 
 void as_destroy(struct addrspace *as) {
-
+return;
 //	kprintf("Running as_destroy, %d regions\n", as->nregions);
 	/* iterate through as->region_list and free each region */
 	struct region *curr = as->region_list;
@@ -115,11 +117,11 @@ void as_destroy(struct addrspace *as) {
 		kfree(to_free);
 	}
 
-	/* as_activate(); */
 
 	/* TODO free frames for the as stack */
-
+kprintf("freeing as\n");
 	kfree(as);
+	as_activate();
 }
 
 void as_activate(void) {
@@ -154,10 +156,11 @@ int readable, int writeable, int executable) {
 	(void) executable; /* unused */
 
 	/* allocate space for new region and set up its fields */
+kprintf("defining new region\n");
 	struct region *new_region = kmalloc(sizeof(struct region));
 //	kprintf("about to create a new region\n");
 	if (!new_region) return ENOMEM;
-
+kprintf("addr of new region: %p %p\n", new_region, &new_region->vbase);
 	size_t npages;
 
 	/* Align the region. First, the base... */
