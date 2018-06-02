@@ -59,15 +59,14 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 	struct region *curr;
 	for (curr = old->region_list; curr != NULL; curr = curr->next) {
 		int ret = as_define_region(newas, curr->vbase, curr->npages * PAGE_SIZE, curr->readable, curr->writeable, true);
-		if (ret) {
-			as_destroy(newas);
-			return ret;
-		}
+		if (!ret) continue;
+		as_destroy(newas);
+		return ret;
 	}
 	KASSERT(newas->nregions == old->nregions);
 
 	/* copy region data from the old as */
-	for (curr = old->region_list; curr != NULL; curr = curr->next) {
+	for (curr = newas->region_list; curr != NULL; curr = curr->next) {
 		copy_region(curr, old, newas);
 	}
 

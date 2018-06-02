@@ -189,21 +189,22 @@ void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 	lock_release(hpt_lock);
 }
 
-int copy_region(struct region *curr, struct addrspace *old, struct addrspace *newas) {
-	vaddr_t addr = curr->vbase;
+int copy_region(struct region *reg, struct addrspace *old, struct addrspace *newas) {
+	vaddr_t addr = reg->vbase;
 	lock_acquire(hpt_lock);
-	while (addr != curr->vbase + curr->npages * PAGE_SIZE) {
+	while (addr != reg->vbase + reg->npages * PAGE_SIZE) {
 		/* check an old page table entry exists for the page */
 		ptable_entry old_pt = search_ptable(old, addr, NULL);
 		if (old_pt != NULL) {
 			/* insert page table entry for each page in the copied region */
-			int ret = insert_ptable_entry(newas, addr, curr->readable, curr->writeable, false);
+			int ret = insert_ptable_entry(newas, addr, reg->readable, reg->writeable, false);
 			if (ret) {
+				lock_release(hpt_lock);
 				as_destroy(newas);
 				return ret;
 			}
 
-			/* get ptable entries for new page */
+			/* get ptable entry for new page */
 			ptable_entry new_pt = search_ptable(newas, addr, NULL);
 			if (new_pt == NULL) {
 				as_destroy(newas);
