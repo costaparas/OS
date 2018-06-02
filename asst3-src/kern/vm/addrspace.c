@@ -59,7 +59,10 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 	struct region *curr;
 	for (curr = old->region_list; curr != NULL; curr = curr->next) {
 		int ret = as_define_region(newas, curr->vbase, curr->npages * PAGE_SIZE, curr->readable, curr->writeable, true);
-		if (ret) return ret;
+		if (ret) {
+			as_destroy(newas);
+			return ret;
+		}
 	}
 	KASSERT(newas->nregions == old->nregions);
 
@@ -73,11 +76,17 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 			if (old_pt != NULL) {
 				/* insert page table entry for each page in the copied region */
 				int ret = insert_ptable_entry(newas, addr, curr->readable, curr->writeable, false);
-				if (ret) return ret;
+				if (ret) {
+					as_destroy(newas);
+					return ret;
+				}
 
 				/* get ptable entries for new page */
 				ptable_entry new_pt = search_ptable_nopre(newas, addr, NULL);
-				if (new_pt == NULL) return ENOMEM;
+				if (new_pt == NULL) {
+					as_destroy(newas);
+					return ENOMEM;
+				}
 
 				/* get frame number for old and new frames */
 				vaddr_t old_frame = PADDR_TO_KVADDR(old_pt->entrylo & TLBLO_PPAGE);

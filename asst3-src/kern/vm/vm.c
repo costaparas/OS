@@ -83,7 +83,7 @@ static void zero_region(vaddr_t paddr, unsigned npages) {
  */
 int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int writeable, bool write_tlb) {
 	KASSERT(as != NULL && vaddr != 0);
-	(void) readable; /* TODO: is this needed? */
+	(void) readable; /* unused */
 	vaddr &= PAGE_FRAME;
 	uint32_t index = hpt_hash(as, vaddr);
 	vaddr_t paddr = alloc_kpages(1);
@@ -100,6 +100,7 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 		overflow = true;
 		i = (i + 1) % total_pages;
 		if (i == index) {
+			/* this is very unlikely, should run out of frames first */
 			free_kpages(paddr);
 			lock_release(hpt_lock);
 			return ENOMEM; /* out of pages */
@@ -178,10 +179,12 @@ void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 		KASSERT((pt->entryhi & TLBHI_VPAGE) == page);
 		free_kpages(PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE));
 
-		/* reset ptable entry, retain pointer to next (which may be valid) */
+		/* reset ptable entry */
 		pt->pid = 0;
 		pt->entryhi = 0;
 		pt->entrylo = 0;
+
+		/* update collision chain to "skip" this entry */
 		prev->next = pt->next;
 	}
 
@@ -208,6 +211,7 @@ ptable_entry search_ptable_nopre (struct addrspace *as, vaddr_t vaddr, ptable_en
  * Find the ptable entry with the given vaddr and pid.
  * Begin the search from curr and follow the collision pointers until found.
  * Requires the page table lock to have been acquired already.
+ * Also sets prev to point to the previous ptable entry in the collision chain.
  */
 ptable_entry search_ptable(ptable_entry curr, vaddr_t vaddr, pid_t pid, ptable_entry prev) {
 	KASSERT(curr != NULL && vaddr != 0);
@@ -218,7 +222,7 @@ ptable_entry search_ptable(ptable_entry curr, vaddr_t vaddr, pid_t pid, ptable_e
 		prev = curr;
 		curr = curr->next;
 	} while (curr != NULL);
-	(void) prev;
+	(void) prev; /* make compiler happy, prev is a pntr meant to be used by caller */
 	return curr;
 }
 
@@ -242,7 +246,7 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 		return EFAULT; /* attempt to write to read-only page */
 	case VM_FAULT_READ:
 	case VM_FAULT_WRITE:
-		break; /* these cases are handled below */
+		break;
 	default:
 		return EINVAL; /* unknown faulttype */
 	}
@@ -294,11 +298,11 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 
 	if (curr == NULL) {
 		lock_release(hpt_lock);
+
 		/* lazy page/frame allocation */
 		int ret = insert_ptable_entry(as, faultaddress, region_found->readable, region_found->writeable, true);
 		if (ret) return ret;
 	} else {
-		/* TODO: check if entry is valid? */
 		int spl = splhigh();
 		tlb_random(curr->entryhi, curr->entrylo);
 		splx(spl);
