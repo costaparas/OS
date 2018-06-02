@@ -150,10 +150,9 @@ void make_page_read_only(vaddr_t vaddr) {
 	ptable_entry curr = &ptable[index];
 
 	lock_acquire(hpt_lock);
+
 	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
-	ptable_entry prev = NULL;
-	curr = search_ptable(curr, vaddr, pid, prev);
-	(void) prev;
+	curr = search_ptable(curr, vaddr, pid, NULL);
 
 	/* unset dirty bit in entrylo */
 	if (curr != NULL) {
@@ -240,7 +239,6 @@ uint32_t hpt_hash(struct addrspace *as, vaddr_t addr) {
 int vm_fault(int faulttype, vaddr_t faultaddress) {
 	switch (faulttype) {
 	case VM_FAULT_READONLY:
-		panic("writing to read-only page\n"); /* TODO: debug-only */
 		return EFAULT; /* attempt to write to read-only page */
 	case VM_FAULT_READ:
 	case VM_FAULT_WRITE:
@@ -282,10 +280,7 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 		curr_region = curr_region->next;
 		nregions++;
 	}
-	if (region_found == NULL) {
-		panic("not in a region\n"); /* TODO: debug-only */
-		return EFAULT;
-	}
+	if (region_found == NULL) return EFAULT;
 	KASSERT(as->nregions == nregions);
 
 	pid_t pid = (uint32_t) as;
@@ -295,9 +290,7 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	lock_acquire(hpt_lock);
 
 	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
-	ptable_entry prev = NULL;
-	curr = search_ptable(curr, faultaddress, pid, prev);
-	(void) prev;
+	curr = search_ptable(curr, faultaddress, pid, NULL);
 
 	if (curr == NULL) {
 		lock_release(hpt_lock);

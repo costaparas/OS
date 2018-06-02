@@ -38,17 +38,19 @@
 #include <vm.h>
 #include <proc.h>
 
+/* create a new addrspace */
 struct addrspace *as_create(void) {
 	struct addrspace *as = kmalloc(sizeof(struct addrspace));
 	if (as == NULL) return NULL;
 
-	 /* initialize as needed */
+	/* initialize as needed */
 	as->nregions = 0;
 	as->region_list = NULL;
 
 	return as;
 }
 
+/* copy an addrspace */
 int as_copy(struct addrspace *old, struct addrspace **ret) {
 	struct addrspace *newas = as_create();
 	if (newas == NULL) return ENOMEM;
@@ -67,15 +69,14 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 		while (addr != curr->vbase + curr->npages * PAGE_SIZE) {
 
 			/* check an old page table entry exists for the page */
-			ptable_entry prev = NULL;
-			ptable_entry old_pt = search_ptable_nopre(old, addr, prev);
+			ptable_entry old_pt = search_ptable_nopre(old, addr, NULL);
 			if (old_pt != NULL) {
 				/* insert page table entry for each page in the copied region */
 				int ret = insert_ptable_entry(newas, addr, curr->readable, curr->writeable, false);
 				if (ret) return ret;
 
 				/* get ptable entries for new page */
-				ptable_entry new_pt = search_ptable_nopre(newas, addr, prev);
+				ptable_entry new_pt = search_ptable_nopre(newas, addr, NULL);
 				if (new_pt == NULL) return ENOMEM;
 
 				/* get frame number for old and new frames */
@@ -100,7 +101,9 @@ void as_destroy(struct addrspace *as) {
 	/* iterate through as->region_list and free each region */
 	struct region *curr = as->region_list;
 	while (curr != NULL) {
-		free_region(as, curr->vbase, curr->npages);
+		free_region(as, curr->vbase, curr->npages); /* free pages & frames */
+
+		/* free memory used by region struct */
 		struct region *to_free = curr;
 		curr = curr->next;
 		kfree(to_free);
@@ -110,6 +113,7 @@ void as_destroy(struct addrspace *as) {
 	as_activate();
 }
 
+/* invalidate all tlb entries */
 void as_activate(void) {
 	struct addrspace *as = proc_getas();
 	if (as == NULL) return;
@@ -123,8 +127,9 @@ void as_activate(void) {
 	splx(spl);
 }
 
+/* invalidate all tlb entries just in case */
 void as_deactivate(void) {
-	as_activate(); /* TODO: check if this breaks anything */
+	as_activate();
 }
 
 /*
@@ -143,7 +148,7 @@ int readable, int writeable, int executable) {
 
 	/* allocate space for new region and set up its fields */
 	struct region *new_region = kmalloc(sizeof(struct region));
-	if (!new_region) return ENOMEM;
+	if (new_region == NULL) return ENOMEM;
 	size_t npages;
 
 	/* Align the region. First, the base... */
@@ -156,12 +161,13 @@ int readable, int writeable, int executable) {
 	npages = memsize / PAGE_SIZE;
 	KASSERT(npages != 0);
 
+	/* initialize **ALL** fields of the region struct */
 	new_region->vbase     = vaddr;
 	new_region->npages    = npages;
 	new_region->readable  = readable;
 	new_region->writeable = writeable;
 	new_region->can_write = writeable;
-	new_region->next = NULL;
+	new_region->next      = NULL;
 
 	as->nregions++;
 
@@ -178,6 +184,7 @@ int readable, int writeable, int executable) {
 	return 0;
 }
 
+/* make all regions writeable for the purposes of loading into read-only regions initially, e.g. code */
 int as_prepare_load(struct addrspace *as) {
 	/*
 	 * initial stack pointer will be USERSTACK, see as_define_stack()
@@ -196,12 +203,13 @@ int as_prepare_load(struct addrspace *as) {
 	return 0;
 }
 
+/* reset real permissions in all regions */
 int as_complete_load(struct addrspace *as) {
 	for (struct region *curr = as->region_list; curr != NULL; curr = curr->next) {
 		/* reset write flag to real write flag */
 		curr->writeable = curr->can_write;
 
-		/* flip the dirty bit in the ptable entry for all entires for in this region */
+		/* flip the dirty bit in the ptable entry for all entires for pages in this region */
 		if (!curr->can_write) {
 			for (vaddr_t addr = curr->vbase; addr != curr->vbase + curr->npages * PAGE_SIZE; addr += PAGE_SIZE) {
 				make_page_read_only(addr);
@@ -209,13 +217,13 @@ int as_complete_load(struct addrspace *as) {
 		}
 	}
 
-	as_activate(); /* flush the tlb since some entries are not read-only */
+	as_activate(); /* flush the tlb since some entries are now read-only */
 	return 0;
 }
 
+/* initial user-level stack pointer */
 int as_define_stack(struct addrspace *as, vaddr_t *stackptr) {
-	/* initial user-level stack pointer */
-	(void) as;
+	(void) as; /* unused */
 	*stackptr = USERSTACK;
 	return 0;
 }
