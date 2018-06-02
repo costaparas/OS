@@ -54,7 +54,6 @@ struct page_table_entry {
 	pid_t pid; /* current process id */
 	uint32_t entryhi;
 	uint32_t entrylo;
-	ptable_entry next; /* internal chaining for collisions */
 };
 
 extern struct page_table_entry *ptable;

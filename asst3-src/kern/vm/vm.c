@@ -40,7 +40,7 @@ void vm_bootstrap(void) {
 	for (uint32_t i = 0; i < total_frames; ++i) {
 		ftable[i].addr = i;
 		if (i == total_frames - 1) {
-			/* laste frame */
+			/* last frame */
 			ftable[i].next = NULL; /* out of frames */
 		} else {
 			ftable[i].next = &ftable[i + 1];
@@ -64,7 +64,6 @@ void vm_bootstrap(void) {
 		ptable[i].pid = 0;
 		ptable[i].entryhi = 0;
 		ptable[i].entrylo = 0;
-		ptable[i].next = NULL;
 	}
 }
 
@@ -97,11 +96,11 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	}
 	ptable_entry entry = &ptable[index];
 	uint32_t i = index;
-	bool overflow = false;
+//	bool overflow = false;
 
 	/* do a linear scan until the 1st free slot is found */
 	while (entry->entrylo & TLBLO_VALID) {
-		overflow = true;
+//		overflow = true;
 		i = (i + 1) % total_pages;
 		if (i == index) {
 			/* this is very unlikely, should run out of frames first */
@@ -114,14 +113,6 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 
 	/* zero-fill the frame */
 	zero_region(paddr, 1);
-
-	ptable_entry curr = &ptable[index];
-
-	/* if there was an overflow, find the end of the overflow chain */
-	if (overflow) {
-		while (curr->next != NULL) curr = curr->next;
-		curr->next = entry; /* set the last entry in the chain to point to this new entry */
-	}
 
 	/* set pid and entryhi in the ptable entry */
 	entry->pid = (uint32_t) as;
@@ -181,9 +172,6 @@ void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 		pt->pid = 0;
 		pt->entryhi = 0;
 		pt->entrylo = 0;
-
-		/* update collision chain to "skip" this entry */
-		if (prev != NULL) prev->next = pt->next;
 	}
 
 	lock_release(hpt_lock);
@@ -237,12 +225,21 @@ ptable_entry search_ptable(struct addrspace *as, vaddr_t vaddr, ptable_entry pre
 	uint32_t index = hpt_hash(as, vaddr);
 	pid_t pid = (uint32_t) as;
 	ptable_entry curr = &ptable[index];
-	do {
-		if ((curr->entryhi & TLBHI_VPAGE) == vaddr && pid == curr->pid) break; /* TODO: may not need to check pid? */
-		prev = curr;
-		curr = curr->next;
-	} while (curr != NULL);
 	(void) prev; /* make compiler happy, prev is a pntr meant to be used by caller */
+
+	uint32_t i = index;
+	/* do a linear scan until the 1st free slot is found */
+	do {
+		curr = &ptable[i];
+		if ((curr->entryhi & TLBHI_VPAGE) == vaddr && pid == curr->pid && (curr->entrylo & TLBLO_VALID)) return curr;
+		i = (i + 1) % total_pages;
+	} while (i != index);
+
+	if (i == index) {
+		/* this is very unlikely, should run out of frames first */
+		return NULL;
+	}
+
 	return curr;
 }
 
