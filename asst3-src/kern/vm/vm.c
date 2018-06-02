@@ -151,7 +151,9 @@ void make_page_read_only(vaddr_t vaddr) {
 
 	lock_acquire(hpt_lock);
 	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
-	curr = search_ptable(curr, vaddr, pid);
+	ptable_entry prev = NULL;
+	curr = search_ptable(curr, vaddr, pid, prev);
+	(void) prev;
 
 	/* unset dirty bit in entrylo */
 	if (curr != NULL) {
@@ -171,7 +173,8 @@ void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 	for (vaddr_t page = vaddr; page != vaddr + npages * PAGE_SIZE; page += PAGE_SIZE) {
 		uint32_t index = hpt_hash(as, page);
 		ptable_entry pt = &ptable[index];
-		pt = search_ptable(pt, page, (pid_t) as); /* find ptable entry associated with page */
+		ptable_entry prev = pt;
+		pt = search_ptable(pt, page, (pid_t) as, prev); /* find ptable entry associated with page */
 		if (pt == NULL) continue;
 		KASSERT((pt->entryhi & TLBHI_VPAGE) == page);
 		free_kpages(PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE));
@@ -180,6 +183,7 @@ void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 		pt->pid = 0;
 		pt->entryhi = 0;
 		pt->entrylo = 0;
+		prev->next = pt->next;
 	}
 
 	lock_release(hpt_lock);
@@ -190,12 +194,12 @@ void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
  * without requiring an existing ptable entry as an argument
  * NOTE THIS USES HPT_LOCK
  */
-ptable_entry search_ptable_nopre (struct addrspace *as, vaddr_t vaddr) {
+ptable_entry search_ptable_nopre (struct addrspace *as, vaddr_t vaddr, ptable_entry prev) {
 	lock_acquire(hpt_lock);
 	uint32_t index = hpt_hash(as, vaddr);
 	ptable_entry curr = &ptable[index];
 
-	ptable_entry res = search_ptable(curr, vaddr, (uint32_t) as);
+	ptable_entry res = search_ptable(curr, vaddr, (uint32_t) as, prev);
 	lock_release(hpt_lock);
 
 	return res;
@@ -206,14 +210,16 @@ ptable_entry search_ptable_nopre (struct addrspace *as, vaddr_t vaddr) {
  * Begin the search from curr and follow the collision pointers until found.
  * Requires the page table lock to have been acquired already.
  */
-ptable_entry search_ptable(ptable_entry curr, vaddr_t vaddr, pid_t pid) {
+ptable_entry search_ptable(ptable_entry curr, vaddr_t vaddr, pid_t pid, ptable_entry prev) {
 	KASSERT(curr != NULL && vaddr != 0);
 	KASSERT((vaddr & PAGE_FRAME) == vaddr);
 	KASSERT(lock_do_i_hold(hpt_lock));
 	do {
 		if ((curr->entryhi & TLBHI_VPAGE) == vaddr && pid == curr->pid) break; /* TODO: may not need to check pid? */
+		prev = curr;
 		curr = curr->next;
 	} while (curr != NULL);
+	(void) prev;
 	return curr;
 }
 
@@ -289,7 +295,9 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	lock_acquire(hpt_lock);
 
 	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
-	curr = search_ptable(curr, faultaddress, pid);
+	ptable_entry prev = NULL;
+	curr = search_ptable(curr, faultaddress, pid, prev);
+	(void) prev;
 
 	if (curr == NULL) {
 		lock_release(hpt_lock);

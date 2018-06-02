@@ -67,14 +67,15 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 		while (addr != curr->vbase + curr->npages * PAGE_SIZE) {
 
 			/* check an old page table entry exists for the page */
-			ptable_entry old_pt = search_ptable_nopre(old, addr);
+			ptable_entry prev = NULL;
+			ptable_entry old_pt = search_ptable_nopre(old, addr, prev);
 			if (old_pt != NULL) {
 				/* insert page table entry for each page in the copied region */
 				int ret = insert_ptable_entry(newas, addr, curr->readable, curr->writeable, false);
 				if (ret) return ret;
 
 				/* get ptable entries for new page */
-				ptable_entry new_pt = search_ptable_nopre(newas, addr);
+				ptable_entry new_pt = search_ptable_nopre(newas, addr, prev);
 				if (new_pt == NULL) return ENOMEM;
 
 				/* get frame number for old and new frames */
