@@ -99,7 +99,6 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	while (entry->entrylo & TLBLO_VALID) {
 		overflow = true;
 		i = (i + 1) % total_pages;
-kprintf("overflow\n\n\n");
 		if (i == index) {
 			free_kpages(paddr);
 			lock_release(hpt_lock);
@@ -129,7 +128,6 @@ kprintf("overflow\n\n\n");
 	} else {
 		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_VALID;
 	}
-//	kprintf("ALLOCATED FRAME: %u\n", paddr);
 	lock_release(hpt_lock);
 
 	/* write new ptable entry to tlb */
@@ -167,7 +165,7 @@ void make_page_read_only(vaddr_t vaddr) {
 /*
  * Remove page table entries and free frames associated with a region.
  */
-int free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
+void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 	lock_acquire(hpt_lock);
 
 	for (vaddr_t page = vaddr; page != vaddr + npages * PAGE_SIZE; page += PAGE_SIZE) {
@@ -176,7 +174,6 @@ int free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 		pt = search_ptable(pt, page, (pid_t) as); /* find ptable entry associated with page */
 		if (pt == NULL) continue;
 		KASSERT((pt->entryhi & TLBHI_VPAGE) == page);
-//		kprintf("FREEING PAGE   : %u\n", PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE));
 		free_kpages(PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE));
 
 		/* reset ptable entry, retain pointer to next (which may be valid) */
@@ -186,7 +183,6 @@ int free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 	}
 
 	lock_release(hpt_lock);
-	return 0;
 }
 
 /*
@@ -236,7 +232,6 @@ uint32_t hpt_hash(struct addrspace *as, vaddr_t addr) {
  * Find the ptable entry corresponding to the faultaddress and load into the tlb.
  */
 int vm_fault(int faulttype, vaddr_t faultaddress) {
-//kprintf("vm_fault: %u\n", faultaddress);
 	switch (faulttype) {
 	case VM_FAULT_READONLY:
 		panic("writing to read-only page\n"); /* TODO: debug-only */

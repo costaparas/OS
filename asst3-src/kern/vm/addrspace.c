@@ -39,17 +39,13 @@
 #include <proc.h>
 
 struct addrspace *as_create(void) {
-//	kprintf("init addrspace\n");
-kprintf("allocing as\n");
 	struct addrspace *as = kmalloc(sizeof(struct addrspace));
 	if (as == NULL) return NULL;
 
-	/*
-	 * Initialize as needed.
-	 */
+	 /* initialize as needed */
 	as->nregions = 0;
 	as->region_list = NULL;
-//	kprintf("addrspace ready\n");
+
 	return as;
 }
 
@@ -100,26 +96,15 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 }
 
 void as_destroy(struct addrspace *as) {
-return;
-//	kprintf("Running as_destroy, %d regions\n", as->nregions);
 	/* iterate through as->region_list and free each region */
 	struct region *curr = as->region_list;
-
-//	int i = 0;
 	while (curr != NULL) {
-		/* TODO: check freeing stack in remove_ptable_entry() */
-//		kprintf("REMOVE REGION %d: %p, npages: %d, vbase: %d\n", i++, curr, curr->npages, curr->vbase & PAGE_FRAME);
-		int result = free_region(as, curr->vbase, curr->npages);
-		if (result) kprintf("Could not find page table entry to remove!\n");
-
+		free_region(as, curr->vbase, curr->npages);
 		struct region *to_free = curr;
 		curr = curr->next;
 		kfree(to_free);
 	}
 
-
-	/* TODO free frames for the as stack */
-kprintf("freeing as\n");
 	kfree(as);
 	as_activate();
 }
@@ -156,11 +141,8 @@ int readable, int writeable, int executable) {
 	(void) executable; /* unused */
 
 	/* allocate space for new region and set up its fields */
-kprintf("defining new region\n");
 	struct region *new_region = kmalloc(sizeof(struct region));
-//	kprintf("about to create a new region\n");
 	if (!new_region) return ENOMEM;
-kprintf("addr of new region: %p %p\n", new_region, &new_region->vbase);
 	size_t npages;
 
 	/* Align the region. First, the base... */
@@ -178,12 +160,12 @@ kprintf("addr of new region: %p %p\n", new_region, &new_region->vbase);
 	new_region->readable  = readable;
 	new_region->writeable = writeable;
 	new_region->can_write = writeable;
+	new_region->next = NULL;
 
 	as->nregions++;
 
 	/* append new_region to as->region_list */
 	struct region *curr_region = as->region_list;
-//	kprintf("NEW_REGION: %p\n", new_region);
 	if (curr_region == NULL) {
 		as->region_list = new_region;
 	} else {
@@ -192,13 +174,10 @@ kprintf("addr of new region: %p %p\n", new_region, &new_region->vbase);
 		as->region_list = new_region;
 	}
 
-//	kprintf("new region created\n");
 	return 0;
 }
 
 int as_prepare_load(struct addrspace *as) {
-//	kprintf("as_prepare_load, creating stack\n");
-
 	/*
 	 * initial stack pointer will be USERSTACK, see as_define_stack()
 	 * base of user stack will be NUM_STACK_PAGES (16 pages) below this
@@ -213,12 +192,10 @@ int as_prepare_load(struct addrspace *as) {
 		curr->writeable = true;
 	}
 
-//	kprintf("as_prepare_load, stack created\n");
 	return 0;
 }
 
 int as_complete_load(struct addrspace *as) {
-//	kprintf("starting as_complete_load\n");
 	for (struct region *curr = as->region_list; curr != NULL; curr = curr->next) {
 		/* reset write flag to real write flag */
 		curr->writeable = curr->can_write;
@@ -232,13 +209,11 @@ int as_complete_load(struct addrspace *as) {
 	}
 
 	as_activate(); /* flush the tlb since some entries are not read-only */
-//	kprintf("as_complete_load\n");
 	return 0;
 }
 
 int as_define_stack(struct addrspace *as, vaddr_t *stackptr) {
 	/* initial user-level stack pointer */
-//	kprintf("called as_define_stack\n");
 	(void) as;
 	*stackptr = USERSTACK;
 	return 0;

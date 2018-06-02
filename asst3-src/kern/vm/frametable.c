@@ -30,13 +30,13 @@ vaddr_t alloc_kpages(unsigned int npages) {
 		/* use ram_stealmem if ftable isn't initialised */
 		addr = ram_stealmem(npages);
 	} else {
-		/* fhead->addr is stored as 20 bits so we need to shift it to form a paddr_t */
 		if (fhead == NULL) {
 			spinlock_release(&stealmem_lock);
 			return 0; /* out of frames */
 		}
+
+		/* fhead->addr is stored as 20 bits so we need to shift it to form a paddr_t */
 		addr = (paddr_t)(fhead->addr << PAGE_BITS);
-//kprintf("physical addr allocated for frame: %u (kernel: %u)\n", addr, PADDR_TO_KVADDR(addr));
 		fhead = fhead->next;
 	}
 	spinlock_release(&stealmem_lock);
@@ -52,6 +52,5 @@ void free_kpages(vaddr_t addr) {
 	ftable_entry old_head = fhead;
 	fhead = (ftable_entry) (KVADDR_TO_PADDR(addr) / PAGE_SIZE + ftable);
 	fhead->next = old_head;
-//kprintf("after freeing frame, new head: %p and its addr: %u\n", fhead, (paddr_t)(fhead->addr << PAGE_BITS));
 	spinlock_release(&stealmem_lock);
 }
