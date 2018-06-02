@@ -77,6 +77,7 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 void make_page_read_only(vaddr_t vaddr);
 ptable_entry search_ptable(struct addrspace *as, vaddr_t vaddr, ptable_entry prev);
 void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages);
+int copy_region(struct region *reg, struct addrspace *old, struct addrspace *newas);
 
 /*
  * Functions in addrspace.c:

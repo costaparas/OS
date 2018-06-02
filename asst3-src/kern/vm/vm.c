@@ -90,7 +90,11 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	KASSERT(paddr % PAGE_SIZE == 0);
 	if (paddr == 0) return ENOMEM; /* out of frames */
 
-	lock_acquire(hpt_lock);
+	bool release_lock = false;
+	if (!lock_do_i_hold(hpt_lock)) {
+		lock_acquire(hpt_lock);
+		release_lock = true;
+	}
 	ptable_entry entry = &ptable[index];
 	uint32_t i = index;
 	bool overflow = false;
@@ -102,7 +106,7 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 		if (i == index) {
 			/* this is very unlikely, should run out of frames first */
 			free_kpages(paddr);
-			lock_release(hpt_lock);
+			if (release_lock) lock_release(hpt_lock);
 			return ENOMEM; /* out of pages */
 		}
 		entry = &ptable[i];
@@ -129,7 +133,7 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	} else {
 		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_VALID;
 	}
-	lock_release(hpt_lock);
+	if (release_lock) lock_release(hpt_lock);
 
 	/* write new ptable entry to tlb */
 	if (!write_tlb) return 0;
@@ -185,6 +189,40 @@ void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 	lock_release(hpt_lock);
 }
 
+int copy_region(struct region *curr, struct addrspace *old, struct addrspace *newas) {
+	vaddr_t addr = curr->vbase;
+	lock_acquire(hpt_lock);
+	while (addr != curr->vbase + curr->npages * PAGE_SIZE) {
+		/* check an old page table entry exists for the page */
+		ptable_entry old_pt = search_ptable(old, addr, NULL);
+		if (old_pt != NULL) {
+			/* insert page table entry for each page in the copied region */
+			int ret = insert_ptable_entry(newas, addr, curr->readable, curr->writeable, false);
+			if (ret) {
+				as_destroy(newas);
+				return ret;
+			}
+
+			/* get ptable entries for new page */
+			ptable_entry new_pt = search_ptable(newas, addr, NULL);
+			if (new_pt == NULL) {
+				as_destroy(newas);
+				return ENOMEM;
+			}
+
+			/* get frame number for old and new frames */
+			vaddr_t old_frame = PADDR_TO_KVADDR(old_pt->entrylo & TLBLO_PPAGE);
+			vaddr_t new_frame = PADDR_TO_KVADDR(new_pt->entrylo & TLBLO_PPAGE);
+
+			/* copy the memory from the old frame to the new frame */
+			memmove((void *) new_frame, (const void *) old_frame, PAGE_SIZE);
+		}
+
+		addr += PAGE_SIZE;
+	}
+	lock_release(hpt_lock);
+	return 0;
+}
 /*
  * Find the ptable entry with the given vaddr and pid.
  * Begin the search from curr and follow the collision pointers until found.
@@ -194,11 +232,7 @@ void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 ptable_entry search_ptable(struct addrspace *as, vaddr_t vaddr, ptable_entry prev) {
 	KASSERT(vaddr != 0);
 	KASSERT((vaddr & PAGE_FRAME) == vaddr);
-	bool release_lock = false;
-	if (!lock_do_i_hold(hpt_lock)) {
-		release_lock = true;
-		lock_acquire(hpt_lock);
-	}
+	KASSERT(lock_do_i_hold(hpt_lock));
 	uint32_t index = hpt_hash(as, vaddr);
 	pid_t pid = (uint32_t) as;
 	ptable_entry curr = &ptable[index];
@@ -208,7 +242,6 @@ ptable_entry search_ptable(struct addrspace *as, vaddr_t vaddr, ptable_entry pre
 		curr = curr->next;
 	} while (curr != NULL);
 	(void) prev; /* make compiler happy, prev is a pntr meant to be used by caller */
-	if (release_lock) lock_release(hpt_lock);
 	return curr;
 }
 
