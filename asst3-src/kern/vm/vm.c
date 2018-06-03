@@ -133,13 +133,16 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	} else {
 		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_VALID;
 	}
-	if (release_lock) lock_release(hpt_lock);
 
 	/* write new ptable entry to tlb */
-	if (!write_tlb) return 0;
+	if (!write_tlb) {
+		if (release_lock) lock_release(hpt_lock);
+		return 0;
+	}
 	int spl = splhigh();
 	tlb_random(entry->entryhi, entry->entrylo);
 	splx(spl);
+	if (release_lock) lock_release(hpt_lock);
 	return 0;
 }
 
@@ -169,7 +172,6 @@ void make_page_read_only(vaddr_t vaddr) {
  */
 void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 	lock_acquire(hpt_lock);
-
 	for (vaddr_t page = vaddr; page != vaddr + npages * PAGE_SIZE; page += PAGE_SIZE) {
 		ptable_entry prev = NULL;
 		ptable_entry pt = search_ptable(as, page, prev); /* find ptable entry associated with page */
@@ -182,10 +184,32 @@ void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 		pt->entryhi = 0;
 		pt->entrylo = 0;
 
-		/* update collision chain to "skip" this entry */
-		if (prev != NULL) prev->next = pt->next;
-	}
+		if (prev != NULL) {
+			/* update collision chain to "skip" this entry */
+			prev->next = pt->next;
+		} else if (pt->next != NULL) {
+			/* head of chain - move last entry in chain to the start */
+			ptable_entry curr = pt;
+			prev = curr;
 
+			/* get the last entry in the chain */
+			while (curr->next != NULL) {
+				prev = curr;
+				curr = curr->next;
+			}
+
+			/* move entry to head of chain */
+			pt->pid = curr->pid;
+			pt->entryhi = curr->entryhi;
+			pt->entrylo = curr->entrylo;
+			curr->pid = 0;
+			curr->entryhi = 0;
+			curr->entrylo = 0;
+
+			/* make 2nd-last slot of chain the last slot */
+			prev->next = NULL;
+		}
+	}
 	lock_release(hpt_lock);
 }
 
@@ -224,6 +248,7 @@ int copy_region(struct region *reg, struct addrspace *old, struct addrspace *new
 	lock_release(hpt_lock);
 	return 0;
 }
+
 /*
  * Find the ptable entry with the given vaddr and pid.
  * Begin the search from curr and follow the collision pointers until found.
@@ -238,7 +263,7 @@ ptable_entry search_ptable(struct addrspace *as, vaddr_t vaddr, ptable_entry pre
 	pid_t pid = (uint32_t) as;
 	ptable_entry curr = &ptable[index];
 	do {
-		if ((curr->entryhi & TLBHI_VPAGE) == vaddr && pid == curr->pid) break; /* TODO: may not need to check pid? */
+		if ((curr->entryhi & TLBHI_VPAGE) == vaddr && pid == curr->pid && (curr->entrylo & TLBLO_VALID)) break;
 		prev = curr;
 		curr = curr->next;
 	} while (curr != NULL);
@@ -290,16 +315,6 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 		/* check if vaddr is in a valid region */
 		if (!region_found && faultaddress >= curr_region->vbase && faultaddress < curr_region->vbase + curr_region->npages * PAGE_SIZE) {
 			region_found = curr_region;
-			/* TODO: i don't think these are needed at all - these are not meant to be enforced */
-			/* TODO: only the VM_FAULT_READONLY case needs to be handled */
-			//if (VM_FAULT_READ && !curr_region->readable) {
-			//	panic("reading from a non-readable region %u\n", faultaddress); /* TODO: debug-only */
-			//	return EFAULT;
-			//}
-			//if (VM_FAULT_WRITE && !curr_region->writeable) {
-			//	panic("writing to a non-writable region %u\n", faultaddress); /* TODO: debug-only */
-			//	return EFAULT;
-			//}
 		}
 		curr_region = curr_region->next;
 		nregions++;
