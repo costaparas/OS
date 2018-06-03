@@ -37,14 +37,16 @@
 #include <vm.h>
 #include "opt-dumbvm.h"
 
-#define NUM_STACK_PAGES 16
+#define NUM_STACK_PAGES 16 /* fixed-size stack size */
 
 struct vnode;
 
+/* region specification */
 struct region {
 	vaddr_t vbase; /* start of region */
 	size_t npages; /* npages in region */
 	bool readable, writeable; /* whether the region is readable/writeable */
+	bool can_write; /* real write permissions - unlike writeable, this should not change */
 	struct region *next; /* pntr to next region */
 };
 
@@ -66,14 +68,18 @@ struct addrspace {
 	paddr_t as_stackpbase;
 #else
 	/* addrspace.c members */
-	vaddr_t stackp; /* user stack base */
 	uint32_t nregions;
 	struct region *region_list;
 #endif
 };
 
+/* function prototypes for hashed page table helpers */
 uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr);
-int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int writeable);
+int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int writeable, bool write_tlb);
+void make_page_read_only(vaddr_t vaddr);
+ptable_entry search_ptable(struct addrspace *as, vaddr_t vaddr, ptable_entry *prev);
+void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages);
+int copy_region(struct region *reg, struct addrspace *old, struct addrspace *newas);
 
 /*
  * Functions in addrspace.c:
