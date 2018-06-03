@@ -157,7 +157,9 @@ void make_page_read_only(vaddr_t vaddr) {
 	lock_acquire(hpt_lock);
 
 	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
-	ptable_entry curr = search_ptable(as, vaddr, NULL);
+	ptable_entry unused;
+	ptable_entry curr = search_ptable(as, vaddr, &unused);
+	(void) unused;
 
 	/* unset dirty bit in entrylo */
 	if (curr != NULL) {
@@ -175,7 +177,7 @@ void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 	lock_acquire(hpt_lock);
 	for (vaddr_t page = vaddr; page != vaddr + npages * PAGE_SIZE; page += PAGE_SIZE) {
 		ptable_entry prev = NULL;
-		ptable_entry pt = search_ptable(as, page, prev); /* find ptable entry associated with page */
+		ptable_entry pt = search_ptable(as, page, &prev); /* find ptable entry associated with page */
 		if (pt == NULL) continue;
 		KASSERT((pt->entryhi & TLBHI_VPAGE) == page);
 		free_kpages(PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE));
@@ -222,7 +224,9 @@ int copy_region(struct region *reg, struct addrspace *old, struct addrspace *new
 	lock_acquire(hpt_lock);
 	while (addr != reg->vbase + reg->npages * PAGE_SIZE) {
 		/* check an old page table entry exists for the page */
-		ptable_entry old_pt = search_ptable(old, addr, NULL);
+		ptable_entry unused;
+		ptable_entry old_pt = search_ptable(old, addr, &unused);
+		(void) unused;
 		if (old_pt != NULL) {
 			/* insert page table entry for each page in the copied region */
 			int ret = insert_ptable_entry(newas, addr, reg->readable, reg->writeable, false);
@@ -232,7 +236,8 @@ int copy_region(struct region *reg, struct addrspace *old, struct addrspace *new
 			}
 
 			/* get ptable entry for new page */
-			ptable_entry new_pt = search_ptable(newas, addr, NULL);
+			ptable_entry new_pt = search_ptable(newas, addr, &unused);
+			(void) unused;
 			if (new_pt == NULL) return ENOMEM; /* this should never happen, very unlikely */
 
 			/* get frame number for old and new frames */
@@ -255,7 +260,7 @@ int copy_region(struct region *reg, struct addrspace *old, struct addrspace *new
  * Requires the page table lock to have been acquired already.
  * Also sets prev to point to the previous ptable entry in the collision chain.
  */
-ptable_entry search_ptable(struct addrspace *as, vaddr_t vaddr, ptable_entry prev) {
+ptable_entry search_ptable(struct addrspace *as, vaddr_t vaddr, ptable_entry *prev) {
 	KASSERT(vaddr != 0);
 	KASSERT((vaddr & PAGE_FRAME) == vaddr);
 	KASSERT(lock_do_i_hold(hpt_lock));
@@ -264,10 +269,9 @@ ptable_entry search_ptable(struct addrspace *as, vaddr_t vaddr, ptable_entry pre
 	ptable_entry curr = &ptable[index];
 	do {
 		if ((curr->entryhi & TLBHI_VPAGE) == vaddr && pid == curr->pid && (curr->entrylo & TLBLO_VALID)) break;
-		prev = curr;
+		*prev = curr;
 		curr = curr->next;
 	} while (curr != NULL);
-	(void) prev; /* make compiler happy, prev is a pntr meant to be used by caller */
 	return curr;
 }
 
@@ -324,7 +328,9 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	lock_acquire(hpt_lock);
 
 	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
-	ptable_entry curr = search_ptable(as, faultaddress, NULL);
+	ptable_entry unused;
+	ptable_entry curr = search_ptable(as, faultaddress, &unused);
+	(void) unused;
 
 	if (curr == NULL) {
 		lock_release(hpt_lock);
