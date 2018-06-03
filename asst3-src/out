@@ -1,0 +1,1337 @@
+
+OS/161 base system version 2.0.3
+(with locks/CVs, system calls solutions)
+Copyright (c) 2000, 2001-2005, 2008-2011, 2013, 2014
+   President and Fellows of Harvard College.  All rights reserved.
+
+osprj175's system version 0 (ASST3 #661)
+
+16208k physical memory available
+Device probe...
+lamebus0 (system main bus)
+emu0 at lamebus0
+ltrace0 at lamebus0
+ltimer0 at lamebus0
+beep0 at ltimer0
+rtclock0 at ltimer0
+lrandom0 at lamebus0
+random0 at lrandom0
+lhd0 at lamebus0
+lhd1 at lamebus0
+lser0 at lamebus0
+con0 at lser0
+
+cpu0: MIPS/161 (System/161 2.x) features 0x0
+OS/161 kernel: km1
+Starting kmalloc test...
+kmalloc test done
+Operation took 0.185946640 seconds
+OS/161 kernel:  km2
+Starting kmalloc stress test...
+kmalloc stress test done
+Operation took 0.947943800 seconds
+OS/161 kernel:  km3 200000
+kmalloctest3: 200000 objects, 782 pointer blocks
+kmalloctest3: 11080000 bytes allocated
+kmalloctest3: passed
+Operation took 234.033929880 seconds
+OS/161 kernel:  p /bin/true
+Program (pid 2) exited with status 0
+Operation took 0.125626499 seconds
+OS/161 kernel:  p /testbin/huge
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [2.0] done
+stage [2.1] done
+stage [2.2] done
+stage [2.3] done
+stage [2.4] done
+stage [2] done
+You passed!
+Program (pid 3) exited with status 0
+Operation took 0.882179741 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+stage [1] done
+Entering the huge program - I will stress test your VM
+staEntering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stage [2.0] done
+ge stage [2.0] done
+[2stage [2.1] donestage [2.1] done
+
+.0] done
+ststage [2.1] done
+age [2.2] done
+stastage [2stage [2.2] done
+.3stage [2.3] done
+ge] done
+st [2.2] done
+stage [2.4] done
+stage [2] done
+stage [2.3] done
+You passed!
+stage [2.4age [2.4] done
+stage [2] done
+] doYou passed!
+ne
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 4) exited with status 0
+Operation took 2.595283722 seconds
+OS/161 kernel:  p /testbin/parallelvm
+Job size approximately 58800 bytes
+Forking 24 jobs; total load 1378k
+Process 0 (pid 9) starting computation...
+Process 1 (pid 10) starting computation...
+Process 2 (pid 11) starting computation...
+Process 11 (pid 20) starting computation...
+Process 9 (pid 18) starting computation...
+Process 7 (pid 16) starting computation...
+Process 5 (pid 14) starting computation...
+Process 3 (pid 12) starting computation...
+Process 4 (pid 13) starting computation...
+Process 12 (pid 21) starting computation...
+Process 6 (pid 15) starting computation...
+Process 10 (pid 19) starting computation...
+Process 8 (pid 17) starting computation...
+Process 13 (pid 22) starting computation...
+Process 14 (pid 23) starting computation...
+Process 15 (pid 24) starting computation...
+Process 23 (pid 32) starting computation...
+Process 21 (pid 30) starting computation...
+Process 19 (pid 28) starting computation...
+Process 17 (pid 26) starting computation...
+Process 16 (pid 25) starting computation...
+Process 18 (pid 27) starting computation...
+Process 20 (pid 29) starting computation...
+Process 22 (pid 31) starting computation...
+Process 0 answer -1337312809: passed
+Process 1 answer 356204544: passed
+Process 2 answer -537881911: passed
+Process 11 answer -364554240: passed
+Process 9 answer -1616928768: passed
+Process 7 answer -993925120: passed
+Process 5 answer -843894784: passed
+Process 3 answer -65406976: passed
+Process 4 answer 1952063315: passed
+Process 12 answer 251084843: passed
+Process 6 answer 1597000869: passed
+Process 10 answer -182386335: passed
+Process 8 answer 838840559: passed
+Process 13 answer -61403136: passed
+Process 14 answer 295326333: passed
+Process 15 answer 1488013312: passed
+Process 23 answer 364554240: passed
+Process 21 answer 61403136: passed
+Process 19 answer -1488013312: passed
+Process 17 answer 0: passed
+Process 16 answer 1901440647: passed
+Process 18 answer -1901440647: passed
+Process 20 answer -295326333: passed
+Process 22 answer -251084843: passed
+Test complete
+Program (pid 8) exited with status 0
+Operation took 12.159069098 seconds
+OS/161 kernel:  q
+Shutting down.
+The system is halted.
+
+OS/161 base system version 2.0.3
+(with locks/CVs, system calls solutions)
+Copyright (c) 2000, 2001-2005, 2008-2011, 2013, 2014
+   President and Fellows of Harvard College.  All rights reserved.
+
+osprj175's system version 0 (ASST3 #661)
+
+16208k physical memory available
+Device probe...
+lamebus0 (system main bus)
+emu0 at lamebus0
+ltrace0 at lamebus0
+ltimer0 at lamebus0
+beep0 at ltimer0
+rtclock0 at ltimer0
+lrandom0 at lamebus0
+random0 at lrandom0
+lhd0 at lamebus0
+lhd1 at lamebus0
+lser0 at lamebus0
+con0 at lser0
+
+cpu0: MIPS/161 (System/161 2.x) features 0x0
+OS/161 kernel: km1
+Starting kmalloc test...
+kmalloc test done
+Operation took 0.185946640 seconds
+OS/161 kernel:  km2
+Starting kmalloc stress test...
+kmalloc stress test done
+Operation took 0.947943800 seconds
+OS/161 kernel:  km3 20000
+kmalloctest3: 20000 objects, 79 pointer blocks
+kmalloctest3: 1108000 bytes allocated
+kmalloctest3: passed
+Operation took 3.719931200 seconds
+OS/161 kernel:  p /bin/true
+Program (pid 2) exited with status 0
+Operation took 0.127650931 seconds
+OS/161 kernel:  p /testbin/huge
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [2.0] done
+stage [2.1] done
+stage [2.2] done
+stage [2.3] done
+stage [2.4] done
+stage [2] done
+You passed!
+Program (pid 3) exited with status 0
+Operation took 0.872150191 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+stage [1] done
+Entering the huge program - I will stress test your VM
+stEntering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stage [2.0] done
+age [2.0] dstage [2.0] done
+one
+ststage [2.1] age [2.1] done
+donestage [2.2] done
+
+ststage [2.2] done
+stage [2.1] done
+stastage [2.2] done
+agge [2.3] done
+ststage [2.4] done
+stage [2] done
+eag [2.3] done
+You passed!
+stage [2.4] done
+stage [2] done
+e [You passed!
+2.3] done
+stage [2.4] done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 4) exited with status 0
+Operation took 2.601286537 seconds
+OS/161 kernel:  p /testbin/parallelvm
+Job size approximately 58800 bytes
+Forking 24 jobs; total load 1378k
+Process 0 (pid 9) starting computation...
+Process 1 (pid 10) starting computation...
+Process 2 (pid 11) starting computation...
+Process 4 (pid 13) starting computation...
+Process 3 (pid 12) starting computation...
+Process 5 (pid 14) starting computation...
+Process 10 (pid 19) starting computation...
+Process 19 (pid 28) starting computation...
+Process 22 (pid 31) starting computation...
+Process 8 (pid 17) starting computation...
+Process 7 (pid 16) starting computation...
+Process 17 (pid 26) starting computation...
+Process 9 (pid 18) starting computation...
+Process 15 (pid 24) starting computation...
+Process 23 (pid 32) starting computation...
+Process 20 (pid 29) starting computation...
+Process 11 (pid 20) starting computation...
+Process 13 (pid 22) starting computation...
+Process 18 (pid 27) starting computation...
+Process 12 (pid 21) starting computation...
+Process 6 (pid 15) starting computation...
+Process 21 (pid 30) starting computation...
+Process 16 (pid 25) starting computation...
+Process 14 (pid 23) starting computation...
+Process 0 answer -1337312809: passed
+Process 1 answer 356204544: passed
+Process 2 answer -537881911: passed
+Process 4 answer 1952063315: passed
+Process 3 answer -65406976: passed
+Process 5 answer -843894784: passed
+Process 10 answer -182386335: passed
+Process 19 answer -1488013312: passed
+Process 22 answer -251084843: passed
+Process 8 answer 838840559: passed
+Process 7 answer -993925120: passed
+Process 17 answer 0: passed
+Process 9 answer -1616928768: passed
+Process 15 answer 1488013312: passed
+Process 23 answer 364554240: passed
+Process 20 answer -295326333: passed
+Process 11 answer -364554240: passed
+Process 13 answer -61403136: passed
+Process 18 answer -1901440647: passed
+Process 12 answer 251084843: passed
+Process 6 answer 1597000869: passed
+Process 21 answer 61403136: passed
+Process 16 answer 1901440647: passed
+Process 14 answer 295326333: passed
+Test complete
+Program (pid 8) exited with status 0
+Operation took 11.965026375 seconds
+OS/161 kernel:  p /bin/true
+Program (pid 33) exited with status 0
+Operation took 0.129650948 seconds
+OS/161 kernel:  p /testbin/huge
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [2.0] done
+stage [2.1] done
+stage [2.2] done
+stage [2.3] done
+stage [2.4] done
+stage [2] done
+You passed!
+Program (pid 34) exited with status 0
+Operation took 0.870186493 seconds
+OS/161 kernel:  q
+Shutting down.
+The system is halted.
+
+OS/161 base system version 2.0.3
+(with locks/CVs, system calls solutions)
+Copyright (c) 2000, 2001-2005, 2008-2011, 2013, 2014
+   President and Fellows of Harvard College.  All rights reserved.
+
+osprj175's system version 0 (ASST3 #661)
+
+16208k physical memory available
+Device probe...
+lamebus0 (system main bus)
+emu0 at lamebus0
+ltrace0 at lamebus0
+ltimer0 at lamebus0
+beep0 at ltimer0
+rtclock0 at ltimer0
+lrandom0 at lamebus0
+random0 at lrandom0
+lhd0 at lamebus0
+lhd1 at lamebus0
+lser0 at lamebus0
+con0 at lser0
+
+cpu0: MIPS/161 (System/161 2.x) features 0x0
+OS/161 kernel: km1
+Starting kmalloc test...
+kmalloc test done
+Operation took 0.185946640 seconds
+OS/161 kernel:  km2
+Starting kmalloc stress test...
+kmalloc stress test done
+Operation took 0.947943800 seconds
+OS/161 kernel:  km3 20000
+kmalloctest3: 20000 objects, 79 pointer blocks
+kmalloctest3: 1108000 bytes allocated
+kmalloctest3: passed
+Operation took 3.719931200 seconds
+OS/161 kernel:  p /bin/true
+Program (pid 2) exited with status 0
+Operation took 0.127626264 seconds
+OS/161 kernel:  p /testbin/huge
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [2.0] done
+stage [2.1] done
+stage [2.2] done
+stage [2.3] done
+stage [2.4] done
+stage [2] done
+You passed!
+Program (pid 3) exited with status 0
+Operation took 0.876111977 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stastage [2.0] done
+stage [1] done
+stastage [2.0] done
+ge [2.0] done
+ge [2.1] done
+stage [2.1]stage [2.2] done
+ done
+ststage [2.1] done
+age [2.3] done
+ststage [2.2] done
+age [2.2] done
+stage [2stage [2.3] done
+.4]stage [2.4] done
+stage [2] done
+ dstage [2.3] done
+onYou passed!
+stage [2.4] done
+stage [2] done
+e
+You passed!
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 4) exited with status 0
+Operation took 2.523368520 seconds
+OS/161 kernel:  p /testbin/parallelvm
+Job size approximately 58800 bytes
+Forking 24 jobs; total load 1378k
+Process 17 (pid 26) starting computation...
+Process 3 (pid 12) starting computation...
+Process 1 (pid 10) starting computation...
+Process 21 (pid 30) starting computation...
+Process 12 (pid 21) starting computation...
+Process 2 (pid 11) starting computation...
+Process 10 (pid 19) starting computation...
+Process 18 (pid 27) starting computation...
+Process 15 (pid 24) starting computation...
+Process 22 (pid 31) starting computation...
+Process 4 (pid 13) starting computation...
+Process 8 (pid 17) starting computation...
+Process 6 (pid 15) starting computation...
+Process 23 (pid 32) starting computation...
+Process 13 (pid 22) starting computation...
+Process 19 (pid 28) starting computation...
+Process 0 (pid 9) starting computation...
+Process 16 (pid 25) starting computation...
+Process 11 (pid 20) starting computation...
+Process 9 (pid 18) starting computation...
+Process 7 (pid 16) starting computation...
+Process 20 (pid 29) starting computation...
+Process 5 (pid 14) starting computation...
+Process 14 (pid 23) starting computation...
+Process 17 answer 0: passed
+Process 5 answer -843894784: passed
+Process 1 answer 356204544: passed
+Process 21 answer 61403136: passed
+Process 12 answer 251084843: passed
+Process 2 answer -537881911: passed
+Process 10 answer -182386335: passed
+Process 18 answer -1901440647: passed
+Process 15 answer 1488013312: passed
+Process 22 answer -251084843: passed
+Process 4 answer 1952063315: passed
+Process 8 answer 838840559: passed
+Process 6 answer 1597000869: passed
+Process 23 answer 364554240: passed
+Process 13 answer -61403136: passed
+Process 19 answer -1488013312: passed
+Process 0 answer -1337312809: passed
+Process 16 answer 1901440647: passed
+Process 11 answer -364554240: passed
+Process 9 answer -1616928768: passed
+Process 7 answer -993925120: passed
+Process 20 answer -295326333: passed
+Process 3 answer -65406976: passed
+Process 14 answer 295326333: passed
+Test complete
+Program (pid 8) exited with status 0
+Operation took 12.049086352 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stastage [2.0] donege [2.0] done
+stage [1] done
+ststage [2.0] done
+
+age [2.1] done
+stastage [2.2] done
+stge [2.1] doage [2.1] done
+stage [2.3] done
+nestage [2.2] donestage [2.4] done
+stage [2] done
+
+
+You passed!
+stage [2.2] done
+stage [2.3] stage [2.3] done
+dstone
+age [2.4] done
+stage [2] done
+stage [2.4] donYou passed!
+e
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 33) exited with status 0
+Operation took 2.561275733 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+stage [1] done
+Entering the huge program - I will stress test your VM
+stEntering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+sage [2.0] done
+tastage [2.0] done
+ge [2.0] dostage [2.1] done
+nstage [2.1] done
+e
+stagstage [2.1] done
+stage [2.2] done
+e [2.2]stage [2.3] done
+ done
+stastage [2.3] done
+stastage [2.4] done
+stage [2] done
+ge You passed!
+[2.4] done
+stage [2] done
+ge [2.2] done
+You passed!
+stage [2.3] done
+stage [2.4] done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 37) exited with status 0
+Operation took 2.604293246 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+stage [1] done
+Entering the huge program - I will stress test your VM
+stEntering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stage [2.0] stage [2.0] done
+donstage [2.1] done
+e
+agestage [2.1] done
+s [2.0] done
+sttage [2stage [2.1] done
+.age [2.2] done
+2] dstage [2.3] done
+stone
+age [2.2] done
+stastagstage [2.4] done
+stage [2] done
+e ge [2.3] done
+You passed!
+st[2.3] done
+agestage [2.4] done
+stage [2] done
+ [You passed!
+2.4] done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 41) exited with status 0
+Operation took 2.557146346 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VMEntering the huge program - I will stress test your VM
+
+stage [1] done
+stage [1] done
+stastage [2.0] done
+stage [1] done
+stage [2.1]stage [2.0] done
+ dostage [2.1] done
+ne
+ge stage [2.2] done
+s[2.0] done
+tagstage [2.1] done
+stastage [2.2] done
+e [2.2] done
+stge [2.3] done
+stage [2.3] dstage [2.4] done
+stage [2] done
+one
+age [2.3] done
+ststage [2.4] done
+stage [2] done
+You passed!
+You passed!
+age [2.4] done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 45) exited with status 0
+Operation took 2.593387565 seconds
+OS/161 kernel:  p /testbin/huge
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [2.0] done
+stage [2.1] done
+stage [2.2] done
+stage [2.3] done
+stage [2.4] done
+stage [2] done
+You passed!
+Program (pid 49) exited with status 0
+Operation took 0.828162228 seconds
+OS/161 kernel:  p /testbin/parallelvm
+Job size approximately 58800 bytes
+Forking 24 jobs; total load 1378k
+Process 12 (pid 63) starting computation...
+Process 6 (pid 57) starting computation...
+Process 12 answer 251084843: passed
+Process 15 (pid 66) starting computation...
+Process 8 (pid 59) starting computation...
+Process 0 (pid 51) starting computation...
+Process 1 (pid 52) starting computation...
+Process 13 (pid 64) starting computation...
+Process 2 (pid 53) starting computation...
+Process 16 (pid 67) starting computation...
+Process 11 (pid 62) starting computation...
+Process 9 (pid 60) starting computation...
+Process 7 (pid 58) starting computation...
+Process 5 (pid 56) starting computation...
+Process 14 (pid 65) starting computation...
+Process 3 (pid 54) starting computation...
+Process 4 (pid 55) starting computation...
+Process 17 (pid 68) starting computation...
+Process 18 (pid 69) starting computation...
+Process 19 (pid 70) starting computation...
+Process 23 (pid 74) starting computation...
+Process 21 (pid 72) starting computation...
+Process 20 (pid 71) starting computation...
+Process 22 (pid 73) starting computation...
+Process 10 (pid 61) starting computation...
+Process 6 answer 1597000869: passed
+Process 15 answer 1488013312: passed
+Process 8 answer 838840559: passed
+Process 0 answer -1337312809: passed
+Process 1 answer 356204544: passed
+Process 13 answer -61403136: passed
+Process 2 answer -537881911: passed
+Process 16 answer 1901440647: passed
+Process 11 answer -364554240: passed
+Process 9 answer -1616928768: passed
+Process 7 answer -993925120: passed
+Process 5 answer -843894784: passed
+Process 14 answer 295326333: passed
+Process 3 answer -65406976: passed
+Process 4 answer 1952063315: passed
+Process 17 answer 0: passed
+Process 18 answer -1901440647: passed
+Process 19 answer -1488013312: passed
+Process 23 answer 364554240: passed
+Process 21 answer 61403136: passed
+Process 20 answer -295326333: passed
+Process 22 answer -251084843: passed
+Process 10 answer -182386335: passed
+Test complete
+Program (pid 50) exited with status 0
+Operation took 12.153068152 seconds
+OS/161 kernel:  p /testbin/huge
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [2.0] done
+stage [2.1] done
+stage [2.2] done
+stage [2.3] done
+stage [2.4] done
+stage [2] done
+You passed!
+Program (pid 75) exited with status 0
+Operation took 0.866180241 seconds
+OS/161 kernel:  p /testbin/parallelvm
+Job size approximately 58800 bytes
+Forking 24 jobs; total load 1378k
+Process 0 (pid 77) starting computation...
+Process 1 (pid 78) starting computation...
+Process 2 (pid 79) starting computation...
+Process 12 (pid 89) starting computation...
+Process 10 (pid 87) starting computation...
+Process 8 (pid 85) starting computation...
+Process 6 (pid 83) starting computation...
+Process 4 (pid 81) starting computation...
+Process 3 (pid 80) starting computation...
+Process 13 (pid 90) starting computation...
+Process 5 (pid 82) starting computation...
+Process 11 (pid 88) starting computation...
+Process 7 (pid 84) starting computation...
+Process 14 (pid 91) starting computation...
+Process 9 (pid 86) starting computation...
+Process 15 (pid 92) starting computation...
+Process 16 (pid 93) starting computation...
+Process 22 (pid 99) starting computation...
+Process 20 (pid 97) starting computation...
+Process 18 (pid 95) starting computation...
+Process 19 (pid 96) starting computation...
+Process 21 (pid 98) starting computation...
+Process 23 (pid 100) starting computation...
+Process 17 (pid 94) starting computation...
+Process 0 answer -1337312809: passed
+Process 1 answer 356204544: passed
+Process 2 answer -537881911: passed
+Process 12 answer 251084843: passed
+Process 10 answer -182386335: passed
+Process 8 answer 838840559: passed
+Process 6 answer 1597000869: passed
+Process 4 answer 1952063315: passed
+Process 3 answer -65406976: passed
+Process 13 answer -61403136: passed
+Process 5 answer -843894784: passed
+Process 11 answer -364554240: passed
+Process 7 answer -993925120: passed
+Process 14 answer 295326333: passed
+Process 9 answer -1616928768: passed
+Process 15 answer 1488013312: passed
+Process 16 answer 1901440647: passed
+Process 22 answer -251084843: passed
+Process 20 answer -295326333: passed
+Process 18 answer -1901440647: passed
+Process 19 answer -1488013312: passed
+Process 21 answer 61403136: passed
+Process 23 answer 364554240: passed
+Process 17 answer 0: passed
+Test complete
+Program (pid 76) exited with status 0
+Operation took 11.993054430 seconds
+OS/161 kernel:  p /bin/true
+Program (pid 101) exited with status 0
+Operation took 0.131595821 seconds
+OS/161 kernel:  q
+Shutting down.
+The system is halted.
+
+OS/161 base system version 2.0.3
+(with locks/CVs, system calls solutions)
+Copyright (c) 2000, 2001-2005, 2008-2011, 2013, 2014
+   President and Fellows of Harvard College.  All rights reserved.
+
+osprj175's system version 0 (ASST3 #661)
+
+16204k physical memory available
+Device probe...
+lamebus0 (system main bus)
+emu0 at lamebus0
+ltrace0 at lamebus0
+ltimer0 at lamebus0
+beep0 at ltimer0
+rtclock0 at ltimer0
+lrandom0 at lamebus0
+random0 at lrandom0
+lhd0 at lamebus0
+lhd1 at lamebus0
+lser0 at lamebus0
+con0 at lser0
+
+cpu0: MIPS/161 (System/161 2.x) features 0x0
+OS/161 kernel: km1
+Starting kmalloc test...
+kmalloc test done
+Operation took 0.185946640 seconds
+OS/161 kernel:  km2
+Starting kmalloc stress test...
+kmalloc stress test done
+Operation took 0.945943800 seconds
+OS/161 kernel:  km3 20000
+kmalloctest3: 20000 objects, 79 pointer blocks
+kmalloctest3: 1108000 bytes allocated
+kmalloctest3: passed
+Operation took 3.719931200 seconds
+OS/161 kernel:  p /bin/true
+Program (pid 2) exited with status 0
+Operation took 0.125653115 seconds
+OS/161 kernel:  p /testbin/huge
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [2.0] done
+stage [2.1] done
+stage [2.2] done
+stage [2.3] done
+stage [2.4] done
+stage [2] done
+You passed!
+Program (pid 3) exited with status 0
+Operation took 0.858122203 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VMstage [1] done
+
+stage [1] done
+stage [1] done
+ststage [2.0] done
+age [2.0] done
+ststage [2.0] done
+agstage [2.1]e [2.1] done
+ dostage [2.2] done
+stage [ne
+stage [2.3] done
+2.1] done
+stagstage [2.2] done
+e ststage [2.3] done
+[2.4] done
+stage [2] done
+ageYou passed!
+ [2.2] done
+stage [2stage [2.3] done
+.4] stage [2.4] done
+stage [2] done
+doYou passed!
+ne
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 4) exited with status 0
+Operation took 2.569094692 seconds
+OS/161 kernel:  p /testbin/parallelvm
+Job size approximately 58800 bytes
+Forking 24 jobs; total load 1378k
+Process 12 (pid 21) starting computation...
+Process 6 (pid 15) starting computation...
+Process 10 (pid 19) starting computation...
+Process 15 (pid 24) starting computation...
+Process 8 (pid 17) starting computation...
+Process 0 (pid 9) starting computation...
+Process 1 (pid 10) starting computation...
+Process 13 (pid 22) starting computation...
+Process 7 (pid 16) starting computation...
+Process 16 (pid 25) starting computation...
+Process 11 (pid 20) starting computation...
+Process 9 (pid 18) starting computation...
+Process 18 (pid 27) starting computation...
+Process 5 (pid 14) starting computation...
+Process 23 (pid 32) starting computation...
+Process 21 (pid 30) starting computation...
+Process 19 (pid 28) starting computation...
+Process 17 (pid 26) starting computation...
+Process 2 (pid 11) starting computation...
+Process 14 (pid 23) starting computation...
+Process 3 (pid 12) starting computation...
+Process 22 (pid 31) starting computation...
+Process 4 (pid 13) starting computation...
+Process 20 (pid 29) starting computation...
+Process 12 answer 251084843: passed
+Process 6 answer 1597000869: passed
+Process 20 answer -295326333: passed
+Process 15 answer 1488013312: passed
+Process 8 answer 838840559: passed
+Process 0 answer -1337312809: passed
+Process 1 answer 356204544: passed
+Process 13 answer -61403136: passed
+Process 7 answer -993925120: passed
+Process 16 answer 1901440647: passed
+Process 11 answer -364554240: passed
+Process 9 answer -1616928768: passed
+Process 18 answer -1901440647: passed
+Process 5 answer -843894784: passed
+Process 23 answer 364554240: passed
+Process 21 answer 61403136: passed
+Process 19 answer -1488013312: passed
+Process 17 answer 0: passed
+Process 2 answer -537881911: passed
+Process 14 answer 295326333: passed
+Process 3 answer -65406976: passed
+Process 22 answer -251084843: passed
+Process 4 answer 1952063315: passed
+Process 10 answer -182386335: passed
+Test complete
+Program (pid 8) exited with status 0
+Operation took 12.041003951 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stEntering the huge program - I will stress test your VM
+stagage [2e [2.0] done
+.0] donstage [1] done
+e
+stagstage [2.1] done
+eststage [2.2] done
+ags [2.1] done
+e [2.0tage [2.3] done
+] done
+ststage [2.2] done
+agstage [2.1] done
+e [stage [2.2] done
+stage [2.3] donstage [2.3] done
+e
+stage [2.4stage [2.4] done
+stage [2] done
+] done
+stage [2] done
+2.You passed!
+You passed!
+4] done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 33) exited with status 0
+Operation took 2.593065521 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+stage [1] done
+Entering the huge program - I will stress test your VM
+stEntering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+sage [2.0] done
+tastagstage [2.0] done
+e stage [2.1] done
+[2.ge [2.0] done
+stastag1] done
+e [2.1] done
+ststage [2.2] done
+geage [2.2] done
+ [2.2] done
+stage [2.3] done
+stastage [2.4] done
+stage [2] done
+staYou passed!
+ge [2.3] done
+ge stage [2.4] done
+stage [2] done
+[2.3] done
+You passed!
+stage [2.4] done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 37) exited with status 0
+Operation took 2.563263976 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stage [stage [2.0] done
+stage [1] done
+stage [2.1] donstage [2.0] done
+e
+2.0]stage [2.2] done
+ dstage [2.3] done
+stage [one
+2.1] done
+stastagstage [2.4] done
+stage [2] done
+e ge [2.1] done
+You passed!
+stage [2.2] done
+[2.stage [2.3] done
+stage [2.4] done
+stage [2] done
+2]You passed!
+ done
+stage [2.3] done
+stage [2.4] done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 41) exited with status 0
+Operation took 2.624928807 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stage [2.0] done
+stage [2.0] done
+Entering the huge program - I will stress test your VM
+ststage [2.1] done
+age [2.1] done
+ststage [2.2] done
+agstage [1] done
+stage [2.3] done
+stage [2.stage [2.4] done
+stage [2] done
+e [2.2] done
+You passed!
+stage [2.3] done
+0stage [2.4] done
+stage [2] done
+] You passed!
+done
+stage [2.1] done
+stage [2.2] done
+stage [2.3] done
+stage [2.4] done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 45) exited with status 0
+Operation took 2.585354342 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stastage [2.0] done
+stage [1] done
+stastage [2.ge [2.1] done
+ge 0] done
+[2.0] stage [2.1] done
+dostage [2.2] done
+stne
+stage [2.3] done
+sage [2.2] done
+tage [2.1] done
+sstage [2.4] done
+stage [2] done
+tage [2.3] donstage [2.2] done
+e
+You passed!
+stage [2.4] done
+stage [2] done
+stage [2You passed!
+.3] done
+stage [2.4] done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 49) exited with status 0
+Operation took 2.657707663 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+stage [1] doneEntering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stage [2.0] dstage [2.0] done
+on
+estage [2.1] done
+sta
+ge [2.0] done
+ststage [2.1] done
+age [2.2] done
+stage [2.1] done
+ststage [2.2] doneage [2.3] done
+
+stastage [2.3] done
+ge stage [2.4] done
+stage [2] done
+[2.2] done
+You passed!
+stage [2.3] done
+ststage [2.4] done
+stage [2] done
+agYou passed!
+e [2.4] done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 53) exited with status 0
+Operation took 2.604217724 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stagstage [1] done
+e [2.0] done
+stage [2.0] done
+stastage [2.1] done
+stastage [2.2] done
+ge [2.0] stage [2.3] done
+dge [2.1] done
+stone
+agstage [2.2] done
+e stage [2.3] done
+stage [2.1] done
+stastag[2.4] done
+stage [2] done
+e [You passed!
+2.2] done
+gestage [ [2.4] done
+stage [2] done2.3] done
+
+stYou passed!
+age [2.4] done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 57) exited with status 0
+Operation took 2.595440369 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stage [2.0] done
+stastage [2stage [1] done
+.1]stage [2.0] done
+ge [2.0] done
+ dstage [2.1] done
+one
+ststage [2.2] stage [2.2] done
+doneage [2.1] done
+
+stsstage [2.2] done
+age [2.3] done
+sttage [2.3] done
+stagestage [2.4] done
+stage [2] done
+age [2.3] done
+You passed!
+stage [2.4] done
+stage [2] done
+ [2.4You passed!
+] done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 61) exited with status 0
+Operation took 2.551167239 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+sEntering the huge program - I will stress test your VM
+stage [2.0] done
+stage [1] done
+ststageage [2.1] done
+ [tage [2.0] done
+ststage [2.1] done
+age [2.2] done
+2.0] done
+stage [2.2] done
+ststagestage [2.3] done
+ [2.age [2.1] done
+stage [2.4] done
+stage [2] done
+stYou passed!
+age [2.2] done
+3] done
+stage [2.3] done
+stage [2.4] done
+stage [2] done
+sYou passed!
+tage [2.4] done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 65) exited with status 0
+Operation took 2.590723903 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+stage [1] done
+Entering the huge program - I will stress test your VM
+staEntering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stge [2.0] dage [2.0] done
+onestage [2.1] done
+stage [2.0] done
+stage [2.2] done
+stastage [2.3ge [2.1] done
+
+] dstage [2.1] done
+stage [2.2] done
+stage [2.2] done
+stastage [2.3] done
+onestage [2.4] dge [2.3] done
+
+one
+stage [2] donestage [2.4] done
+stage [2] done
+
+You passed!
+You passed!
+stage [2.4] done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 69) exited with status 0
+Operation took 2.553331238 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stage [2.0] done
+Entering the huge program - I will stress test your VM
+ststagage [2.1stage [1] done
+] done
+e sta[2.0] done
+ge stage [stage [2.1] done
+2.0] done
+[2.2] done
+stage [2.1] done
+ststage [2.2] done
+age [2.3] done
+stastagege [2.2] done
+stastage [2.3] done
+ [2.4] done
+stage [2] done
+ge [2.3] done
+stYou passed!
+stage [2.4] done
+stage [2] done
+age [2.4]You passed!
+ done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 73) exited with status 0
+Operation took 2.591064995 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+stage [1] done
+Entering the huge program - I will stress test your VM
+staEntering the huge program - I will stress test your VMge [2.0] done
+stage [1] done
+stage [2.1] done
+stage [2.0] done
+stage [2.2] done
+
+ststaagege  [2.1] done
+stage [1] done
+stage [2.2] done
+st[2.3] done
+agstage [e [2.0] done
+ststage [2.1] done
+a2.4] done
+stage [2] done
+stYou passed!
+age [2.2] donge [2.3] done
+e
+stage [stage [2.3] done
+2.4] done
+stage [2] done
+stYou passed!
+age [2.4] done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 77) exited with status 0
+Operation took 2.603082603 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stage [2.0] done
+ststage [2.age [2.0] done
+1] done
+Entering the huge program - I will stress test your VM
+ststagagestage [1] done
+ [2.1] done
+stage [2.0] done
+e stage [2.1] dstage [2.2] done
+onestage [2.3] done
+
+stagstage [2.2] donee [2.4] done
+stage [2] done
+
+[2.2] done
+stage [2.You passed!
+st3] done
+agestage [2.4 [2.3] done
+] dstage [2.4] done
+stage [2] done
+oYou passed!
+ne
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 81) exited with status 0
+Operation took 2.605300914 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stage [2.0] done
+stage [1] done
+ststage [2.0] done
+stage [2.0] done
+age [2.1] done
+stage [2.1] done
+stagstage [2.1] done
+e stage [2.2] done
+stage [2.2] done
+ststage [2.3] done
+[2age [2.3] done
+.2] done
+stastage [2.3] done
+stage [2.4] done
+stage [2] done
+geYou passed!
+ [2.4] done
+stage [2] done
+stage [2.4] done
+stage [2] done
+You passed!
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 85) exited with status 0
+Operation took 2.586927610 seconds
+OS/161 kernel:  p /testbin/triplehuge
+/testbin/triplehuge: Starting: running three copies of /testbin/huge...
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [1] done
+stage [2.0] done
+stage [2.stage [2.1] done
+0] stage [2.2] done
+dstage [1] done
+stage [2.3] done
+one
+stage [2.4] done
+stage [2] done
+stage [2.1] done
+You passed!
+stagestage [2.0] done
+ [2.2] done
+stage [2.1] donstage [2.3] done
+e
+stage [2.4] done
+stage [2] done
+stage [2.2] done
+You passed!
+stage [2.3] done
+stage [2.4] done
+stage [2] done
+You passed!
+/testbin/triplehuge: Congratulations! You passed.
+Program (pid 89) exited with status 0
+Operation took 2.563096276 seconds
+OS/161 kernel:  p /bin/true
+Program (pid 93) exited with status 0
+Operation took 0.127552167 seconds
+OS/161 kernel:  p /testbin/huge
+Entering the huge program - I will stress test your VM
+stage [1] done
+stage [2.0] done
+stage [2.1] done
+stage [2.2] done
+stage [2.3] done
+stage [2.4] done
+stage [2] done
+You passed!
+Program (pid 94) exited with status 0
+Operation took 0.880137828 seconds
+OS/161 kernel:  q
+Shutting down.
+The system is halted.

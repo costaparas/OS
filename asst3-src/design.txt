@@ -1,1 +1,94 @@
-Place your design document here.
+COMP3231 Assignment 3 Design Document
+
+##############################
+Basic Issues in the Assignment
+##############################
+
+P: We needed a method of keeping track of which sections of physical memory
+were used or free.
+
+S: We implemented a frame table as a linked list of entries, with a head
+pointer referencing the entry for the next free frame available for allocation.
+Each entry tracks a physical frame number as well as a pointer to the entry
+tracking the next free frame, with the last entry in the list pointing to NULL.
+
+P: We needed a way to allocate and free frames in physical memory, both before
+and after the initialisation of our frame table.
+
+S: To account for the allocation of pages prior to the initialisation of our
+frame table, we use the function ram_stealmem(). However once our frame
+table is initialised, all requests to allocate pages use the entry pointed to
+by our frame table linked list. If more than one page is requested or the
+available frames are exhausted, a zero return value results.
+
+P: Our frame table must be able to handle concurrent modification to prevent
+race conditions (e.g. multiple alloc_kpages() calls returning the same frame).
+
+S: To implement concurrency control, we first identified the critical sections
+of alloc_kpages() and free_kpages(), then used a spinlock to restrict access.
+
+P: We needed a means of providing virtual memory translation for user programs.
+
+S: We implemented a hashed page table (HPT) shared by all processes and a TLB
+refill handler (vm_fault()) which is called when we encounter a TLB miss.
+The refill handler either searches for an existing page table entry that maps
+to the correct address, or lazy loads a new page table entry if none is found.
+We store the virtual address and physical address for the mapping in the format
+used by the TLB (entryhi/entrylo) and also store the process ID. We also store
+a `next` pointer for collision resolution (see next problem).
+
+P: We needed a method to resolve hash collisions in our HPT.
+
+S: For our HPT, we used linear probing with internal chaining to resolve hash
+collisions. On hash collisions, we perform a linear search of our page table
+until we find the first available empty slot. We then insert our page into the
+slot and update the `next` pointer of the last entry in the existing chain to
+point to the newly-inserted page.
+
+P: We needed a way of providing synchronisation for the hashed page table.
+
+S: Since the HPT is a global data structure shared between processes, we need
+to ensure that if one process inserts an entry into the HPT, other processes
+do not overwrite it (or see an intermediate partially-initialized HPT entry).
+To handle this, we used a single HPT lock called `hpt_lock`, acquired and
+released before accessing the HPT entries.
+
+P: We needed a way to create and track the address space for each process.
+
+S: Our address space is designated by the list of regions associated with it
+(including a fixed-size stack region) and the total number of regions (used for
+debugging and corruption checks). Region specifications include their base
+virtual address, the number of pages and whether the region is
+readable/writeable. Since the regions form a linked list, we also have a
+pointer to the next region.
+
+P: We needed a way to track the read/write permissions for each region in an
+address space at various stages during the process's lifetime.
+
+S: In our region struct, we keep track of three flags: `readable`, `writeable`
+(temporary write permissions) and `can_write` ("persistent" write permissions).
+We use two flags to track write permissions since all regions need to be
+writeable when being loaded by the ELF, however once loading is finished,
+regions that were previously read-only need to be reverted while regions that
+previously also had write permissions needed to retain their status. As such,
+in as_prepare_load(), we set `writeable` to be true for every region,
+then in as_complete_load() we revert each region's permissions to their prior
+state. The `can_write` flag enables this by storing the "real" write permission
+for the region.
+
+#######################
+Summary of File Changes
+#######################
+
+kern/include/vm.h: contains definitions of our frame table and hashed page
+table entries
+
+kern/vm/frametable.c: contains implementations of our frame table manipulation
+functions (alloc_kpages/free_kpages)
+
+kern/vm/vm.c: contains implementations of our virtual memory functions
+
+kern/include/addrspace.h: contains definitions of our address space and region
+data structures
+
+kern/vm/addrspace.c: contains implementations of our address space functions

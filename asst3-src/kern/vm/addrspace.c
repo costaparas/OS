@@ -78,6 +78,7 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 	return 0;
 }
 
+/* free memory associated with an addrspace and release pages and frames */
 void as_destroy(struct addrspace *as) {
 	/* iterate through as->region_list and free each region */
 	struct region *curr = as->region_list;
@@ -114,14 +115,9 @@ void as_deactivate(void) {
 }
 
 /*
- * Set up a segment at virtual address VADDR of size MEMSIZE. The
- * segment in memory extends from VADDR up to (but not including)
- * VADDR+MEMSIZE.
- *
- * The READABLE, WRITEABLE, and EXECUTABLE flags are set if read,
- * write, or execute permission should be set on the segment. At the
- * moment, these are ignored. When you write the VM system, you may
- * want to implement them.
+ * Set up a segment at virtual address vaddr of size memsize. The
+ * segment in memory extends from vaddr up to (but not including)
+ * vaddr + memsize.
  */
 int as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 int readable, int writeable, int executable) {
