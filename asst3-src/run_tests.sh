@@ -1,5 +1,6 @@
 #!/bin/sh
 
+bmake k > /dev/null && bmake u > /dev/null
 cd ../root
 
 sys161 kernel "km1; km2; km3 200000; p /bin/true; p /testbin/huge; p /testbin/triplehuge; p /testbin/parallelvm; q"
