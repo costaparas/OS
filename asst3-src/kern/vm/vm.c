@@ -161,9 +161,7 @@ void make_page_read_only(vaddr_t vaddr) {
 	lock_acquire(hpt_lock);
 
 	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
-	ptable_entry unused;
-	ptable_entry curr = search_ptable(as, vaddr, &unused);
-	(void) unused;
+	ptable_entry curr = search_ptable(as, vaddr, NULL);
 
 	/* unset dirty bit in entrylo */
 	if (curr != NULL) {
@@ -226,9 +224,8 @@ int copy_region(struct region *reg, struct addrspace *old, struct addrspace *new
 	lock_acquire(hpt_lock);
 	while (addr != reg->vbase + reg->npages * PAGE_SIZE) {
 		/* check an old page table entry exists for the page */
-		ptable_entry unused;
-		ptable_entry old_pt = search_ptable(old, addr, &unused);
-		(void) unused;
+		ptable_entry old_pt = search_ptable(old, addr, NULL);
+
 		if (old_pt != NULL) {
 			/* insert page table entry for each page in the copied region */
 			int ret = insert_ptable_entry(newas, addr, reg->writeable, false);
@@ -238,8 +235,7 @@ int copy_region(struct region *reg, struct addrspace *old, struct addrspace *new
 			}
 
 			/* get ptable entry for new page */
-			ptable_entry new_pt = search_ptable(newas, addr, &unused);
-			(void) unused;
+			ptable_entry new_pt = search_ptable(newas, addr, NULL);
 			if (new_pt == NULL) return ENOMEM; /* this should never happen, very unlikely */
 
 			/* get frame number for old and new frames */
@@ -271,7 +267,7 @@ ptable_entry search_ptable(struct addrspace *as, vaddr_t vaddr, ptable_entry *pr
 	ptable_entry curr = &ptable[index];
 	do {
 		if ((curr->entryhi & TLBHI_VPAGE) == vaddr && pid == curr->pid && (curr->entrylo & TLBLO_VALID)) break;
-		*prev = curr;
+		if (prev != NULL) *prev = curr;
 		curr = curr->next;
 	} while (curr != NULL);
 	return curr;
@@ -330,9 +326,7 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 	lock_acquire(hpt_lock);
 
 	/* find ptable entry by traversing ptable using next pntrs to handle collisions */
-	ptable_entry unused;
-	ptable_entry curr = search_ptable(as, faultaddress, &unused);
-	(void) unused;
+	ptable_entry curr = search_ptable(as, faultaddress, NULL);
 
 	if (curr == NULL) {
 		lock_release(hpt_lock);
