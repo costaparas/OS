@@ -90,64 +90,63 @@ static void zero_region(vaddr_t paddr, unsigned npages) {
 int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int writeable, bool write_tlb) {
 	KASSERT(as != NULL && vaddr != 0);
 	vaddr &= PAGE_FRAME;
-	uint32_t index = hpt_hash(as, vaddr);
 	vaddr_t paddr = alloc_kpages(1);
 	KASSERT(paddr % PAGE_SIZE == 0);
 	if (paddr == 0) return ENOMEM; /* out of frames */
 
-	bool release_lock = false;
-	if (!lock_do_i_hold(hpt_lock)) {
-		lock_acquire(hpt_lock);
-		release_lock = true;
-	}
-	ptable_entry entry = &ptable[index];
-	uint32_t i = index;
-	bool overflow = false;
+	/* check we currently hold the hpt lock - if not acquire it */
+	bool release_lock = !lock_do_i_hold(hpt_lock);
+	if (release_lock) lock_acquire(hpt_lock);
+
+	/* find a free slot to insert the ptable entry */
+	uint32_t index = hpt_hash(as, vaddr);
+	uint32_t candidate = index;
+
+	/* check if the hash slot already has a valid HPT entry */
+	ptable_entry entry = &ptable[candidate];
+	bool initial_collision = (entry->entrylo & TLBLO_VALID);
 
 	/* do a linear scan until the 1st free slot is found */
 	while (entry->entrylo & TLBLO_VALID) {
-		overflow = true;
-		i = (i + 1) % total_hpt_pages;
-		if (i == index) {
-			/* this is very unlikely, should run out of frames first */
+		candidate = (candidate + 1) % total_hpt_pages;
+
+		/* check if we looped back around - very unlikely, should run out of frames first */
+		if (candidate == index) {
 			free_kpages(paddr);
 			if (release_lock) lock_release(hpt_lock);
 			return ENOMEM; /* out of pages */
 		}
-		entry = &ptable[i];
+		entry = &ptable[candidate];
 	}
 
 	/* zero-fill the frame */
 	zero_region(paddr, 1);
 
+
+	/* if there was an collision, find the end of the collision chain
+	 * and set the last entry in the chain to point to the new entry*/
 	ptable_entry curr = &ptable[index];
-
-	/* if there was an overflow, find the end of the overflow chain */
-	if (overflow) {
+	if (initial_collision) {
 		while (curr->next != NULL) curr = curr->next;
-		curr->next = entry; /* set the last entry in the chain to point to this new entry */
+		curr->next = entry;
 	}
 
-	/* set pid and entryhi in the ptable entry */
+	/* set ptable entry values */
 	entry->pid = (uint32_t) as;
-	entry->entryhi = vaddr;
 	entry->next = NULL;
+	entry->entryhi = vaddr;
+	entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_VALID;
 
-	/* set entrylo in the ptable entry */
-	if (writeable) {
-		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_DIRTY | TLBLO_VALID;
-	} else {
-		entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_VALID;
-	}
+	/* set TLBLO_DIRTY in entrylo if writeable */
+	if (writeable) entry->entrylo |= TLBLO_DIRTY;
 
 	/* write new ptable entry to tlb */
-	if (!write_tlb) {
-		if (release_lock) lock_release(hpt_lock);
-		return 0;
+	if (write_tlb) {
+		int spl = splhigh();
+		tlb_random(entry->entryhi, entry->entrylo);
+		splx(spl);
 	}
-	int spl = splhigh();
-	tlb_random(entry->entryhi, entry->entrylo);
-	splx(spl);
+
 	if (release_lock) lock_release(hpt_lock);
 	return 0;
 }
