@@ -182,40 +182,38 @@ void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 	for (vaddr_t page = vaddr; page != vaddr + npages * PAGE_SIZE; page += PAGE_SIZE) {
 		ptable_entry prev = NULL;
 		ptable_entry pt = search_ptable(as, page, &prev); /* find ptable entry associated with page */
-		if (pt == NULL) continue;
+		if (pt == NULL) continue; /* no HPT entry found */
+
 		KASSERT((pt->entryhi & TLBHI_VPAGE) == page);
 		free_kpages(PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE));
 
-		/* reset ptable entry */
-		pt->pid = 0;
-		pt->entryhi = 0;
-		pt->entrylo = 0;
-
+		ptable_entry last_in_chain = pt;
 		if (prev != NULL) {
 			/* update collision chain to "skip" this entry */
 			prev->next = pt->next;
 		} else if (pt->next != NULL) {
 			/* head of chain - move last entry in chain to the start */
-			ptable_entry curr = pt;
-			prev = curr;
+			prev = pt;
 
 			/* get the last entry in the chain */
-			while (curr->next != NULL) {
-				prev = curr;
-				curr = curr->next;
+			while (last_in_chain->next != NULL) {
+				prev = last_in_chain;
+				last_in_chain = last_in_chain->next;
 			}
 
 			/* move entry to head of chain */
-			pt->pid = curr->pid;
-			pt->entryhi = curr->entryhi;
-			pt->entrylo = curr->entrylo;
-			curr->pid = 0;
-			curr->entryhi = 0;
-			curr->entrylo = 0;
+			pt->pid = last_in_chain->pid;
+			pt->entryhi = last_in_chain->entryhi;
+			pt->entrylo = last_in_chain->entrylo;
 
 			/* make 2nd-last slot of chain the last slot */
 			prev->next = NULL;
 		}
+
+		/* reset ptable entry */
+		last_in_chain->pid = 0;
+		last_in_chain->entryhi = 0;
+		last_in_chain->entrylo = 0;
 	}
 	lock_release(hpt_lock);
 }
