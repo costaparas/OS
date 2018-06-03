@@ -59,7 +59,8 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 	struct region *curr;
 	for (curr = old->region_list; curr != NULL; curr = curr->next) {
 		int ret = as_define_region(newas, curr->vbase, curr->npages * PAGE_SIZE, curr->readable, curr->writeable, true);
-		if (ret) { /* error in as_define_region */
+		if (ret) {
+			/* error in as_define_region() */
 			as_destroy(newas);
 			return ret;
 		}
@@ -69,7 +70,8 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 	/* copy region data from the old address space */
 	for (curr = newas->region_list; curr != NULL; curr = curr->next) {
 		int ret = copy_region(curr, old, newas);
-		if (ret) { /* error in copy_region */
+		if (ret) {
+			/* error in copy_region() */
 			as_destroy(newas);
 			return ret;
 		}
@@ -131,17 +133,15 @@ int readable, int writeable, int executable) {
 	if (new_region == NULL) return ENOMEM;
 	size_t npages;
 
-	/* Align the region. First, the base... */
+	/* align the region base and length */
 	memsize += vaddr & ~(vaddr_t)PAGE_FRAME;
 	vaddr &= PAGE_FRAME;
-
-	/* ...and now the length. */
 	memsize = (memsize + PAGE_SIZE - 1) & PAGE_FRAME;
 
 	npages = memsize / PAGE_SIZE;
 	KASSERT(npages != 0);
 
-	/* initialize **ALL** fields of the region struct */
+	/* initialize all fields of the region struct */
 	new_region->vbase     = vaddr;
 	new_region->npages    = npages;
 	new_region->readable  = readable;

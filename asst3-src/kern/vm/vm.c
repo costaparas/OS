@@ -17,13 +17,12 @@ struct page_table_entry *ptable = 0;
 struct lock *hpt_lock;
 
 /*
- * Initialises the frame table and hashed page table.
+ * Initialise the frame table and hashed page table.
  */
-static void init_tables (paddr_t phys_size, paddr_t first_free) {
+static void init_tables(paddr_t phys_size, paddr_t first_free) {
 	vaddr_t kernel_top = PADDR_TO_KVADDR(first_free); /* top of kernel */
-
-	uint32_t total_frames = phys_size / PAGE_SIZE; 	/* total number of frames in physical memory */
-	total_hpt_pages = total_frames * 2; 	 	/* size hpt to twice as many physical frames */
+	uint32_t total_frames = phys_size / PAGE_SIZE; /* total number of frames in physical memory */
+	total_hpt_pages = total_frames * 2; /* size hpt to twice as many physical frames */
 
 	/* total number of bytes required to store the frame table and HPT */
 	uint32_t ft_size  = total_frames * sizeof(struct frame_table_entry);
@@ -40,6 +39,7 @@ static void init_tables (paddr_t phys_size, paddr_t first_free) {
 	/* initialise frame table - set physical frame number (addr) and next pointer */
 	for (uint32_t i = 0; i < total_frames; ++i) {
 		ftable[i].addr = i;
+
 		/* point to next frame; last frame has no next */
 		ftable[i].next = (i != total_frames - 1) ? &ftable[i + 1] : NULL;
 	}
@@ -122,9 +122,10 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int writeable, bool
 	/* zero-fill the frame */
 	zero_region(paddr, 1);
 
-
-	/* if there was an collision, find the end of the collision chain
-	 * and set the last entry in the chain to point to the new entry*/
+	/*
+	 * if there was an collision, find the end of the collision chain
+	 * and set the last entry in the chain to point to the new entry
+	 */
 	ptable_entry curr = &ptable[index];
 	if (initial_collision) {
 		while (curr->next != NULL) curr = curr->next;
@@ -133,9 +134,9 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int writeable, bool
 
 	/* set ptable entry values */
 	entry->pid = (uint32_t) as;
-	entry->next = NULL;
 	entry->entryhi = vaddr;
 	entry->entrylo = KVADDR_TO_PADDR(paddr) | TLBLO_VALID;
+	entry->next = NULL;
 
 	/* set TLBLO_DIRTY in entrylo if writeable */
 	if (writeable) entry->entrylo |= TLBLO_DIRTY;
@@ -181,37 +182,38 @@ void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 		ptable_entry prev = NULL;
 		ptable_entry pt = search_ptable(as, page, &prev); /* find ptable entry associated with page */
 		if (pt == NULL) continue; /* no HPT entry found */
-
 		KASSERT((pt->entryhi & TLBHI_VPAGE) == page);
 		free_kpages(PADDR_TO_KVADDR(pt->entrylo & TLBLO_PPAGE));
+		ptable_entry to_remove = pt;
 
-		ptable_entry last_in_chain = pt;
 		if (prev != NULL) {
 			/* update collision chain to "skip" this entry */
 			prev->next = pt->next;
 		} else if (pt->next != NULL) {
 			/* head of chain - move last entry in chain to the start */
-			prev = pt;
+			ptable_entry curr = pt;
+			prev = curr;
 
 			/* get the last entry in the chain */
-			while (last_in_chain->next != NULL) {
-				prev = last_in_chain;
-				last_in_chain = last_in_chain->next;
+			while (curr->next != NULL) {
+				prev = curr;
+				curr = curr->next;
 			}
 
 			/* move entry to head of chain */
-			pt->pid = last_in_chain->pid;
-			pt->entryhi = last_in_chain->entryhi;
-			pt->entrylo = last_in_chain->entrylo;
+			pt->pid = curr->pid;
+			pt->entryhi = curr->entryhi;
+			pt->entrylo = curr->entrylo;
+			to_remove = curr;
 
 			/* make 2nd-last slot of chain the last slot */
 			prev->next = NULL;
 		}
 
 		/* reset ptable entry */
-		last_in_chain->pid = 0;
-		last_in_chain->entryhi = 0;
-		last_in_chain->entrylo = 0;
+		to_remove->pid = 0;
+		to_remove->entryhi = 0;
+		to_remove->entrylo = 0;
 	}
 	lock_release(hpt_lock);
 }
