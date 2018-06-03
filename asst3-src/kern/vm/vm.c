@@ -126,6 +126,7 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	/* set pid and entryhi in the ptable entry */
 	entry->pid = (uint32_t) as;
 	entry->entryhi = vaddr;
+	entry->next = NULL;
 
 	/* set entrylo in the ptable entry */
 	if (writeable) {
