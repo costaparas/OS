@@ -11,13 +11,56 @@
 #include <synch.h>
 
 ftable_entry fhead = 0; /* pntr to first free entry in frame table */
-uint32_t total_pages = 0; /* total pages in the hpt */
+uint32_t total_hpt_pages = 0; /* total pages in the hpt */
 struct frame_table_entry *ftable = 0;
 struct page_table_entry *ptable = 0;
 struct lock *hpt_lock;
 
 /*
- * Initialise the VM system by placing the frametable and page table just after the kernel.
+ * Initialises the frame table and hashed page table.
+ */
+static void init_tables (paddr_t phys_size, paddr_t first_free) {
+	vaddr_t kernel_top = PADDR_TO_KVADDR(first_free); /* top of kernel */
+
+	uint32_t total_frames = phys_size / PAGE_SIZE; 	/* total number of frames in physical memory */
+	total_hpt_pages = total_frames * 2; 	 	/* size hpt to twice as many physical frames */
+
+	/* total number of bytes required to store the frame table and HPT */
+	uint32_t ft_size  = total_frames * sizeof(struct frame_table_entry);
+	uint32_t hpt_size = total_hpt_pages * sizeof(struct page_table_entry);
+
+	/* total number of frames used by the kernel, frame table and HPT */
+	uint32_t kern_frames = first_free / PAGE_SIZE;
+	uint32_t ft_frames   = ft_size    / PAGE_SIZE;
+	uint32_t hpt_frames  = hpt_size   / PAGE_SIZE;
+
+	/* place frame table right after kernel */
+	ftable = (ftable_entry) kernel_top;
+
+	/* initialise frame table - set physical frame number (addr) and next pointer */
+	for (uint32_t i = 0; i < total_frames; ++i) {
+		ftable[i].addr = i;
+		/* point to next frame; last frame has no next */
+		ftable[i].next = (i != total_frames - 1) ? &ftable[i + 1] : NULL;
+	}
+
+	/* place page table right after kernel and frame table */
+	ptable = (ptable_entry) (kernel_top + ft_size);
+
+	/* initialise page table */
+	for (uint32_t i = 0; i < total_hpt_pages; ++i) {
+		ptable[i].pid = 0;
+		ptable[i].entryhi = 0;
+		ptable[i].entrylo = 0;
+		ptable[i].next = NULL;
+	}
+
+	/* set the first free frame to be directly after the frames used by the kernel, frame table and HPT */
+	fhead = &ftable[kern_frames + ft_frames + hpt_frames];
+}
+
+/*
+ * Initialise the VM system.
  */
 void vm_bootstrap(void) {
 	/* create hpt lock */
@@ -26,46 +69,9 @@ void vm_bootstrap(void) {
 
 	paddr_t phys_size = ram_getsize(); /* must be called first, since ram_getfirstfree() invalidates it */
 	paddr_t first_free = ram_getfirstfree();
-	vaddr_t kernel_top = PADDR_TO_KVADDR(first_free); /* top of kernel */
 
-	/* place frame table right after kernel */
-	ftable = (ftable_entry) kernel_top;
-
-	/* set first free frame to be the frame immediately after kernel */
-	uint32_t kern_frames = first_free / PAGE_SIZE; /* frames used by kernel */
-	fhead = &ftable[kern_frames];
-
-	/* initialise frame table - set physical frame number (addr) and next pointer */
-	uint32_t total_frames = phys_size / PAGE_SIZE;
-	for (uint32_t i = 0; i < total_frames; ++i) {
-		ftable[i].addr = i;
-		if (i == total_frames - 1) {
-			/* last frame */
-			ftable[i].next = NULL; /* out of frames */
-		} else {
-			ftable[i].next = &ftable[i + 1];
-		}
-	}
-
-	/* update fhead to point to first free entry - i.e. after the ftable */
-	uint32_t frame_table_size = total_frames * sizeof(struct frame_table_entry);
-	fhead += frame_table_size / PAGE_SIZE;
-
-	/* place page table right after frame table */
-	ptable = (ptable_entry) (kernel_top + frame_table_size);
-
-	/* update fhead to point to first free entry - i.e. after the ptable */
-	total_pages = total_frames * 2; /* size hpt to twice as many physical frames */
-	uint32_t hpt_size = total_pages * sizeof(struct page_table_entry);
-	fhead += hpt_size / PAGE_SIZE;
-
-	/* init page table */
-	for (uint32_t i = 0; i < total_pages; ++i) {
-		ptable[i].pid = 0;
-		ptable[i].entryhi = 0;
-		ptable[i].entrylo = 0;
-		ptable[i].next = NULL;
-	}
+	/* initialise frame table and hashed page table */
+	init_tables(phys_size, first_free);
 }
 
 /*
@@ -102,7 +108,7 @@ int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int w
 	/* do a linear scan until the 1st free slot is found */
 	while (entry->entrylo & TLBLO_VALID) {
 		overflow = true;
-		i = (i + 1) % total_pages;
+		i = (i + 1) % total_hpt_pages;
 		if (i == index) {
 			/* this is very unlikely, should run out of frames first */
 			free_kpages(paddr);
@@ -282,7 +288,7 @@ uint32_t hpt_hash(struct addrspace *as, vaddr_t addr) {
 	KASSERT(as != NULL && addr != 0);
 	KASSERT((addr & PAGE_FRAME) == addr);
 	uint32_t index;
-	index = (((uint32_t) as) ^ (addr >> PAGE_BITS)) % total_pages;
+	index = (((uint32_t) as) ^ (addr >> PAGE_BITS)) % total_hpt_pages;
 	return index;
 }
 
