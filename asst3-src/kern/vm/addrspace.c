@@ -59,18 +59,20 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 	struct region *curr;
 	for (curr = old->region_list; curr != NULL; curr = curr->next) {
 		int ret = as_define_region(newas, curr->vbase, curr->npages * PAGE_SIZE, curr->readable, curr->writeable, true);
-		if (!ret) continue;
-		as_destroy(newas);
-		return ret;
+		if (ret) { /* error in as_define_region */
+			as_destroy(newas);
+			return ret;
+		}
 	}
 	KASSERT(newas->nregions == old->nregions);
 
-	/* copy region data from the old as */
+	/* copy region data from the old address space */
 	for (curr = newas->region_list; curr != NULL; curr = curr->next) {
 		int ret = copy_region(curr, old, newas);
-		if (!ret) continue;
-		as_destroy(newas);
-		return ret;
+		if (ret) { /* error in copy_region */
+			as_destroy(newas);
+			return ret;
+		}
 	}
 
 	*ret = newas;
@@ -103,6 +105,7 @@ void as_activate(void) {
 	/* disable interrupts on this cpu while frobbing the tlb */
 	int spl = splhigh();
 
+	/* invalidate all tlb entries */
 	for (int i = 0; i < NUM_TLB; i++) {
 		tlb_write(TLBHI_INVALID(i), TLBLO_INVALID(), i);
 	}
@@ -150,13 +153,11 @@ int readable, int writeable, int executable) {
 
 	/* append new_region to as->region_list */
 	struct region *curr_region = as->region_list;
-	if (curr_region == NULL) {
-		as->region_list = new_region;
-	} else {
+	if (curr_region != NULL) {
 		struct region *old_head = as->region_list;
 		new_region->next = old_head;
-		as->region_list = new_region;
 	}
+	as->region_list = new_region;
 
 	return 0;
 }

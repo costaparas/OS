@@ -262,10 +262,12 @@ ptable_entry search_ptable(struct addrspace *as, vaddr_t vaddr, ptable_entry *pr
 	KASSERT(vaddr != 0);
 	KASSERT((vaddr & PAGE_FRAME) == vaddr);
 	KASSERT(lock_do_i_hold(hpt_lock));
+
 	uint32_t index = hpt_hash(as, vaddr);
 	pid_t pid = (uint32_t) as;
 	ptable_entry curr = &ptable[index];
 	do {
+		/* if vaddr and pid in curr match and it is valid - found */
 		if ((curr->entryhi & TLBHI_VPAGE) == vaddr && pid == curr->pid && (curr->entrylo & TLBLO_VALID)) break;
 		if (prev != NULL) *prev = curr;
 		curr = curr->next;
