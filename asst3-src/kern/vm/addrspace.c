@@ -67,7 +67,10 @@ int as_copy(struct addrspace *old, struct addrspace **ret) {
 
 	/* copy region data from the old as */
 	for (curr = newas->region_list; curr != NULL; curr = curr->next) {
-		copy_region(curr, old, newas);
+		int ret = copy_region(curr, old, newas);
+		if (!ret) continue;
+		as_destroy(newas);
+		return ret;
 	}
 
 	*ret = newas;
@@ -171,7 +174,8 @@ int as_prepare_load(struct addrspace *as) {
 	 * vm_fault() maybe triggered before as_define_stack() is called
 	 * but not before as_prepare_load() is called
 	 */
-	as_define_region(as, USERSTACK - PAGE_SIZE * NUM_STACK_PAGES, PAGE_SIZE * NUM_STACK_PAGES, true, true, false);
+	int ret = as_define_region(as, USERSTACK - PAGE_SIZE * NUM_STACK_PAGES, PAGE_SIZE * NUM_STACK_PAGES, true, true, false);
+	if (ret) return ret;
 
 	/* set writable flag to true for all regions temporarily */
 	for (struct region *curr = as->region_list; curr != NULL; curr = curr->next) {

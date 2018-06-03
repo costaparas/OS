@@ -37,10 +37,11 @@
 #include <vm.h>
 #include "opt-dumbvm.h"
 
-#define NUM_STACK_PAGES 16
+#define NUM_STACK_PAGES 16 /* fixed-size stack size */
 
 struct vnode;
 
+/* region specification */
 struct region {
 	vaddr_t vbase; /* start of region */
 	size_t npages; /* npages in region */
@@ -72,6 +73,7 @@ struct addrspace {
 #endif
 };
 
+/* function prototypes for hashed page table helpers */
 uint32_t hpt_hash(struct addrspace *as, vaddr_t faultaddr);
 int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int writeable, bool write_tlb);
 void make_page_read_only(vaddr_t vaddr);

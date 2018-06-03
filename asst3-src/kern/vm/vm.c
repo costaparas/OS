@@ -10,15 +10,15 @@
 #include <machine/tlb.h>
 #include <synch.h>
 
-/* Place your page table functions here */
-
-ftable_entry fhead = 0;
+ftable_entry fhead = 0; /* pntr to first free entry in frame table */
 uint32_t total_pages = 0; /* total pages in the hpt */
 struct frame_table_entry *ftable = 0;
 struct page_table_entry *ptable = 0;
-
 struct lock *hpt_lock;
 
+/*
+ * Initialise the VM system by placing the frametable and page table just after the kernel.
+ */
 void vm_bootstrap(void) {
 	/* create hpt lock */
 	hpt_lock = lock_create("hpt_lock");
@@ -40,7 +40,7 @@ void vm_bootstrap(void) {
 	for (uint32_t i = 0; i < total_frames; ++i) {
 		ftable[i].addr = i;
 		if (i == total_frames - 1) {
-			/* laste frame */
+			/* last frame */
 			ftable[i].next = NULL; /* out of frames */
 		} else {
 			ftable[i].next = &ftable[i + 1];
@@ -54,7 +54,7 @@ void vm_bootstrap(void) {
 	/* place page table right after frame table */
 	ptable = (ptable_entry) (kernel_top + frame_table_size);
 
-	/* update fhead to point to first free entry - i.e. after tge ptable */
+	/* update fhead to point to first free entry - i.e. after the ptable */
 	total_pages = total_frames * 2; /* size hpt to twice as many physical frames */
 	uint32_t hpt_size = total_pages * sizeof(struct page_table_entry);
 	fhead += hpt_size / PAGE_SIZE;
@@ -214,6 +214,9 @@ void free_region(struct addrspace *as, vaddr_t vaddr, uint32_t npages) {
 	lock_release(hpt_lock);
 }
 
+/*
+ * Copy ptable entries from old to new addrspace and allocate new frames.
+ */
 int copy_region(struct region *reg, struct addrspace *old, struct addrspace *newas) {
 	vaddr_t addr = reg->vbase;
 	lock_acquire(hpt_lock);
@@ -225,16 +228,12 @@ int copy_region(struct region *reg, struct addrspace *old, struct addrspace *new
 			int ret = insert_ptable_entry(newas, addr, reg->readable, reg->writeable, false);
 			if (ret) {
 				lock_release(hpt_lock);
-				as_destroy(newas);
 				return ret;
 			}
 
 			/* get ptable entry for new page */
 			ptable_entry new_pt = search_ptable(newas, addr, NULL);
-			if (new_pt == NULL) {
-				as_destroy(newas);
-				return ENOMEM;
-			}
+			if (new_pt == NULL) return ENOMEM; /* this should never happen, very unlikely */
 
 			/* get frame number for old and new frames */
 			vaddr_t old_frame = PADDR_TO_KVADDR(old_pt->entrylo & TLBLO_PPAGE);
