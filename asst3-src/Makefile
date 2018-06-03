@@ -70,33 +70,3 @@ install: $(OSTREE)
 # old BSD name, same as distclean
 cleandir: distclean
 .PHONY: cleandir
-
-k: # Build kernel
-	cd kern/compile/ASST3 && bmake && bmake install
-u: # Build userland
-	bmake && bmake install
-
-a:
-	bmake k && bmake u
-
-q:
-	bmake k > /dev/null && bmake u > /dev/null
-
-run: # Run kernel
-	cd ../root && sys161 kernel #"p /bin/true"
-	# cd ../root && sys161 kernel "$(args)"
-
-debug: # run kernel with tlb trace debugging info
-	cd ../root && trace161 -tt kernel "p /bin/true"
-
-conf: # Full reconfigure
-	./configure && \
-	bmake && bmake install && \
-	cd kern/conf && ./config ASST3 && \
-	cd ../compile/ASST3 && bmake depend && bmake && bmake install
-
-domconf: # CONF WITH DOM'S SILLY DIRECTORY SYSTEM
-	./configure --ostree='~/Documents/comp3231/assignments/root' && \
-	bmake && bmake install && \
-	cd kern/conf && ./config ASST3 && \
-	cd ../compile/ASST3 && bmake depend && bmake && bmake install
