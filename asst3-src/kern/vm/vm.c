@@ -87,9 +87,8 @@ static void zero_region(vaddr_t paddr, unsigned npages) {
  * Call alloc_kpages() to acquire a frame for the page.
  * Set the dirty bit as needed for write permissions.
  */
-int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int readable, int writeable, bool write_tlb) {
+int insert_ptable_entry(struct addrspace *as, vaddr_t vaddr, int writeable, bool write_tlb) {
 	KASSERT(as != NULL && vaddr != 0);
-	(void) readable; /* unused */
 	vaddr &= PAGE_FRAME;
 	uint32_t index = hpt_hash(as, vaddr);
 	vaddr_t paddr = alloc_kpages(1);
@@ -235,7 +234,7 @@ int copy_region(struct region *reg, struct addrspace *old, struct addrspace *new
 		(void) unused;
 		if (old_pt != NULL) {
 			/* insert page table entry for each page in the copied region */
-			int ret = insert_ptable_entry(newas, addr, reg->readable, reg->writeable, false);
+			int ret = insert_ptable_entry(newas, addr, reg->writeable, false);
 			if (ret) {
 				lock_release(hpt_lock);
 				return ret;
@@ -342,7 +341,7 @@ int vm_fault(int faulttype, vaddr_t faultaddress) {
 		lock_release(hpt_lock);
 
 		/* lazy page/frame allocation */
-		int ret = insert_ptable_entry(as, faultaddress, region_found->readable, region_found->writeable, true);
+		int ret = insert_ptable_entry(as, faultaddress, region_found->writeable, true);
 		if (ret) return ret;
 	} else {
 		int spl = splhigh();
